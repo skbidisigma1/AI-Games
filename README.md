@@ -20,6 +20,22 @@ A collection of innovative games exploring artificial intelligence, consciousnes
 
 **Story**: Navigate decaying data landscapes to recover corrupted memories and uncover the mystery behind a vanished AI civilization. Your choices and code interpretations shape both the narrative and the digital world around you.
 
+### 🎮 BounceBlox
+*A cheerful platforming adventure with a bouncy cube and color-coded block mechanics*
+
+**Location**: `/BounceBlox/`
+
+**Features**:
+- Snappy platforming physics with gravity and momentum
+- Color-coded blocks with unique behaviors (solid, crumble, launch, gravity-reverse)
+- Star collection and level progression system
+- Single-screen levels perfect for quick sessions
+- Cheerful visual design with particle effects
+
+**Play**: Open `BounceBlox/index.html` in a web browser
+
+**Gameplay**: Control a happy cube through platforming challenges. Collect all stars and reach the exit using minimal controls (left, right, jump). Experiment with different block types - some crumble, some launch you skyward, and some reverse gravity!
+
 ## Getting Started
 
 Each game is self-contained in its own directory with:
