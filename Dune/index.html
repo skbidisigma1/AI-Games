@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dune - Desert Arena Shooter</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="1000" height="700"></canvas>
+        
+        <!-- UI Overlays -->
+        <div id="ui">
+            <!-- Title Screen -->
+            <div id="titleScreen" class="screen active">
+                <div class="title-content">
+                    <h1 class="dune-title">DUNE</h1>
+                    <h2 class="subtitle">Desert Arena Shooter</h2>
+                    <p class="game-description">
+                        Survive the desert arena against horrible AI bots!<br>
+                        💥 Shoot to eliminate enemies • 🏃 Move to avoid their terrible aim<br>
+                        ❤️ Collect health packs • ⭐ Survive as long as possible
+                    </p>
+                    <div class="controls-info">
+                        <p><strong>Controls:</strong> WASD to move, Mouse to aim, Click to shoot</p>
+                    </div>
+                    <button id="startGame" class="dune-button">ENTER THE ARENA</button>
+                </div>
+            </div>
+            
+            <!-- Game Screen -->
+            <div id="gameScreen" class="screen">
+                <div id="hud">
+                    <div id="healthInfo">
+                        <span class="hud-label">HEALTH:</span>
+                        <div id="healthBar">
+                            <div id="healthFill"></div>
+                        </div>
+                        <span id="healthText">100</span>
+                    </div>
+                    <div id="scoreInfo">
+                        <span class="hud-label">SCORE:</span>
+                        <span id="scoreValue">0</span>
+                    </div>
+                    <div id="enemyInfo">
+                        <span class="hud-label">BOTS:</span>
+                        <span id="enemyCount">5</span>
+                    </div>
+                    <div id="ammoInfo">
+                        <span class="hud-label">AMMO:</span>
+                        <span id="ammoCount">∞</span>
+                    </div>
+                </div>
+                
+                <!-- Game Over Dialog -->
+                <div id="gameOver" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2>Game Over!</h2>
+                        <p id="finalScore">Final Score: 0</p>
+                        <p id="survivalTime">Survival Time: 0s</p>
+                        <button id="restartGame" class="dune-button">Try Again</button>
+                        <button id="backToMenu" class="dune-button">Back to Menu</button>
+                    </div>
+                </div>
+                
+                <!-- Victory Dialog -->
+                <div id="victory" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2>Wave Complete!</h2>
+                        <p id="waveScore">Wave Score: 0</p>
+                        <button id="nextWave" class="dune-button">Next Wave</button>
+                        <button id="backToMenuVictory" class="dune-button">Back to Menu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Audio -->
+    <audio id="shootSound" preload="auto">
+        <source src="audio/shoot.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="hitSound" preload="auto">
+        <source src="audio/hit.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="enemyDeathSound" preload="auto">
+        <source src="audio/enemy_death.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="healthPickupSound" preload="auto">
+        <source src="audio/health_pickup.mp3" type="audio/mpeg">
+    </audio>
+    
+    <script src="game.js"></script>
+</body>
+</html>

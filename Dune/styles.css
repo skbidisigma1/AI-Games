@@ -1,0 +1,282 @@
+/* Dune - Desert Arena Shooter Styles */
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Courier New', monospace;
+    background: linear-gradient(135deg, #8B4513, #CD853F, #DEB887);
+    color: #2F1B14;
+    overflow: hidden;
+    cursor: none;
+}
+
+#gameContainer {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle at center, #F4A460, #D2691E, #8B4513);
+}
+
+#gameCanvas {
+    border: 3px solid #8B4513;
+    box-shadow: 0 0 20px rgba(139, 69, 19, 0.5);
+    background: #F5DEB3;
+    cursor: crosshair;
+}
+
+/* UI Overlays */
+#ui {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    pointer-events: all;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* Title Screen */
+#titleScreen {
+    background: rgba(139, 69, 19, 0.9);
+    backdrop-filter: blur(5px);
+}
+
+.title-content {
+    text-align: center;
+    background: rgba(245, 222, 179, 0.95);
+    padding: 40px;
+    border-radius: 15px;
+    border: 3px solid #8B4513;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+    max-width: 600px;
+}
+
+.dune-title {
+    font-size: 4rem;
+    margin: 0;
+    color: #8B4513;
+    text-shadow: 3px 3px 0px #CD853F, 6px 6px 10px rgba(0, 0, 0, 0.3);
+    letter-spacing: 8px;
+    font-weight: bold;
+}
+
+.subtitle {
+    font-size: 1.5rem;
+    margin: 10px 0 20px;
+    color: #A0522D;
+    font-weight: normal;
+}
+
+.game-description {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 25px;
+    color: #654321;
+}
+
+.controls-info {
+    margin-bottom: 30px;
+    padding: 15px;
+    background: rgba(139, 69, 19, 0.1);
+    border-radius: 8px;
+    border: 1px solid #CD853F;
+}
+
+.controls-info p {
+    margin: 0;
+    font-size: 1rem;
+    color: #8B4513;
+}
+
+.dune-button {
+    background: linear-gradient(45deg, #8B4513, #A0522D);
+    color: #F5DEB3;
+    border: none;
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    font-family: 'Courier New', monospace;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin: 5px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.dune-button:hover {
+    background: linear-gradient(45deg, #A0522D, #8B4513);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dune-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Game HUD */
+#hud {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(139, 69, 19, 0.8);
+    padding: 15px 25px;
+    border-radius: 10px;
+    border: 2px solid #A0522D;
+    backdrop-filter: blur(5px);
+    pointer-events: none;
+}
+
+.hud-label {
+    font-weight: bold;
+    color: #F5DEB3;
+    margin-right: 8px;
+    font-size: 1rem;
+}
+
+#healthBar {
+    display: inline-block;
+    width: 120px;
+    height: 16px;
+    background: #654321;
+    border: 2px solid #A0522D;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 0 10px;
+    vertical-align: middle;
+}
+
+#healthFill {
+    height: 100%;
+    background: linear-gradient(90deg, #FF6B6B, #FFE66D, #4ECDC4);
+    transition: width 0.3s ease;
+    width: 100%;
+}
+
+#healthText, #scoreValue, #enemyCount, #ammoCount {
+    color: #F5DEB3;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+/* Dialogs */
+.dialog {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(139, 69, 19, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: all;
+}
+
+.dialog.hidden {
+    display: none;
+}
+
+.dialog-content {
+    background: rgba(245, 222, 179, 0.95);
+    padding: 40px;
+    border-radius: 15px;
+    border: 3px solid #8B4513;
+    text-align: center;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    max-width: 400px;
+}
+
+.dialog-content h2 {
+    margin-top: 0;
+    color: #8B4513;
+    font-size: 2rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.dialog-content p {
+    margin: 15px 0;
+    color: #654321;
+    font-size: 1.1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dune-title {
+        font-size: 2.5rem;
+        letter-spacing: 4px;
+    }
+    
+    .title-content {
+        padding: 20px;
+        margin: 20px;
+    }
+    
+    #hud {
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+    }
+    
+    #gameCanvas {
+        max-width: 100vw;
+        max-height: 100vh;
+    }
+}
+
+/* Game-specific visual effects */
+.sand-particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: #DEB887;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: sandDrift 3s linear infinite;
+}
+
+@keyframes sandDrift {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(100vh);
+    }
+}
+
+/* Crosshair cursor for the game canvas */
+#gameCanvas:hover {
+    cursor: crosshair;
+}
