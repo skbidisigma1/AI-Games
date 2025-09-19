@@ -11,14 +11,31 @@ A collection of innovative games exploring artificial intelligence, consciousnes
 
 **Features**:
 - Memory reconstruction puzzles
-- Logic-based hacking challenges  
+- Logic-based hacking challenges
 - Moral choice branches that affect the world
 - Dynamic code interpretation system
 - Glitchcore cyber-ruins aesthetic
+- Comprehensive help system and tutorials
 
 **Play**: Open `Echoes/index.html` in a web browser
 
 **Story**: Navigate decaying data landscapes to recover corrupted memories and uncover the mystery behind a vanished AI civilization. Your choices and code interpretations shape both the narrative and the digital world around you.
+
+### 🧠 Data Stream - Neural Pattern Recognition
+*A fast-paced pattern matching game where you train your artificial consciousness*
+
+**Location**: `/DataStream/`
+
+**Features**:
+- Progressive difficulty with longer, faster patterns
+- Neural integrity system - survive as long as possible
+- Score and level progression system
+- Responsive cyberpunk interface
+- Mobile-friendly controls
+
+**Play**: Open `DataStream/index.html` in a web browser
+
+**Story**: Train your AI consciousness by recognizing patterns in endless data streams. Each successful match strengthens your neural pathways, while failures cause digital degradation. How long can you maintain synchronization?
 
 ### 🎮 BounceBlox
 *A cheerful platforming adventure with a bouncy cube and color-coded block mechanics*
@@ -58,6 +75,6 @@ Feel free to extend existing games or create new ones that explore these themes!
 
 All games are designed to be:
 - **Accessible**: Run in any modern web browser
-- **Self-contained**: No external dependencies required  
+- **Self-contained**: No external dependencies required
 - **Extensible**: Well-documented code for easy modification
 - **Educational**: Incorporate learning elements naturally into gameplay

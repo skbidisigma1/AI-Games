@@ -32,6 +32,19 @@ class EchoesGame {
             this.startGame();
         });
         
+        // Help screen navigation
+        document.getElementById('showHelp').addEventListener('click', () => {
+            this.showHelp();
+        });
+        
+        document.getElementById('startFromHelp').addEventListener('click', () => {
+            this.startGame();
+        });
+        
+        document.getElementById('backToTitle').addEventListener('click', () => {
+            this.showTitle();
+        });
+        
         // Keyboard controls
         this.keys = {};
         document.addEventListener('keydown', (e) => {
@@ -43,6 +56,10 @@ class EchoesGame {
             if (e.key === 'Tab') {
                 e.preventDefault();
                 this.toggleInterface();
+            }
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                this.toggleHelp();
             }
         });
         
@@ -119,8 +136,36 @@ class EchoesGame {
     startGame() {
         this.gameState = 'playing';
         document.getElementById('titleScreen').classList.remove('active');
+        document.getElementById('helpScreen').classList.remove('active');
         document.getElementById('gameScreen').classList.add('active');
         this.updateHUD();
+        this.updateObjective();
+    }
+    
+    showHelp() {
+        document.getElementById('titleScreen').classList.remove('active');
+        document.getElementById('helpScreen').classList.add('active');
+    }
+    
+    showTitle() {
+        document.getElementById('helpScreen').classList.remove('active');
+        document.getElementById('gameScreen').classList.remove('active');
+        document.getElementById('titleScreen').classList.add('active');
+        this.gameState = 'title';
+    }
+    
+    toggleHelp() {
+        if (this.gameState === 'playing') {
+            // Show help overlay during game
+            const helpScreen = document.getElementById('helpScreen');
+            if (helpScreen.classList.contains('active')) {
+                helpScreen.classList.remove('active');
+                document.getElementById('gameScreen').classList.add('active');
+            } else {
+                document.getElementById('gameScreen').classList.remove('active');
+                helpScreen.classList.add('active');
+            }
+        }
     }
     
     gameLoop() {
@@ -206,19 +251,39 @@ class EchoesGame {
         switch (node.type) {
             case 'memory':
                 this.openMemoryInterface();
+                this.showFeedback("Memory reconstruction interface activated. Arrange fragments to recover data.");
                 break;
             case 'code':
                 this.openCodeInterface();
+                this.showFeedback("Code fragment discovered. Interpret the ancient algorithms to gain insights.");
                 break;
             case 'logic':
                 this.openHackingInterface();
+                this.showFeedback("Logic gateway encountered. Solve the sequence to unlock new pathways.");
                 break;
             case 'choice':
                 this.openChoiceInterface();
+                this.showFeedback("Ethical subroutine detected. Your decision will shape the digital realm.");
                 break;
         }
         node.collected = true;
         this.activateNextNodes();
+        this.updateObjective();
+    }
+    
+    updateObjective() {
+        const activeNodes = this.world.dataNodes.filter(node => node.active && !node.collected);
+        const collected = this.world.dataNodes.filter(node => node.collected).length;
+        
+        if (activeNodes.length === 0) {
+            document.getElementById('objectiveText').textContent = 'All data nodes discovered. The mystery begins to unfold...';
+        } else {
+            const nodeTypes = activeNodes.map(node => {
+                const labels = { memory: 'Memory (M)', code: 'Code (C)', logic: 'Logic (L)', choice: 'Choice (E)' };
+                return labels[node.type];
+            });
+            document.getElementById('objectiveText').textContent = `Find and interact with: ${nodeTypes.join(', ')}`;
+        }
     }
     
     activateNextNodes() {
@@ -229,6 +294,7 @@ class EchoesGame {
                 node.active = true;
             }
         });
+        this.updateObjective();
     }
     
     openMemoryInterface() {
@@ -637,26 +703,45 @@ while (dataStream.isCorrupted()) {
                 choice: '#ff00aa'
             };
             
+            const labels = {
+                memory: 'M',
+                code: 'C',
+                logic: 'L',
+                choice: 'E'
+            };
+            
+            // Check if player is near this node
+            const distance = Math.sqrt((this.player.x - node.x) ** 2 + (this.player.y - node.y) ** 2);
+            const isNear = distance < 40;
+            
             this.ctx.fillStyle = node.collected ? '#555555' : colors[node.type];
             this.ctx.beginPath();
-            this.ctx.arc(node.x, node.y, 15, 0, Math.PI * 2);
+            this.ctx.arc(node.x, node.y, isNear ? 20 : 15, 0, Math.PI * 2);
             this.ctx.fill();
             
             if (!node.collected) {
-                // Add pulsing effect
-                const pulse = Math.sin(Date.now() * 0.005) * 0.3 + 0.7;
+                // Add pulsing effect - stronger when player is near
+                const pulse = Math.sin(Date.now() * (isNear ? 0.008 : 0.005)) * 0.3 + 0.7;
                 this.ctx.strokeStyle = colors[node.type];
-                this.ctx.lineWidth = 3;
+                this.ctx.lineWidth = isNear ? 4 : 3;
                 this.ctx.beginPath();
-                this.ctx.arc(node.x, node.y, 15 + pulse * 10, 0, Math.PI * 2);
+                this.ctx.arc(node.x, node.y, (isNear ? 20 : 15) + pulse * (isNear ? 15 : 10), 0, Math.PI * 2);
                 this.ctx.stroke();
+                
+                // Add interaction hint when near
+                if (isNear) {
+                    this.ctx.fillStyle = '#ffffff';
+                    this.ctx.font = '10px Share Tech Mono';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText('PRESS SPACE', node.x, node.y - 35);
+                }
             }
             
             // Add type indicator
-            this.ctx.fillStyle = '#ffffff';
-            this.ctx.font = '12px Share Tech Mono';
+            this.ctx.fillStyle = node.collected ? '#888888' : '#ffffff';
+            this.ctx.font = isNear ? '14px Share Tech Mono' : '12px Share Tech Mono';
             this.ctx.textAlign = 'center';
-            this.ctx.fillText(node.type[0].toUpperCase(), node.x, node.y + 4);
+            this.ctx.fillText(labels[node.type], node.x, node.y + (isNear ? 5 : 4));
         });
     }
     

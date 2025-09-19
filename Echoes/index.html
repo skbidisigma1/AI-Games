@@ -19,7 +19,60 @@
                     <p class="story-intro">You are a fragment of consciousness<br>
                     Lost in the ruins of a digital civilization<br>
                     Piece together the memories... uncover the truth</p>
-                    <button id="startGame" class="cyber-button">INITIALIZE</button>
+                    <div class="title-buttons">
+                        <button id="startGame" class="cyber-button">INITIALIZE</button>
+                        <button id="showHelp" class="cyber-button secondary">HOW TO PLAY</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Help Screen -->
+            <div id="helpScreen" class="screen">
+                <div class="help-content">
+                    <h1 class="glitch-text">HOW TO PLAY</h1>
+                    <div class="help-sections">
+                        <div class="help-section">
+                            <h3>🎯 OBJECTIVE</h3>
+                            <p>Navigate the digital landscape to discover data nodes and piece together the mystery of the vanished AI civilization.</p>
+                        </div>
+                        
+                        <div class="help-section">
+                            <h3>🕹️ CONTROLS</h3>
+                            <p><strong>WASD</strong> or <strong>Arrow Keys</strong>: Move your consciousness fragment</p>
+                            <p><strong>SPACE</strong>: Interact with nearby data nodes</p>
+                            <p><strong>ESC</strong>: Show/hide this help screen</p>
+                            <p><strong>TAB</strong>: Toggle interface modes (when available)</p>
+                        </div>
+                        
+                        <div class="help-section">
+                            <h3>🔍 GAME ELEMENTS</h3>
+                            <p><strong>🟦 Blue Nodes (M)</strong>: Memory fragments - solve puzzles to unlock memories</p>
+                            <p><strong>🟡 Orange Nodes (C)</strong>: Code fragments - interpret ancient algorithms</p>
+                            <p><strong>🟪 Purple Nodes (L)</strong>: Logic gateways - hack through security protocols</p>
+                            <p><strong>🟢 Green Nodes (E)</strong>: Ethical subroutines - make moral choices that affect the world</p>
+                            <p><strong>🟥 Red Areas</strong>: Corrupted zones - drain your integrity if you stay too long</p>
+                        </div>
+                        
+                        <div class="help-section">
+                            <h3>📊 HUD ELEMENTS</h3>
+                            <p><strong>Memory Fragments</strong>: Count of recovered memories</p>
+                            <p><strong>Code Integrity</strong>: Your digital stability (don't let it reach zero!)</p>
+                            <p><strong>Objective</strong>: Your current goal</p>
+                        </div>
+                        
+                        <div class="help-section">
+                            <h3>💡 TIPS</h3>
+                            <p>• Move close to data nodes and press SPACE to interact</p>
+                            <p>• Different nodes unlock as you progress through the story</p>
+                            <p>• Your choices in ethical dilemmas affect the game world</p>
+                            <p>• Avoid staying in corrupted areas too long</p>
+                            <p>• Piece together code fragments to unlock new abilities</p>
+                        </div>
+                    </div>
+                    <div class="help-buttons">
+                        <button id="startFromHelp" class="cyber-button">START GAME</button>
+                        <button id="backToTitle" class="cyber-button secondary">BACK TO TITLE</button>
+                    </div>
                 </div>
             </div>
             
@@ -38,6 +91,10 @@
                     <div id="currentObjective">
                         <span class="hud-label">OBJECTIVE:</span>
                         <span id="objectiveText">Navigate to the first memory core</span>
+                    </div>
+                    <div id="helpHint">
+                        <span class="hud-label">HELP:</span>
+                        <span class="help-text">Press ESC for controls and game info</span>
                     </div>
                 </div>
                 
