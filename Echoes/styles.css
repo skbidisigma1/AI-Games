@@ -1,0 +1,388 @@
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono:wght@400&family=Orbitron:wght@400;700;900&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Share Tech Mono', monospace;
+    background: #000011;
+    color: #00ff88;
+    overflow: hidden;
+    cursor: crosshair;
+}
+
+#gameContainer {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#gameCanvas {
+    border: 2px solid #00ff88;
+    box-shadow: 0 0 20px #00ff8844;
+    background: #000022;
+}
+
+/* UI Styling */
+#ui {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.screen {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: none;
+    pointer-events: auto;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* Title Screen */
+#titleScreen {
+    background: linear-gradient(45deg, #000011, #001122);
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.title-content {
+    text-align: center;
+    animation: fadeInGlitch 2s ease-in-out;
+}
+
+.glitch-text {
+    font-family: 'Orbitron', monospace;
+    font-size: 4rem;
+    font-weight: 900;
+    color: #00ff88;
+    text-shadow: 
+        0 0 10px #00ff88,
+        2px 2px 0 #ff0088,
+        -2px -2px 0 #0088ff;
+    animation: glitch 2s infinite;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.2rem;
+    color: #88ffaa;
+    letter-spacing: 0.2em;
+    margin-bottom: 2rem;
+}
+
+.story-intro {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #aaaaff;
+    margin-bottom: 3rem;
+    opacity: 0.8;
+}
+
+/* Cyber Button */
+.cyber-button {
+    font-family: 'Share Tech Mono', monospace;
+    background: transparent;
+    border: 2px solid #00ff88;
+    color: #00ff88;
+    padding: 15px 30px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.cyber-button:hover {
+    background: #00ff8822;
+    box-shadow: 0 0 20px #00ff88;
+    transform: translateY(-2px);
+}
+
+.cyber-button:active {
+    transform: translateY(0);
+}
+
+/* Game Screen */
+#gameScreen {
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+#hud {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 17, 0.8);
+    border: 1px solid #00ff88;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    pointer-events: auto;
+}
+
+.hud-label {
+    color: #88ffaa;
+    margin-right: 10px;
+}
+
+#integrityBar {
+    width: 200px;
+    height: 20px;
+    border: 1px solid #00ff88;
+    background: #001122;
+    position: relative;
+}
+
+#integrityFill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff0088, #00ff88);
+    width: 75%;
+    transition: width 0.3s;
+}
+
+/* Interfaces */
+.interface {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 17, 0.95);
+    border: 2px solid #00ff88;
+    box-shadow: 0 0 30px #00ff8844;
+    padding: 20px;
+    min-width: 400px;
+    max-width: 600px;
+    pointer-events: auto;
+}
+
+.interface.hidden {
+    display: none;
+}
+
+.interface-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #00ff88;
+    padding-bottom: 10px;
+}
+
+.interface-header h3 {
+    color: #00ff88;
+    font-family: 'Orbitron', monospace;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #ff0088;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-btn:hover {
+    background: #ff008822;
+}
+
+/* Memory Grid */
+.memory-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.memory-fragment {
+    width: 80px;
+    height: 80px;
+    border: 1px solid #00ff88;
+    background: #001122;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.memory-fragment:hover {
+    background: #00ff8822;
+    box-shadow: 0 0 10px #00ff88;
+}
+
+.memory-fragment.placed {
+    background: #00ff8844;
+    border-color: #00ff88;
+}
+
+.memory-fragment.corrupted {
+    background: #ff008822;
+    border-color: #ff0088;
+    animation: corrupt 1s infinite;
+}
+
+/* Logic Puzzle */
+.logic-puzzle {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.logic-gate {
+    padding: 20px;
+    border: 1px solid #00ff88;
+    background: #001122;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.logic-gate:hover {
+    background: #00ff8822;
+}
+
+.logic-gate.active {
+    background: #00ff8844;
+    box-shadow: 0 0 10px #00ff88;
+}
+
+/* Choice Interface */
+.choice-text {
+    margin-bottom: 20px;
+    line-height: 1.6;
+    color: #aaaaff;
+}
+
+.choice-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.choice-button {
+    padding: 15px;
+    background: transparent;
+    border: 1px solid #00ff88;
+    color: #00ff88;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: left;
+}
+
+.choice-button:hover {
+    background: #00ff8822;
+    border-color: #88ffaa;
+}
+
+/* Code Editor */
+.code-editor {
+    margin-bottom: 20px;
+}
+
+#codeText {
+    width: 100%;
+    height: 200px;
+    background: #000011;
+    border: 1px solid #00ff88;
+    color: #00ff88;
+    font-family: 'Share Tech Mono', monospace;
+    padding: 15px;
+    resize: none;
+    font-size: 0.9rem;
+}
+
+#codeText:focus {
+    outline: none;
+    box-shadow: 0 0 10px #00ff8844;
+}
+
+/* Animations */
+@keyframes glitch {
+    0% { transform: translateX(0); }
+    10% { transform: translateX(-2px) scaleY(1.1); }
+    20% { transform: translateX(2px); }
+    30% { transform: translateX(-1px) scaleY(0.9); }
+    40% { transform: translateX(1px); }
+    50% { transform: translateX(0) scaleY(1.05); }
+    60% { transform: translateX(-1px); }
+    70% { transform: translateX(1px) scaleY(0.95); }
+    80% { transform: translateX(0); }
+    90% { transform: translateX(-1px) scaleY(1.02); }
+    100% { transform: translateX(0); }
+}
+
+@keyframes corrupt {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+@keyframes fadeInGlitch {
+    0% { 
+        opacity: 0; 
+        transform: translateY(20px);
+    }
+    100% { 
+        opacity: 1; 
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    #gameCanvas {
+        width: 90vw;
+        height: 60vh;
+    }
+    
+    .glitch-text {
+        font-size: 3rem;
+    }
+    
+    .interface {
+        min-width: 90vw;
+        max-width: 90vw;
+    }
+}
+
+@media (max-width: 768px) {
+    #hud {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    
+    #integrityBar {
+        width: 150px;
+    }
+    
+    .glitch-text {
+        font-size: 2.5rem;
+    }
+}

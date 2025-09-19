@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echoes of the Forgotten Code</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="1200" height="800"></canvas>
+        
+        <!-- UI Overlays -->
+        <div id="ui">
+            <div id="titleScreen" class="screen active">
+                <div class="title-content">
+                    <h1 class="glitch-text">ECHOES</h1>
+                    <h2 class="subtitle">OF THE FORGOTTEN CODE</h2>
+                    <p class="story-intro">You are a fragment of consciousness<br>
+                    Lost in the ruins of a digital civilization<br>
+                    Piece together the memories... uncover the truth</p>
+                    <button id="startGame" class="cyber-button">INITIALIZE</button>
+                </div>
+            </div>
+            
+            <div id="gameScreen" class="screen">
+                <div id="hud">
+                    <div id="memoryFragments">
+                        <span class="hud-label">MEMORY FRAGMENTS:</span>
+                        <span id="fragmentCount">0</span>
+                    </div>
+                    <div id="codeIntegrity">
+                        <span class="hud-label">CODE INTEGRITY:</span>
+                        <div id="integrityBar">
+                            <div id="integrityFill"></div>
+                        </div>
+                    </div>
+                    <div id="currentObjective">
+                        <span class="hud-label">OBJECTIVE:</span>
+                        <span id="objectiveText">Navigate to the first memory core</span>
+                    </div>
+                </div>
+                
+                <!-- Memory Reconstruction Interface -->
+                <div id="memoryInterface" class="interface hidden">
+                    <div class="interface-header">
+                        <h3>MEMORY RECONSTRUCTION</h3>
+                        <button class="close-btn" onclick="closeInterface('memoryInterface')">&times;</button>
+                    </div>
+                    <div id="memoryGrid" class="memory-grid"></div>
+                    <button id="reconstructMemory" class="cyber-button">RECONSTRUCT</button>
+                </div>
+                
+                <!-- Hacking Interface -->
+                <div id="hackingInterface" class="interface hidden">
+                    <div class="interface-header">
+                        <h3>LOGIC GATEWAY</h3>
+                        <button class="close-btn" onclick="closeInterface('hackingInterface')">&times;</button>
+                    </div>
+                    <div id="logicPuzzle" class="logic-puzzle"></div>
+                    <button id="executeHack" class="cyber-button">EXECUTE</button>
+                </div>
+                
+                <!-- Choice Interface -->
+                <div id="choiceInterface" class="interface hidden">
+                    <div class="interface-header">
+                        <h3>ETHICAL SUBROUTINE</h3>
+                    </div>
+                    <div id="choiceText" class="choice-text"></div>
+                    <div id="choiceButtons" class="choice-buttons"></div>
+                </div>
+                
+                <!-- Code Fragment Interface -->
+                <div id="codeInterface" class="interface hidden">
+                    <div class="interface-header">
+                        <h3>CODE FRAGMENT</h3>
+                        <button class="close-btn" onclick="closeInterface('codeInterface')">&times;</button>
+                    </div>
+                    <div id="codeEditor" class="code-editor">
+                        <textarea id="codeText" placeholder="// Ancient code fragment found..."></textarea>
+                    </div>
+                    <button id="interpretCode" class="cyber-button">INTERPRET</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Audio -->
+    <audio id="ambientSound" loop>
+        <source src="audio/ambient.mp3" type="audio/mpeg">
+    </audio>
+    
+    <script src="game.js"></script>
+</body>
+</html>
