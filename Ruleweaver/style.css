@@ -1,0 +1,360 @@
+/* Ruleweaver - Minimalist Functional Design */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Courier New', monospace;
+    background: #1a1a1a;
+    color: #e0e0e0;
+    line-height: 1.4;
+    overflow-x: auto;
+}
+
+#gameContainer {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #333;
+    padding-bottom: 15px;
+}
+
+h1 {
+    font-size: 2.5em;
+    color: #4CAF50;
+    text-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    font-size: 1.1em;
+    color: #888;
+    font-style: italic;
+}
+
+#gameContent {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    grid-template-rows: auto 1fr;
+    gap: 20px;
+    flex: 1;
+    margin-bottom: 20px;
+}
+
+/* Simulation Area */
+#simulationArea {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    background: #2a2a2a;
+    border: 2px solid #444;
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+#worldCanvas {
+    background: #000;
+    border: 1px solid #555;
+    border-radius: 4px;
+    flex: 1;
+    image-rendering: pixelated;
+}
+
+#simulationControls {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.control-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9em;
+    transition: background 0.2s;
+}
+
+.control-btn:hover {
+    background: #45a049;
+}
+
+.control-btn:active {
+    background: #3d8b40;
+}
+
+#tickCounter {
+    margin-left: auto;
+    color: #888;
+    font-size: 0.9em;
+}
+
+/* Rule Panel */
+#rulePanel {
+    grid-column: 2;
+    grid-row: 1;
+    background: #2a2a2a;
+    border: 2px solid #444;
+    border-radius: 8px;
+    padding: 15px;
+    overflow-y: auto;
+    max-height: 500px;
+}
+
+#rulePanel h3 {
+    color: #4CAF50;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 5px;
+}
+
+.rule-section {
+    margin-bottom: 20px;
+}
+
+.rule-section h4 {
+    color: #FFC107;
+    margin-bottom: 10px;
+    font-size: 1em;
+}
+
+.rule-control {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rule-control label {
+    flex: 1;
+    font-size: 0.9em;
+    color: #ccc;
+}
+
+.rule-control input[type="range"] {
+    flex: 2;
+    background: #333;
+    border-radius: 4px;
+    height: 20px;
+}
+
+.rule-control input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #4CAF50;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.rule-control input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: #4CAF50;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+.rule-control span {
+    flex: 0 0 50px;
+    text-align: right;
+    font-size: 0.8em;
+    color: #888;
+}
+
+.rule-control input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+/* Status Panel */
+#statusPanel {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#objectivesPanel, #statsPanel {
+    background: #2a2a2a;
+    border: 2px solid #444;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+#objectivesPanel h3, #statsPanel h3 {
+    color: #FF9800;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 5px;
+}
+
+.objective {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #333;
+    margin-bottom: 8px;
+}
+
+.objective:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.objective-text {
+    flex: 1;
+    font-size: 0.9em;
+}
+
+.objective-status {
+    color: #888;
+    font-size: 0.8em;
+}
+
+.objective.completed .objective-status {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding: 4px 0;
+}
+
+.stat-label {
+    color: #ccc;
+    font-size: 0.9em;
+}
+
+.stat-item span:last-child {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+/* Event Log */
+#eventLog {
+    background: #2a2a2a;
+    border: 2px solid #444;
+    border-radius: 8px;
+    padding: 15px;
+    height: 200px;
+    overflow-y: auto;
+}
+
+#eventLog h3 {
+    color: #E91E63;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 5px;
+}
+
+#logEntries {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.log-entry {
+    font-size: 0.9em;
+    padding: 6px 8px;
+    background: #1a1a1a;
+    border-left: 3px solid #333;
+    border-radius: 3px;
+    word-wrap: break-word;
+}
+
+.log-entry.important {
+    border-left-color: #FF9800;
+    background: rgba(255, 152, 0, 0.1);
+}
+
+.log-entry.critical {
+    border-left-color: #F44336;
+    background: rgba(244, 67, 54, 0.1);
+}
+
+.log-entry.success {
+    border-left-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    #gameContent {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+    }
+    
+    #simulationArea {
+        grid-column: 1;
+        grid-row: 1;
+    }
+    
+    #rulePanel {
+        grid-column: 1;
+        grid-row: 2;
+        max-height: none;
+    }
+    
+    #statusPanel {
+        grid-column: 1;
+        grid-row: 3;
+        flex-direction: row;
+    }
+    
+    #objectivesPanel, #statsPanel {
+        flex: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    #gameContainer {
+        padding: 10px;
+    }
+    
+    h1 {
+        font-size: 2em;
+    }
+    
+    #worldCanvas {
+        width: 100%;
+        height: 300px;
+    }
+    
+    #statusPanel {
+        flex-direction: column;
+    }
+    
+    .control-btn {
+        padding: 6px 12px;
+        font-size: 0.8em;
+    }
+}
+
+/* Entity color indicators */
+.entity-herbivore { color: #4CAF50; }
+.entity-carnivore { color: #F44336; }
+.entity-resource { color: #2196F3; }
+.entity-trader { color: #FF9800; }
