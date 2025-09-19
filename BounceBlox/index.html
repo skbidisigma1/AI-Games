@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BounceBlox - Platforming Adventure</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <!-- UI Overlays -->
+        <div id="ui">
+            <!-- Title Screen -->
+            <div id="titleScreen" class="screen active">
+                <div class="title-content">
+                    <h1 class="bounce-title">BounceBlox</h1>
+                    <h2 class="subtitle">Platforming Adventure</h2>
+                    <p class="game-description">
+                        Control a cheerful cube through color-coded block worlds!<br>
+                        🟦 Blue blocks are solid • 🟥 Red blocks crumble<br>
+                        🟩 Green blocks launch you • 🟪 Purple blocks reverse gravity<br>
+                        Collect all ⭐ stars and reach the 🚪 exit!
+                    </p>
+                    <div class="controls-info">
+                        <p><strong>Controls:</strong> A/D or ←/→ to move, SPACE or W or ↑ to jump</p>
+                    </div>
+                    <button id="startGame" class="bounce-button">START BOUNCING!</button>
+                </div>
+            </div>
+            
+            <!-- Game Screen -->
+            <div id="gameScreen" class="screen">
+                <div id="hud">
+                    <div id="levelInfo">
+                        <span class="hud-label">LEVEL:</span>
+                        <span id="currentLevel">1</span>
+                    </div>
+                    <div id="starsInfo">
+                        <span class="hud-label">STARS:</span>
+                        <span id="starsCollected">0</span> / <span id="totalStars">3</span>
+                    </div>
+                    <div id="instructions">
+                        <span class="hud-label">GOAL:</span>
+                        <span>Collect all stars and reach the exit!</span>
+                    </div>
+                </div>
+                
+                <!-- Level Complete Dialog -->
+                <div id="levelComplete" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2>Level Complete!</h2>
+                        <p id="levelCompleteText">Great job! You collected all the stars!</p>
+                        <button id="nextLevel" class="bounce-button">Next Level</button>
+                        <button id="restartLevel" class="bounce-button">Restart Level</button>
+                    </div>
+                </div>
+                
+                <!-- Game Over Dialog -->
+                <div id="gameOver" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2>Try Again!</h2>
+                        <p>Don't worry, keep bouncing!</p>
+                        <button id="restartGame" class="bounce-button">Restart Level</button>
+                        <button id="backToMenu" class="bounce-button">Back to Menu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Audio -->
+    <audio id="jumpSound" preload="auto">
+        <source src="audio/jump.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="collectSound" preload="auto">
+        <source src="audio/collect.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="bounceSound" preload="auto">
+        <source src="audio/bounce.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="completeSound" preload="auto">
+        <source src="audio/complete.mp3" type="audio/mpeg">
+    </audio>
+    
+    <script src="game.js"></script>
+</body>
+</html>
