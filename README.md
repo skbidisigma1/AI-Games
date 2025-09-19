@@ -36,6 +36,23 @@ A collection of innovative games exploring artificial intelligence, consciousnes
 
 **Gameplay**: Control a happy cube through platforming challenges. Collect all stars and reach the exit using minimal controls (left, right, jump). Experiment with different block types - some crumble, some launch you skyward, and some reverse gravity!
 
+### 🏜️ Dune
+*A top-down arena shooter where you face off against hilariously incompetent AI bots*
+
+**Location**: `/Dune/`
+
+**Features**:
+- Classic deadshot.io-inspired arena shooter gameplay
+- Intentionally terrible AI bots with poor aim and slow reactions
+- Wave-based progression with increasingly incompetent enemies
+- Health system with collectible health packs
+- Desert-themed arena with sandy visuals
+- Mouse aiming with WASD movement
+
+**Play**: Open `Dune/index.html` in a web browser
+
+**Gameplay**: Survive waves of horrible AI bots in a desert arena. The enemies are deliberately designed to be terrible at combat - they have poor aim, slow reactions, get confused easily, and make questionable tactical decisions. Use WASD to move, mouse to aim, and click to shoot your way through increasingly large waves of incompetent opponents!
+
 ## Getting Started
 
 Each game is self-contained in its own directory with:
