@@ -1,0 +1,53 @@
+# Echoes of the Forgotten Code - .gitignore
+
+# Development files
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node modules (if Node.js is added later)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts (if build process is added)
+dist/
+build/
+*.min.js
+*.min.css
+
+# Audio and asset working files
+*.wav.backup
+*.mp3.backup
+*.psd
+*.ai
+*.sketch
+
+# Testing and coverage
+coverage/
+.nyc_output/
+test-results/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Cache directories
+.cache/
+.parcel-cache/
+
+# Temporary directories
+tmp/
+temp/
