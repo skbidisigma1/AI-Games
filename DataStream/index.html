@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Stream - AI Games</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="titleScreen" class="screen active">
+            <div class="title-content">
+                <h1 class="glitch-text">DATA STREAM</h1>
+                <h2 class="subtitle">NEURAL PATTERN RECOGNITION</h2>
+                <p class="story-intro">
+                    Train your artificial consciousness by recognizing patterns<br>
+                    in the endless flow of digital information<br>
+                    How long can you maintain synchronization?
+                </p>
+                <div class="title-buttons">
+                    <button id="startGame" class="cyber-button">INITIALIZE</button>
+                    <button id="showHelp" class="cyber-button secondary">HOW TO PLAY</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="helpScreen" class="screen">
+            <div class="help-content">
+                <h1 class="glitch-text">HOW TO PLAY</h1>
+                <div class="help-sections">
+                    <div class="help-section">
+                        <h3>🎯 OBJECTIVE</h3>
+                        <p>Match the incoming data patterns by clicking the correct sequence buttons. Each successful match increases your neural efficiency.</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h3>🎮 CONTROLS</h3>
+                        <p><strong>Mouse Click</strong>: Select pattern elements</p>
+                        <p><strong>1-4 Keys</strong>: Quick select buttons 1-4</p>
+                        <p><strong>SPACE</strong>: Pause/unpause the game</p>
+                        <p><strong>ESC</strong>: Show/hide this help screen</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h3>🧠 GAMEPLAY</h3>
+                        <p>• Watch the <strong>pattern</strong> shown at the top</p>
+                        <p>• Click the buttons in the <strong>same sequence</strong></p>
+                        <p>• Patterns get longer and faster as you progress</p>
+                        <p>• Missing a pattern reduces your neural integrity</p>
+                        <p>• Game ends when integrity reaches zero</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h3>⚡ SCORING</h3>
+                        <p><strong>Perfect Match</strong>: +100 points, integrity restored</p>
+                        <p><strong>Good Match</strong>: +50 points</p>
+                        <p><strong>Missed Pattern</strong>: -20 integrity, no points</p>
+                        <p><strong>Speed Bonus</strong>: Extra points for quick responses</p>
+                    </div>
+                </div>
+                <div class="help-buttons">
+                    <button id="startFromHelp" class="cyber-button">START GAME</button>
+                    <button id="backToTitle" class="cyber-button secondary">BACK TO TITLE</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="gameScreen" class="screen">
+            <div id="hud">
+                <div class="hud-item">
+                    <span class="hud-label">SCORE:</span>
+                    <span id="score">0</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-label">LEVEL:</span>
+                    <span id="level">1</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-label">INTEGRITY:</span>
+                    <div id="integrityBar">
+                        <div id="integrityFill"></div>
+                    </div>
+                </div>
+                <div class="hud-item">
+                    <span class="help-text">ESC for help</span>
+                </div>
+            </div>
+
+            <div id="gameArea">
+                <div id="patternDisplay">
+                    <div class="pattern-label">TARGET PATTERN:</div>
+                    <div id="currentPattern"></div>
+                    <div id="patternProgress"></div>
+                </div>
+
+                <div id="inputArea">
+                    <div class="input-label">NEURAL INPUT:</div>
+                    <div id="buttonGrid">
+                        <button class="pattern-button" data-value="1">1</button>
+                        <button class="pattern-button" data-value="2">2</button>
+                        <button class="pattern-button" data-value="3">3</button>
+                        <button class="pattern-button" data-value="4">4</button>
+                    </div>
+                    <div id="userInput"></div>
+                </div>
+
+                <div id="feedback"></div>
+            </div>
+
+            <div id="gameOver" class="modal hidden">
+                <div class="modal-content">
+                    <h2>NEURAL SYNCHRONIZATION LOST</h2>
+                    <div id="finalStats">
+                        <p>Final Score: <span id="finalScore">0</span></p>
+                        <p>Level Reached: <span id="finalLevel">1</span></p>
+                        <p>Patterns Completed: <span id="patternsCompleted">0</span></p>
+                    </div>
+                    <div class="modal-buttons">
+                        <button id="playAgain" class="cyber-button">RESTART</button>
+                        <button id="backToMenu" class="cyber-button secondary">MAIN MENU</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
