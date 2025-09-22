@@ -152,22 +152,26 @@ class HillRiderGame {
     }
     
     createPlayer() {
+        // Start player on a hill for momentum building
+        const startX = 100;
+        const startY = this.canvas.height * 0.4; // Start higher up on a hill
+        
         this.player = {
-            x: 200,
-            y: 300,
-            width: 30,
-            height: 20,
+            x: startX,
+            y: startY,
+            radius: 15, // Changed to radius for circular player
             velocityX: 0,
             velocityY: 0,
-            maxSpeed: 15,
-            acceleration: 0.3,
-            friction: 0.98,
-            gravity: 0.4,
+            maxSpeed: 20,
+            acceleration: 0.5,
+            friction: 0.995, // Reduced friction for better momentum
+            gravity: 0.6, // Increased gravity for better physics
             momentum: 0,
             maxMomentum: 100,
             onGround: false,
             angle: 0,
-            trail: []
+            trail: [],
+            color: '#3498db'
         };
     }
     
@@ -175,9 +179,9 @@ class HillRiderGame {
         this.terrain = {
             points: [],
             segments: [],
-            width: 200, // Distance between points
-            amplitude: 150, // Initial hill height variation
-            frequency: 0.02, // Hill frequency
+            width: 100, // Reduced distance between points for smoother collision
+            amplitude: 120, // Hill height variation
+            frequency: 0.015, // Hill frequency
             offset: 0,
             seed: Math.random() * 1000
         };
@@ -186,38 +190,49 @@ class HillRiderGame {
     }
     
     generateTerrain() {
-        const startX = this.terrain.offset;
-        const endX = startX + this.canvas.width * 3; // Generate ahead
-        const baseHeight = this.canvas.height * 0.7;
+        const startX = -200; // Start before player position
+        const endX = startX + this.canvas.width * 4; // Generate more terrain
+        const baseHeight = this.canvas.height * 0.6;
         
-        // Clear existing points beyond current view
-        this.terrain.points = this.terrain.points.filter(point => 
-            point.x > startX - this.canvas.width
-        );
+        // Clear existing points
+        this.terrain.points = [];
         
-        // Find the last point to continue from
-        let lastX = startX;
-        if (this.terrain.points.length > 0) {
-            lastX = this.terrain.points[this.terrain.points.length - 1].x;
-        }
-        
-        // Generate new points
-        for (let x = lastX; x <= endX; x += this.terrain.width) {
-            const difficultyFactor = Math.min(this.distance / 5000, 2); // Increase difficulty over distance
-            const currentAmplitude = this.terrain.amplitude * (1 + difficultyFactor);
+        // Generate terrain starting with a downhill slope for momentum
+        for (let x = startX; x <= endX; x += this.terrain.width) {
+            let y;
             
-            // Use multiple noise octaves for more realistic terrain
-            const noise1 = this.noise(x * this.terrain.frequency + this.terrain.seed);
-            const noise2 = this.noise(x * this.terrain.frequency * 2 + this.terrain.seed) * 0.5;
-            const noise3 = this.noise(x * this.terrain.frequency * 4 + this.terrain.seed) * 0.25;
-            
-            const combinedNoise = noise1 + noise2 + noise3;
-            const y = baseHeight + combinedNoise * currentAmplitude;
+            if (x < 200) {
+                // Create initial downhill slope for momentum building
+                const slopeProgress = (x - startX) / (200 - startX);
+                const startHeight = this.canvas.height * 0.3; // Start high
+                const endHeight = this.canvas.height * 0.7; // End lower
+                y = startHeight + (endHeight - startHeight) * slopeProgress;
+                
+                // Add small variations
+                const noise = this.noise(x * this.terrain.frequency + this.terrain.seed) * 30;
+                y += noise;
+            } else {
+                // Normal procedural terrain generation
+                const difficultyFactor = Math.min((x - 200) / 5000, 2);
+                const currentAmplitude = this.terrain.amplitude * (1 + difficultyFactor);
+                
+                // Use multiple noise octaves for realistic terrain
+                const noise1 = this.noise(x * this.terrain.frequency + this.terrain.seed);
+                const noise2 = this.noise(x * this.terrain.frequency * 2 + this.terrain.seed) * 0.5;
+                const noise3 = this.noise(x * this.terrain.frequency * 4 + this.terrain.seed) * 0.25;
+                
+                const combinedNoise = noise1 + noise2 + noise3;
+                y = baseHeight + combinedNoise * currentAmplitude;
+            }
             
             this.terrain.points.push({ x, y });
         }
         
         // Create segments for collision detection
+        this.updateTerrainSegments();
+    }
+    
+    updateTerrainSegments() {
         this.terrain.segments = [];
         for (let i = 0; i < this.terrain.points.length - 1; i++) {
             this.terrain.segments.push({
@@ -419,6 +434,7 @@ class HillRiderGame {
         this.updateCollectibles();
         this.updatePowerups();
         this.updateParticles();
+        this.createMomentumParticles(); // Add momentum particles
         this.checkCollisions();
         this.updateScore();
         this.updateHUD();
@@ -427,21 +443,25 @@ class HillRiderGame {
     updatePlayer() {
         // Apply momentum-based physics
         if (this.isAccelerating && this.player.onGround) {
-            // Build momentum downhill
+            // Build momentum when accelerating downhill
             const groundAngle = this.getGroundAngle(this.player.x);
-            if (groundAngle > 0) { // Downhill
-                this.player.momentum = Math.min(this.player.momentum + 2, this.player.maxMomentum);
-                this.player.velocityX += this.player.acceleration * (1 + groundAngle * 0.5);
+            if (groundAngle > 0.1) { // Downhill (adjusted threshold)
+                this.player.momentum = Math.min(this.player.momentum + 3, this.player.maxMomentum);
+                // More acceleration on steeper slopes
+                this.player.velocityX += this.player.acceleration * (1 + groundAngle * 2);
+            } else if (groundAngle > -0.1) { // Flat ground
+                this.player.momentum = Math.min(this.player.momentum + 1, this.player.maxMomentum);
+                this.player.velocityX += this.player.acceleration * 0.5;
             }
+            // Less momentum gain going uphill
         } else {
             // Lose momentum gradually when not accelerating
-            this.player.momentum = Math.max(this.player.momentum - 1, 0);
+            this.player.momentum = Math.max(this.player.momentum - 0.5, 0);
         }
         
-        // Apply momentum to speed
-        const momentumBoost = (this.player.momentum / this.player.maxMomentum) * 3;
-        this.player.velocityX = Math.min(this.player.velocityX + momentumBoost * 0.1, 
-                                        this.player.maxSpeed + momentumBoost);
+        // Apply momentum boost to speed
+        const momentumBoost = (this.player.momentum / this.player.maxMomentum) * 8;
+        const targetSpeed = this.player.maxSpeed + momentumBoost;
         
         // Apply friction
         this.player.velocityX *= this.player.friction;
@@ -453,28 +473,44 @@ class HillRiderGame {
         this.player.x += this.player.velocityX;
         this.player.y += this.player.velocityY;
         
-        // Ground collision
+        // Improved ground collision for circular player
         const groundY = this.getGroundHeight(this.player.x);
-        if (this.player.y + this.player.height > groundY) {
-            this.player.y = groundY - this.player.height;
-            this.player.velocityY = 0;
+        if (this.player.y + this.player.radius > groundY) {
+            this.player.y = groundY - this.player.radius;
+            
+            // Bounce and momentum handling
+            if (this.player.velocityY > 2) {
+                // Bounce on hard landing
+                this.player.velocityY = -this.player.velocityY * 0.3;
+            } else {
+                this.player.velocityY = 0;
+            }
+            
             this.player.onGround = true;
             
-            // Update player angle based on ground slope
-            this.player.angle = this.getGroundAngle(this.player.x) * 0.5;
+            // Adjust velocity based on ground slope for better physics
+            const groundAngle = this.getGroundAngle(this.player.x);
+            this.player.angle = groundAngle * 0.7;
+            
+            // Apply slope physics
+            if (Math.abs(groundAngle) > 0.1) {
+                this.player.velocityX += Math.sin(groundAngle) * 0.3;
+            }
+            
         } else {
             this.player.onGround = false;
-            this.player.angle = Math.atan2(this.player.velocityY, this.player.velocityX);
+            // Air physics - angle follows velocity
+            this.player.angle = Math.atan2(this.player.velocityY, this.player.velocityX) * 0.5;
         }
         
-        // Update trail
+        // Update trail with circular player center
         this.player.trail.push({ x: this.player.x, y: this.player.y });
-        if (this.player.trail.length > 10) {
+        if (this.player.trail.length > 15) {
             this.player.trail.shift();
         }
         
         // Check if player fell off the world
-        if (this.player.y > this.canvas.height + 100) {
+        if (this.player.y > this.canvas.height + 200) {
             this.gameOver();
         }
     }
@@ -508,8 +544,40 @@ class HillRiderGame {
     }
     
     updateTerrain() {
-        this.terrain.offset = this.camera.x;
-        this.generateTerrain();
+        // Generate more terrain as player progresses
+        const playerX = this.player.x;
+        const lastPoint = this.terrain.points[this.terrain.points.length - 1];
+        
+        if (lastPoint && playerX + this.canvas.width * 2 > lastPoint.x) {
+            // Need to generate more terrain ahead
+            const startX = lastPoint.x;
+            const endX = playerX + this.canvas.width * 4;
+            const baseHeight = this.canvas.height * 0.6;
+            
+            for (let x = startX + this.terrain.width; x <= endX; x += this.terrain.width) {
+                // Normal procedural terrain generation
+                const difficultyFactor = Math.min((x - 200) / 5000, 2);
+                const currentAmplitude = this.terrain.amplitude * (1 + difficultyFactor);
+                
+                // Use multiple noise octaves for realistic terrain
+                const noise1 = this.noise(x * this.terrain.frequency + this.terrain.seed);
+                const noise2 = this.noise(x * this.terrain.frequency * 2 + this.terrain.seed) * 0.5;
+                const noise3 = this.noise(x * this.terrain.frequency * 4 + this.terrain.seed) * 0.25;
+                
+                const combinedNoise = noise1 + noise2 + noise3;
+                const y = baseHeight + combinedNoise * currentAmplitude;
+                
+                this.terrain.points.push({ x, y });
+            }
+            
+            // Update segments
+            this.updateTerrainSegments();
+        }
+        
+        // Clean up old terrain points that are far behind
+        const minX = playerX - this.canvas.width * 2;
+        this.terrain.points = this.terrain.points.filter(point => point.x > minX);
+        this.updateTerrainSegments();
     }
     
     updateCollectibles() {
@@ -569,10 +637,24 @@ class HillRiderGame {
     }
     
     isColliding(obj1, obj2) {
-        return obj1.x < obj2.x + obj2.width &&
-               obj1.x + obj1.width > obj2.x &&
-               obj1.y < obj2.y + obj2.height &&
-               obj1.y + obj1.height > obj2.y;
+        // For circular player (obj1) and rectangular collectibles (obj2)
+        if (obj1.radius) {
+            // Circle to rectangle collision
+            const closestX = Math.max(obj2.x, Math.min(obj1.x, obj2.x + obj2.width));
+            const closestY = Math.max(obj2.y, Math.min(obj1.y, obj2.y + obj2.height));
+            
+            const distanceX = obj1.x - closestX;
+            const distanceY = obj1.y - closestY;
+            const distanceSquared = distanceX * distanceX + distanceY * distanceY;
+            
+            return distanceSquared < obj1.radius * obj1.radius;
+        } else {
+            // Original rectangle collision as fallback
+            return obj1.x < obj2.x + obj2.width &&
+                   obj1.x + obj1.width > obj2.x &&
+                   obj1.y < obj2.y + obj2.height &&
+                   obj1.y + obj1.height > obj2.y;
+        }
     }
     
     applyPowerup(type) {
@@ -608,12 +690,33 @@ class HillRiderGame {
             this.particles.push({
                 x: x,
                 y: y,
-                vx: (Math.random() - 0.5) * 8,
-                vy: (Math.random() - 0.5) * 8 - 2,
-                life: 30 + Math.random() * 30,
-                maxLife: 30 + Math.random() * 30,
+                vx: (Math.random() - 0.5) * 10,
+                vy: (Math.random() - 0.5) * 10 - 3,
+                life: 30 + Math.random() * 40,
+                maxLife: 30 + Math.random() * 40,
                 color: color,
-                alpha: 1
+                alpha: 1,
+                size: 2 + Math.random() * 4
+            });
+        }
+    }
+    
+    createMomentumParticles() {
+        // Create particles when player has high momentum
+        if (this.player.momentum > 60 && this.player.onGround && Math.random() < 0.3) {
+            const particleX = this.player.x - this.player.radius + Math.random() * this.player.radius * 2;
+            const particleY = this.player.y + this.player.radius;
+            
+            this.particles.push({
+                x: particleX,
+                y: particleY,
+                vx: -this.player.velocityX * 0.5 + (Math.random() - 0.5) * 3,
+                vy: -Math.random() * 2,
+                life: 20,
+                maxLife: 20,
+                color: '#f39c12',
+                alpha: 0.8,
+                size: 2 + Math.random() * 2
             });
         }
     }
@@ -638,9 +741,25 @@ class HillRiderGame {
         document.getElementById('speedValue').textContent = Math.floor(this.player.velocityX * 10) / 10;
         document.getElementById('coinsValue').textContent = this.coins;
         
-        // Update momentum bar
+        // Update momentum bar with better visual feedback
         const momentumPercent = (this.player.momentum / this.player.maxMomentum) * 100;
-        document.getElementById('momentumFill').style.width = momentumPercent + '%';
+        const momentumFill = document.getElementById('momentumFill');
+        momentumFill.style.width = momentumPercent + '%';
+        
+        // Change momentum bar color based on level
+        if (momentumPercent > 80) {
+            momentumFill.style.backgroundColor = '#e74c3c'; // Red for high momentum
+            momentumFill.style.boxShadow = '0 0 10px #e74c3c';
+        } else if (momentumPercent > 50) {
+            momentumFill.style.backgroundColor = '#f39c12'; // Orange for medium momentum
+            momentumFill.style.boxShadow = '0 0 8px #f39c12';
+        } else if (momentumPercent > 20) {
+            momentumFill.style.backgroundColor = '#f1c40f'; // Yellow for low momentum
+            momentumFill.style.boxShadow = '0 0 5px #f1c40f';
+        } else {
+            momentumFill.style.backgroundColor = '#95a5a6'; // Gray for no momentum
+            momentumFill.style.boxShadow = 'none';
+        }
     }
     
     // High Score System
@@ -853,49 +972,59 @@ class HillRiderGame {
         
         // Draw player trail
         if (this.player.trail.length > 1) {
-            this.ctx.strokeStyle = 'rgba(52, 152, 219, 0.3)';
-            this.ctx.lineWidth = 3;
+            this.ctx.strokeStyle = 'rgba(52, 152, 219, 0.4)';
+            this.ctx.lineWidth = 4;
             this.ctx.beginPath();
             this.ctx.moveTo(this.player.trail[0].x, this.player.trail[0].y);
             for (let i = 1; i < this.player.trail.length; i++) {
-                this.ctx.lineTo(this.player.trail[i].x + this.player.width/2, 
-                                this.player.trail[i].y + this.player.height/2);
+                const alpha = i / this.player.trail.length;
+                this.ctx.lineTo(this.player.trail[i].x, this.player.trail[i].y);
             }
             this.ctx.stroke();
         }
         
         // Position and rotate player
-        this.ctx.translate(this.player.x + this.player.width/2, this.player.y + this.player.height/2);
+        this.ctx.translate(this.player.x, this.player.y);
         this.ctx.rotate(this.player.angle);
         
-        // Player body (vehicle)
-        this.ctx.fillStyle = '#3498db';
-        this.ctx.strokeStyle = '#2980b9';
-        this.ctx.lineWidth = 2;
-        this.ctx.fillRect(-this.player.width/2, -this.player.height/2, this.player.width, this.player.height);
-        this.ctx.strokeRect(-this.player.width/2, -this.player.height/2, this.player.width, this.player.height);
-        
-        // Player wheels
-        this.ctx.fillStyle = '#34495e';
-        this.ctx.beginPath();
-        this.ctx.arc(-this.player.width/3, this.player.height/2, 6, 0, Math.PI * 2);
-        this.ctx.fill();
-        this.ctx.beginPath();
-        this.ctx.arc(this.player.width/3, this.player.height/2, 6, 0, Math.PI * 2);
-        this.ctx.fill();
-        
         // Momentum glow effect
-        if (this.player.momentum > 30) {
-            const glowIntensity = (this.player.momentum - 30) / 70;
-            const glowSize = 5 + glowIntensity * 15;
+        if (this.player.momentum > 20) {
+            const glowIntensity = (this.player.momentum - 20) / 80;
+            const glowSize = 5 + glowIntensity * 20;
             
             this.ctx.shadowColor = '#f39c12';
             this.ctx.shadowBlur = glowSize;
-            this.ctx.fillStyle = `rgba(243, 156, 18, ${glowIntensity * 0.3})`;
-            this.ctx.fillRect(-this.player.width/2 - 5, -this.player.height/2 - 5, 
-                             this.player.width + 10, this.player.height + 10);
+            this.ctx.fillStyle = `rgba(243, 156, 18, ${glowIntensity * 0.4})`;
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, this.player.radius + 8, 0, Math.PI * 2);
+            this.ctx.fill();
             this.ctx.shadowBlur = 0;
         }
+        
+        // Player body (circular)
+        this.ctx.fillStyle = this.player.color;
+        this.ctx.strokeStyle = '#2980b9';
+        this.ctx.lineWidth = 3;
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, this.player.radius, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.stroke();
+        
+        // Player face/direction indicator
+        this.ctx.fillStyle = '#fff';
+        this.ctx.beginPath();
+        this.ctx.arc(this.player.radius * 0.3, -this.player.radius * 0.2, 3, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.beginPath();
+        this.ctx.arc(this.player.radius * 0.3, this.player.radius * 0.2, 3, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // Smile
+        this.ctx.strokeStyle = '#fff';
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.arc(this.player.radius * 0.2, 0, 4, 0, Math.PI);
+        this.ctx.stroke();
         
         this.ctx.restore();
     }
@@ -990,7 +1119,7 @@ class HillRiderGame {
             this.ctx.globalAlpha = particle.alpha;
             this.ctx.fillStyle = particle.color;
             this.ctx.beginPath();
-            this.ctx.arc(particle.x, particle.y, 3, 0, Math.PI * 2);
+            this.ctx.arc(particle.x, particle.y, particle.size || 3, 0, Math.PI * 2);
             this.ctx.fill();
             this.ctx.restore();
         });
