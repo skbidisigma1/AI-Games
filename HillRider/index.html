@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HillRider - Momentum Master</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="1200" height="700"></canvas>
+        
+        <!-- UI Overlays -->
+        <div id="ui">
+            <!-- Title Screen -->
+            <div id="titleScreen" class="screen active">
+                <div class="title-content">
+                    <h1 class="hill-title">🌄 HillRider</h1>
+                    <h2 class="subtitle">Momentum Master</h2>
+                    <p class="game-description">
+                        Ride over procedurally generated hills with perfect momentum control!<br>
+                        ⬇️ Hold to build speed downhill • ⬆️ Release for maximum airtime<br>
+                        💰 Collect coins • ⚡ Grab power-ups • 🏆 Beat your high score
+                    </p>
+                    <div class="controls-info">
+                        <p><strong>Controls:</strong> Hold SPACE or Click to accelerate, Release to coast</p>
+                    </div>
+                    <button id="startGame" class="hill-button">🚀 START RIDING!</button>
+                    <button id="showHighScores" class="hill-button secondary">🏆 HIGH SCORES</button>
+                    <button id="showSettings" class="hill-button secondary">⚙️ SETTINGS</button>
+                </div>
+            </div>
+            
+            <!-- Game Screen -->
+            <div id="gameScreen" class="screen">
+                <div id="hud">
+                    <div id="scoreInfo">
+                        <span class="hud-label">SCORE:</span>
+                        <span id="scoreValue">0</span>
+                    </div>
+                    <div id="distanceInfo">
+                        <span class="hud-label">DISTANCE:</span>
+                        <span id="distanceValue">0</span>m
+                    </div>
+                    <div id="speedInfo">
+                        <span class="hud-label">SPEED:</span>
+                        <span id="speedValue">0</span>
+                    </div>
+                    <div id="coinsInfo">
+                        <span class="hud-label">COINS:</span>
+                        <span id="coinsValue">0</span>
+                    </div>
+                </div>
+                
+                <!-- Momentum Indicator -->
+                <div id="momentumIndicator">
+                    <div class="momentum-label">MOMENTUM</div>
+                    <div id="momentumBar">
+                        <div id="momentumFill"></div>
+                    </div>
+                    <div id="actionHint">HOLD TO ACCELERATE</div>
+                </div>
+                
+                <!-- Game Over Dialog -->
+                <div id="gameOver" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2>🏁 Ride Complete!</h2>
+                        <p id="finalScore">Final Score: 0</p>
+                        <p id="finalDistance">Distance: 0m</p>
+                        <p id="coinsCollected">Coins: 0</p>
+                        <p id="highScoreMessage" class="hidden">🎉 NEW HIGH SCORE!</p>
+                        <button id="restartGame" class="hill-button">🔄 RIDE AGAIN</button>
+                        <button id="backToMenu" class="hill-button">🏠 BACK TO MENU</button>
+                    </div>
+                </div>
+                
+                <!-- Pause Dialog -->
+                <div id="pauseMenu" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2>⏸️ Paused</h2>
+                        <button id="resumeGame" class="hill-button">▶️ RESUME</button>
+                        <button id="restartFromPause" class="hill-button">🔄 RESTART</button>
+                        <button id="backToMenuFromPause" class="hill-button">🏠 MENU</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- High Scores Screen -->
+            <div id="highScoresScreen" class="screen">
+                <div class="title-content">
+                    <h1 class="hill-title">🏆 High Scores</h1>
+                    <div id="highScoresList">
+                        <div class="high-score-entry">
+                            <span class="rank">1.</span>
+                            <span class="score">0</span>
+                            <span class="distance">0m</span>
+                        </div>
+                        <div class="high-score-entry">
+                            <span class="rank">2.</span>
+                            <span class="score">0</span>
+                            <span class="distance">0m</span>
+                        </div>
+                        <div class="high-score-entry">
+                            <span class="rank">3.</span>
+                            <span class="score">0</span>
+                            <span class="distance">0m</span>
+                        </div>
+                        <div class="high-score-entry">
+                            <span class="rank">4.</span>
+                            <span class="score">0</span>
+                            <span class="distance">0m</span>
+                        </div>
+                        <div class="high-score-entry">
+                            <span class="rank">5.</span>
+                            <span class="score">0</span>
+                            <span class="distance">0m</span>
+                        </div>
+                    </div>
+                    <button id="clearHighScores" class="hill-button danger">🗑️ CLEAR SCORES</button>
+                    <button id="backFromHighScores" class="hill-button">🏠 BACK</button>
+                </div>
+            </div>
+            
+            <!-- Settings Screen -->
+            <div id="settingsScreen" class="screen">
+                <div class="title-content">
+                    <h1 class="hill-title">⚙️ Settings</h1>
+                    <div class="settings-grid">
+                        <div class="setting-item">
+                            <label for="soundToggle">🔊 Sound Effects:</label>
+                            <input type="checkbox" id="soundToggle" checked>
+                        </div>
+                        <div class="setting-item">
+                            <label for="musicToggle">🎵 Background Music:</label>
+                            <input type="checkbox" id="musicToggle" checked>
+                        </div>
+                        <div class="setting-item">
+                            <label for="qualitySelect">🎨 Graphics Quality:</label>
+                            <select id="qualitySelect">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label for="difficultySelect">⚡ Difficulty:</label>
+                            <select id="difficultySelect">
+                                <option value="easy">Easy</option>
+                                <option value="normal" selected>Normal</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button id="backFromSettings" class="hill-button">🏠 BACK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Audio -->
+    <audio id="accelerateSound" preload="auto" loop>
+        <!-- Placeholder for acceleration sound -->
+    </audio>
+    <audio id="coinSound" preload="auto">
+        <!-- Placeholder for coin collection sound -->
+    </audio>
+    <audio id="powerupSound" preload="auto">
+        <!-- Placeholder for power-up sound -->
+    </audio>
+    <audio id="crashSound" preload="auto">
+        <!-- Placeholder for crash sound -->
+    </audio>
+    <audio id="backgroundMusic" preload="auto" loop>
+        <!-- Placeholder for background music -->
+    </audio>
+    
+    <script src="game.js"></script>
+</body>
+</html>
