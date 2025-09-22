@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eli Neilson's Adventure - House of Hazards</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <!-- UI Overlays -->
+        <div id="ui">
+            <!-- Title Screen -->
+            <div id="titleScreen" class="screen active">
+                <div class="title-content">
+                    <h1 class="game-title">Eli Neilson's Adventure</h1>
+                    <h2 class="subtitle">House of Hazards</h2>
+                    <p class="game-description">
+                        Help Eli navigate through a treacherous house filled with hazards and traps<br>
+                        to reach his computer and search for Ryan Reynolds OF!<br>
+                        Avoid dangers, collect items, and use your wits to survive.
+                    </p>
+                    <div class="controls-info">
+                        <p><strong>Controls:</strong></p>
+                        <p>Arrow Keys: Move Eli around</p>
+                        <p>E Key: Interact with objects</p>
+                        <p>W Key: Use items from inventory</p>
+                    </div>
+                    <button id="startGame" class="adventure-button">Start Adventure</button>
+                </div>
+            </div>
+            
+            <!-- Game Screen -->
+            <div id="gameScreen" class="screen">
+                <div id="hud">
+                    <div id="healthInfo">
+                        <span class="hud-label">Health:</span>
+                        <div id="healthBar">
+                            <div id="healthFill"></div>
+                        </div>
+                    </div>
+                    <div id="inventoryInfo">
+                        <span class="hud-label">Items:</span>
+                        <div id="inventorySlots"></div>
+                    </div>
+                    <div id="objectiveInfo">
+                        <span class="hud-label">Objective:</span>
+                        <span id="currentObjective">Reach your computer safely</span>
+                    </div>
+                </div>
+                
+                <!-- Interaction Prompt -->
+                <div id="interactionPrompt" class="prompt hidden">
+                    <span id="interactionText">Press E to interact</span>
+                </div>
+                
+                <!-- Game Complete Dialog -->
+                <div id="gameComplete" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2>Success!</h2>
+                        <p id="completionText">Eli reached his computer and searched for Ryan Reynolds OF!</p>
+                        <button id="restartGame" class="adventure-button">Play Again</button>
+                    </div>
+                </div>
+                
+                <!-- Game Over Dialog -->
+                <div id="gameOver" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2>Game Over!</h2>
+                        <p>Eli was caught by the hazards. Try again!</p>
+                        <button id="restartFromGameOver" class="adventure-button">Try Again</button>
+                        <button id="backToMenu" class="adventure-button">Back to Menu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>
