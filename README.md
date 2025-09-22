@@ -53,6 +53,25 @@ A collection of innovative games exploring artificial intelligence, consciousnes
 
 **Gameplay**: Control a happy cube through platforming challenges. Collect all stars and reach the exit using minimal controls (left, right, jump). Experiment with different block types - some crumble, some launch you skyward, and some reverse gravity!
 
+### 🌄 HillRider - Momentum Master
+*A simple, addictive hill-riding game where players master momentum control over procedurally generated terrain*
+
+**Location**: `/HillRider/`
+
+**Features**:
+- Procedural terrain generation with increasing difficulty
+- Momentum-based physics system with realistic acceleration and friction
+- Coin collection and power-up system
+- Dynamic camera with smooth following and momentum-based effects
+- Local high score storage and progression tracking
+- Touch/mobile-friendly controls with hold-to-accelerate mechanics
+- Minimalist graphics with smooth animations and particle effects
+- Settings system for audio, graphics quality, and difficulty
+
+**Play**: Open `HillRider/index.html` in a web browser
+
+**Gameplay**: Control a vehicle riding over endless procedurally generated hills. Master the core mechanic of holding to accelerate downhill and releasing to coast uphill. Perfect timing builds momentum for higher speeds, longer jumps, and better scores. Collect coins and power-ups while the terrain becomes increasingly challenging the farther you travel!
+
 ### 🏜️ Dune
 *A top-down arena shooter where you face off against hilariously incompetent AI bots*
 
