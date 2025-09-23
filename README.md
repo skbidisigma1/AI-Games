@@ -106,24 +106,26 @@ A collection of innovative games exploring artificial intelligence, consciousnes
 
 **Gameplay**: Survive waves of horrible AI bots in a desert arena. The enemies are deliberately designed to be terrible at combat - they have poor aim, slow reactions, get confused easily, and make questionable tactical decisions. Use WASD to move, mouse to aim, and click to shoot your way through increasingly large waves of incompetent opponents!
 
-### 🏠 Eli Neilson's Adventure - House of Hazards
-*Help Eli navigate through a treacherous house filled with hazards and traps to reach his computer*
+### 🧱 Idle Breakout+ - Full Game Experience
+*A comprehensive idle brick-breaking game with autonomous balls, strategic upgrades, and prestige mechanics*
 
-**Location**: `/EliNeilson/`
+**Location**: `/IdleBreakout/`
 
 **Features**:
-- Multi-room house layout with entrance hall, dark hallway, and computer room
-- Variety of hazards including spikes, fire traps, lasers, and electric obstacles
-- Inventory system with keys, health packs, and protective shields
-- Progressive difficulty and room-based challenges
-- Health system with damage from hazards and healing items
-- Interactive objects and environmental storytelling
+- Autonomous ball physics with four distinct ball types
+- Strategic upgrade system with exponential progression
+- Passive income generation and offline earnings
+- Power-up system for tactical advantages
+- Prestige mechanics with permanent multiplier bonuses
+- Comprehensive save system with cross-session persistence
+- Mobile-responsive design with touch-friendly controls
+- Data-driven configuration for easy balance adjustments
 
-**Play**: Open `EliNeilson/index.html` in a web browser
+**Play**: Open `IdleBreakout/index.html` in a web browser
 
-**Controls**: Arrow keys to move, E to interact, W to use items
+**Controls**: Mouse to navigate menus and purchase upgrades, Space to pause, Escape for help
 
-**Story**: Guide Eli Neilson through his dangerous house filled with traps and hazards. Collect keys to unlock doors, avoid deadly obstacles, and use items strategically to survive. Your ultimate goal: reach Eli's computer safely so he can search for "Ryan Reynolds OF"!
+**Gameplay**: Watch autonomous balls destroy bricks automatically while you strategically upgrade your arsenal. Choose between Basic, Power, Speed, and Splash balls, each with unique characteristics. Use power-ups tactically, earn coins continuously (even offline), and prestige for permanent bonuses when ready. Master the art of idle optimization!
 
 ## Getting Started
 

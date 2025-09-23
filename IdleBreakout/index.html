@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Idle Breakout+ - Full Game Experience</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <!-- UI Overlays -->
+        <div id="ui">
+            <!-- Title Screen -->
+            <div id="titleScreen" class="screen active">
+                <div class="title-content">
+                    <h1 class="idle-title">IDLE BREAKOUT+</h1>
+                    <h2 class="subtitle">Full Game Experience</h2>
+                    <p class="game-description">
+                        🧱 Watch autonomous balls destroy bricks and earn coins passively<br>
+                        ⚡ Upgrade your arsenal for maximum destruction efficiency<br>
+                        🚀 Unlock prestige bonuses and achieve idle mastery<br>
+                        💰 Earn coins even when offline!
+                    </p>
+                    <div class="controls-info">
+                        <p><strong>Gameplay:</strong> Strategic upgrading and optimization</p>
+                        <p><strong>Controls:</strong> Mouse to interact with upgrades and menus</p>
+                    </div>
+                    <button id="startGame" class="idle-button">START BREAKING!</button>
+                    <button id="showHelp" class="idle-button secondary">HOW TO PLAY</button>
+                </div>
+            </div>
+
+            <!-- Help Screen -->
+            <div id="helpScreen" class="screen">
+                <div class="help-content">
+                    <h1 class="idle-title">HOW TO PLAY</h1>
+                    <div class="help-sections">
+                        <div class="help-section">
+                            <h3>🎯 OBJECTIVE</h3>
+                            <p>Break bricks automatically with your ball army. Earn coins to upgrade balls and increase destruction efficiency. Progress through increasingly difficult levels.</p>
+                        </div>
+                        
+                        <div class="help-section">
+                            <h3>🎮 CONTROLS</h3>
+                            <p><strong>Mouse Click</strong>: Purchase upgrades and activate power-ups</p>
+                            <p><strong>SPACE</strong>: Pause/unpause the game</p>
+                            <p><strong>ESC</strong>: Toggle menus and help screen</p>
+                        </div>
+                        
+                        <div class="help-section">
+                            <h3>🧠 STRATEGY</h3>
+                            <p>• <strong>Ball Types</strong>: Each has unique damage, speed, and special abilities</p>
+                            <p>• <strong>Upgrades</strong>: Improve damage, speed, and unlock new ball types</p>
+                            <p>• <strong>Power-ups</strong>: Temporary boosts for difficult levels</p>
+                            <p>• <strong>Prestige</strong>: Reset for permanent bonuses when ready</p>
+                            <p>• <strong>Offline Earnings</strong>: Continue earning when not playing</p>
+                        </div>
+                    </div>
+                    <div class="help-buttons">
+                        <button id="helpBack" class="idle-button">BACK TO GAME</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Game Screen -->
+            <div id="gameScreen" class="screen">
+                <!-- Main HUD -->
+                <div id="hud">
+                    <div id="coinsDisplay">
+                        <span class="hud-label">💰</span>
+                        <span id="coinAmount">0</span>
+                    </div>
+                    <div id="levelDisplay">
+                        <span class="hud-label">LEVEL:</span>
+                        <span id="currentLevel">1</span>
+                    </div>
+                    <div id="ballsDisplay">
+                        <span class="hud-label">BALLS:</span>
+                        <span id="ballCount">1</span>
+                    </div>
+                    <div id="dpsDisplay">
+                        <span class="hud-label">DPS:</span>
+                        <span id="dpsAmount">0</span>
+                    </div>
+                    <div id="powerupTimers"></div>
+                </div>
+
+                <!-- Top Navigation Bar -->
+                <div id="topNavBar">
+                    <div class="nav-section" id="quickShop">
+                        <div class="nav-item" data-type="basic">
+                            <div class="nav-icon">⚪</div>
+                            <div class="nav-price">💰 15</div>
+                        </div>
+                        <div class="nav-item" data-type="power">
+                            <div class="nav-icon">🔴</div>
+                            <div class="nav-price">💰 100</div>
+                        </div>
+                        <div class="nav-item" data-type="speed">
+                            <div class="nav-icon">🟢</div>
+                            <div class="nav-price">💰 250</div>
+                        </div>
+                        <div class="nav-item" data-type="splash">
+                            <div class="nav-icon">🔵</div>
+                            <div class="nav-price">💰 500</div>
+                        </div>
+                    </div>
+                    <div class="nav-section">
+                        <button id="expandShopBtn" class="nav-button">🛒 EXPAND SHOP</button>
+                    </div>
+                </div>
+
+                <!-- Compact Upgrade Panel -->
+                <div id="upgradePanel" class="panel compact">
+                    <div class="panel-tabs">
+                        <button class="tab-btn active" data-tab="balls">BALLS</button>
+                        <button class="tab-btn" data-tab="powerups">POWER-UPS</button>
+                    </div>
+                    <div id="ballsTab" class="tab-content active">
+                        <div id="ballUpgrades" class="upgrade-grid-compact">
+                            <!-- Ball upgrades will be dynamically generated -->
+                        </div>
+                    </div>
+                    <div id="powerupsTab" class="tab-content">
+                        <div id="powerupShop" class="upgrade-grid-compact">
+                            <!-- Power-ups will be dynamically generated -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expanded Shop Modal -->
+                <div id="expandedShopModal" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>🛒 EXPANDED SHOP</h2>
+                            <button id="closeModal" class="close-btn">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="shop-sections">
+                                <div class="shop-section">
+                                    <h3>⚽ BALL TYPES</h3>
+                                    <div id="modalBallShop" class="modal-shop-grid">
+                                        <!-- Generated dynamically -->
+                                    </div>
+                                </div>
+                                <div class="shop-section">
+                                    <h3>⚡ POWER-UPS</h3>
+                                    <div id="modalPowerupShop" class="modal-shop-grid">
+                                        <!-- Generated dynamically -->
+                                    </div>
+                                </div>
+                                <div class="shop-section">
+                                    <h3>⚙️ SETTINGS</h3>
+                                    <div class="settings-grid">
+                                        <div class="setting-item">
+                                            <label>Sound Effects:</label>
+                                            <input type="checkbox" id="modalSoundToggle" checked>
+                                        </div>
+                                        <div class="setting-item">
+                                            <label>Particles:</label>
+                                            <input type="checkbox" id="modalParticlesToggle" checked>
+                                        </div>
+                                        <div class="setting-item">
+                                            <label>Auto-Save:</label>
+                                            <input type="checkbox" id="modalAutosaveToggle" checked>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prestige Panel -->
+                <div id="prestigePanel" class="panel hidden">
+                    <h3>PRESTIGE SYSTEM</h3>
+                    <p id="prestigeDescription">Reset progress for permanent bonuses</p>
+                    <div id="prestigeRewards"></div>
+                    <button id="prestigeButton" class="idle-button">PRESTIGE</button>
+                </div>
+
+                <!-- Settings Panel -->
+                <div id="settingsPanel" class="panel hidden">
+                    <h3>SETTINGS</h3>
+                    <div class="setting-row">
+                        <label>Sound Effects:</label>
+                        <input type="checkbox" id="soundToggle" checked>
+                    </div>
+                    <div class="setting-row">
+                        <label>Particles:</label>
+                        <input type="checkbox" id="particlesToggle" checked>
+                    </div>
+                    <div class="setting-row">
+                        <label>Auto-Save:</label>
+                        <input type="checkbox" id="autosaveToggle" checked>
+                    </div>
+                </div>
+
+                <!-- Side Menu -->
+                <div id="sideMenu">
+                    <button id="upgradeTab" class="menu-tab active">UPGRADES</button>
+                    <button id="prestigeTab" class="menu-tab">PRESTIGE</button>
+                    <button id="settingsTab" class="menu-tab">SETTINGS</button>
+                    <button id="pauseButton" class="menu-tab">PAUSE</button>
+                </div>
+
+                <!-- Offline Earnings Dialog -->
+                <div id="offlineEarnings" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2>Welcome Back!</h2>
+                        <p>While you were away, your balls earned:</p>
+                        <div id="offlineAmount" class="offline-amount">0 coins</div>
+                        <button id="collectOffline" class="idle-button">COLLECT</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Audio -->
+    <audio id="brickBreakSound" preload="auto">
+        <source src="audio/brick_break.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="upgradeSound" preload="auto">
+        <source src="audio/upgrade.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="powerupSound" preload="auto">
+        <source src="audio/powerup.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="levelCompleteSound" preload="auto">
+        <source src="audio/level_complete.mp3" type="audio/mpeg">
+    </audio>
+    
+    <script src="game.js"></script>
+</body>
+</html>
