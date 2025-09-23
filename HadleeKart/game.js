@@ -361,6 +361,25 @@ class HadleeKartGame {
         
         // Power-up collisions
         this.powerUpSystem.checkCollisions(allKarts, this.track);
+        
+        // Oil slick collisions
+        if (window.oilSlicks) {
+            window.oilSlicks = window.oilSlicks.filter(oilSlick => {
+                if (!oilSlick.active) return false;
+                
+                // Update oil slick
+                oilSlick.update(1/60);
+                
+                // Check collision with all karts
+                allKarts.forEach(kart => {
+                    if (oilSlick.checkCollision(kart)) {
+                        this.createCollisionParticles(kart, { x: oilSlick.x, y: oilSlick.y });
+                    }
+                });
+                
+                return oilSlick.active;
+            });
+        }
     }
     
     /**
@@ -391,10 +410,20 @@ class HadleeKartGame {
         
         allKarts.forEach(kart => {
             if (this.track.checkLapCompletion(kart)) {
+                const lapTime = kart.raceTime - (kart.lastLapTime || 0);
                 kart.completeLap();
+                kart.lastLapTime = kart.raceTime;
                 
                 if (kart.isPlayer) {
                     this.currentLap = kart.lapsCompleted + 1;
+                    
+                    // Show lap notification for player
+                    this.showLapNotification(lapTime);
+                    
+                    // Update best lap time
+                    if (lapTime < this.bestLapTime) {
+                        this.bestLapTime = lapTime;
+                    }
                     
                     if (kart.lapsCompleted >= this.totalLaps) {
                         this.completeRace();
@@ -402,6 +431,23 @@ class HadleeKartGame {
                 }
             }
         });
+    }
+    
+    /**
+     * Show lap completion notification
+     */
+    showLapNotification(lapTime) {
+        const notification = document.getElementById('lapNotification');
+        const timeElement = document.getElementById('lapNotificationTime');
+        
+        timeElement.textContent = `Lap Time: ${this.formatTime(lapTime)}`;
+        
+        notification.classList.remove('hidden');
+        
+        // Hide after animation completes
+        setTimeout(() => {
+            notification.classList.add('hidden');
+        }, 3000);
     }
     
     /**
@@ -443,6 +489,7 @@ class HadleeKartGame {
         // Render game elements
         this.renderer.renderTrack(this.track);
         this.renderer.renderPowerUps(this.powerUpSystem.powerUps);
+        this.renderer.renderOilSlicks(window.oilSlicks || []);
         this.renderer.renderKarts(this.getAllKarts());
         this.renderer.renderParticles(this.particles);
         
@@ -1619,6 +1666,42 @@ class RenderingEngine {
             }
             
             ctx.restore();
+            
+            // Draw shield effect (after restore to avoid rotation)
+            if (kart.hasShield) {
+                ctx.save();
+                ctx.translate(kart.x, kart.y);
+                
+                const time = Date.now() * 0.01;
+                ctx.strokeStyle = `rgba(52, 152, 219, ${0.7 + Math.sin(time) * 0.3})`;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(0, 0, kart.radius + 8, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                ctx.restore();
+            }
+            
+            // Draw super star effect
+            if (kart.superStar) {
+                ctx.save();
+                ctx.translate(kart.x, kart.y);
+                
+                const time = Date.now() * 0.02;
+                for (let i = 0; i < 5; i++) {
+                    const angle = (i / 5) * Math.PI * 2 + time;
+                    const x = Math.cos(angle) * (kart.radius + 15);
+                    const y = Math.sin(angle) * (kart.radius + 15);
+                    
+                    ctx.fillStyle = `rgba(241, 196, 15, ${0.8 + Math.sin(time + i) * 0.2})`;
+                    ctx.font = '16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('⭐', x, y);
+                }
+                
+                ctx.restore();
+            }
         });
     }
     
@@ -1646,6 +1729,37 @@ class RenderingEngine {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(powerUp.type.name, 0, 0);
+            
+            ctx.restore();
+        });
+    }
+    
+    renderOilSlicks(oilSlicks) {
+        const ctx = this.ctx;
+        
+        oilSlicks.forEach(oilSlick => {
+            if (!oilSlick.active) return;
+            
+            ctx.save();
+            ctx.translate(oilSlick.x, oilSlick.y);
+            
+            // Draw oil slick with gradient
+            const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, oilSlick.radius);
+            gradient.addColorStop(0, 'rgba(44, 62, 80, 0.8)');
+            gradient.addColorStop(0.7, 'rgba(44, 62, 80, 0.4)');
+            gradient.addColorStop(1, 'rgba(44, 62, 80, 0.1)');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, oilSlick.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Add some shine effect
+            const time = oilSlick.animationTime * 2;
+            ctx.fillStyle = `rgba(127, 140, 141, ${0.3 + Math.sin(time) * 0.2})`;
+            ctx.beginPath();
+            ctx.arc(-5, -5, oilSlick.radius * 0.3, 0, Math.PI * 2);
+            ctx.fill();
             
             ctx.restore();
         });

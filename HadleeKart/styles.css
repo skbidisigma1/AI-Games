@@ -249,6 +249,42 @@ body {
     border-color: #8e44ad !important;
 }
 
+.powerup-oil {
+    background: #34495e !important;
+    color: #fff !important;
+    border-color: #2c3e50 !important;
+}
+
+.powerup-shield {
+    background: #3498db !important;
+    color: #fff !important;
+    border-color: #2980b9 !important;
+}
+
+.powerup-teleporter {
+    background: #9b59b6 !important;
+    color: #fff !important;
+    border-color: #8e44ad !important;
+    animation: teleporterPulse 1s ease-in-out infinite;
+}
+
+.powerup-star {
+    background: #f1c40f !important;
+    color: #fff !important;
+    border-color: #f39c12 !important;
+    animation: starGlow 1s ease-in-out infinite;
+}
+
+@keyframes teleporterPulse {
+    0%, 100% { box-shadow: 0 0 5px #9b59b6; }
+    50% { box-shadow: 0 0 15px #9b59b6, 0 0 25px #9b59b6; }
+}
+
+@keyframes starGlow {
+    0%, 100% { box-shadow: 0 0 5px #f1c40f; }
+    50% { box-shadow: 0 0 15px #f1c40f, 0 0 25px #f1c40f; }
+}
+
 /* Minimap */
 #minimap {
     position: absolute;
@@ -487,4 +523,63 @@ body {
 
 .racing-button.secondary:hover {
     background: linear-gradient(45deg, #7f8c8d, #6c7b7d);
+}
+
+/* Lap Notification */
+.lap-notification {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(46, 204, 113, 0.95);
+    border: 3px solid #27ae60;
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: lapNotificationSlide 3s ease-out;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.lap-notification.hidden {
+    display: none;
+}
+
+.lap-notification-content h3 {
+    font-family: 'Fredoka One', cursive;
+    color: white;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    text-shadow: 2px 2px 0px #1e8449;
+}
+
+.lap-notification-content p {
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+@keyframes lapNotificationSlide {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+    15% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+    25% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    85% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
 }
