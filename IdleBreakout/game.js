@@ -14,9 +14,9 @@ const CONFIG = {
     
     physics: {
         gravity: 0,
-        friction: 0.99,
-        bounceReduction: 0.8,
-        maxBallSpeed: 8
+        friction: 0.995, // Reduced friction for more consistent movement
+        bounceReduction: 0.9, // Less speed loss on bounces
+        maxBallSpeed: 15 // Higher max speed
     },
     
     balls: {
@@ -25,7 +25,7 @@ const CONFIG = {
             baseCost: 10,
             costMultiplier: 1.5,
             baseDamage: 1,
-            baseSpeed: 3,
+            baseSpeed: 8, // Increased from 3
             color: '#ffffff',
             description: 'Simple but reliable'
         },
@@ -34,7 +34,7 @@ const CONFIG = {
             baseCost: 100,
             costMultiplier: 1.6,
             baseDamage: 5,
-            baseSpeed: 2.5,
+            baseSpeed: 6, // Increased from 2.5
             color: '#ff4444',
             description: 'Heavy damage, slower movement'
         },
@@ -43,7 +43,7 @@ const CONFIG = {
             baseCost: 250,
             costMultiplier: 1.7,
             baseDamage: 2,
-            baseSpeed: 6,
+            baseSpeed: 12, // Increased from 6
             color: '#44ff44',
             description: 'Fast but weaker hits'
         },
@@ -52,7 +52,7 @@ const CONFIG = {
             baseCost: 500,
             costMultiplier: 1.8,
             baseDamage: 3,
-            baseSpeed: 4,
+            baseSpeed: 9, // Increased from 4
             splashRadius: 50,
             color: '#4444ff',
             description: 'Damages nearby bricks'
@@ -62,7 +62,7 @@ const CONFIG = {
             baseCost: 1000,
             costMultiplier: 1.9,
             baseDamage: 4,
-            baseSpeed: 3.5,
+            baseSpeed: 7, // Increased from 3.5
             penetration: 3,
             color: '#ff44ff',
             description: 'Passes through multiple bricks'
@@ -72,7 +72,7 @@ const CONFIG = {
             baseCost: 2000,
             costMultiplier: 2.0,
             baseDamage: 2,
-            baseSpeed: 5,
+            baseSpeed: 10, // Increased from 5
             chainLightning: true,
             color: '#ffff44',
             description: 'Chains between nearby bricks'
@@ -82,7 +82,7 @@ const CONFIG = {
             baseCost: 5000,
             costMultiplier: 2.2,
             baseDamage: 8,
-            baseSpeed: 2,
+            baseSpeed: 5, // Increased from 2
             voidRadius: 30,
             color: '#8844ff',
             description: 'Creates void zones that damage over time'
@@ -92,7 +92,7 @@ const CONFIG = {
             baseCost: 10000,
             costMultiplier: 2.5,
             baseDamage: 6,
-            baseSpeed: 4,
+            baseSpeed: 8, // Increased from 4
             rebirth: true,
             fireTrail: true,
             color: '#ff8844',
@@ -127,7 +127,14 @@ const CONFIG = {
         brickHPMultiplier: 1.2,
         rewardMultiplier: 1.1,
         maxBricksPerRow: 15,
-        maxRows: 8
+        maxRows: 8,
+        goldBrickInterval: 20 // Every 20th level gets gold brick
+    },
+    
+    gameplay: {
+        clickDamageBase: 1, // Base click damage
+        clickDamageUpgradeCost: 100, // Cost to upgrade click damage
+        clickDamageUpgradeMultiplier: 1.8 // Cost scaling for click damage upgrades
     }
 };
 
@@ -197,11 +204,16 @@ class Ball {
         this.voidZones = [];
         this.fireTrailParticles = [];
         
-        // Normalize initial velocity
+        // Normalize initial velocity with higher base speed
         const speed = Math.sqrt(this.vx ** 2 + this.vy ** 2);
         if (speed > 0) {
-            this.vx = (this.vx / speed) * this.maxSpeed * 0.8;
-            this.vy = (this.vy / speed) * this.maxSpeed * 0.8;
+            this.vx = (this.vx / speed) * this.maxSpeed * 0.9; // Increased from 0.8
+            this.vy = (this.vy / speed) * this.maxSpeed * 0.9; // Increased from 0.8
+        } else {
+            // Ensure balls always have some velocity
+            const angle = Math.random() * Math.PI * 2;
+            this.vx = Math.cos(angle) * this.maxSpeed * 0.9;
+            this.vy = Math.sin(angle) * this.maxSpeed * 0.9;
         }
     }
     
@@ -234,11 +246,11 @@ class Ball {
         // Check current speed
         const speed = Math.sqrt(this.vx ** 2 + this.vy ** 2);
         
-        // Only inject velocity if ball is completely stopped (very rare)
-        if (speed < 0.1) {
+        // Inject velocity if ball is moving too slowly
+        if (speed < this.maxSpeed * 0.3) {
             const angle = Math.atan2(this.vy, this.vx) || Math.random() * Math.PI * 2;
-            this.vx = Math.cos(angle) * this.maxSpeed * 0.3;
-            this.vy = Math.sin(angle) * this.maxSpeed * 0.3;
+            this.vx = Math.cos(angle) * this.maxSpeed * 0.6; // Increased injection speed
+            this.vy = Math.sin(angle) * this.maxSpeed * 0.6;
         }
         
         // Limit maximum speed
