@@ -13,7 +13,8 @@ class HadleeKartGame {
         this.minimapCtx = this.minimapCanvas.getContext('2d');
         
         // Game state
-        this.gameState = 'title'; // 'title', 'racing', 'paused', 'complete'
+        this.gameState = 'title'; // 'title', 'trackSelection', 'racing', 'paused', 'complete'
+        this.selectedTrack = 'classic';
         this.currentLap = 1;
         this.totalLaps = 3;
         this.raceTime = 0;
@@ -55,9 +56,23 @@ class HadleeKartGame {
      * Setup all event listeners for UI and controls
      */
     setupEventListeners() {
-        // Start race button
+        // Start race button (now opens track selection)
         document.getElementById('startRace').addEventListener('click', () => {
-            this.startRace();
+            this.showTrackSelection();
+        });
+        
+        // Back to title button
+        document.getElementById('backToTitle').addEventListener('click', () => {
+            this.backToTitle();
+        });
+        
+        // Track selection buttons
+        document.querySelectorAll('.track-button').forEach((button, index) => {
+            button.addEventListener('click', () => {
+                const trackOption = button.closest('.track-option');
+                const trackType = trackOption.getAttribute('data-track');
+                this.selectTrack(trackType);
+            });
         });
         
         // Restart race button
@@ -72,13 +87,125 @@ class HadleeKartGame {
         
         // Input handling
         this.inputHandler.setupEventListeners();
+        
+        // Initialize track previews
+        this.initializeTrackPreviews();
     }
     
     /**
      * Create the racing track with checkpoints and visual elements
      */
     createTrack() {
-        this.track = new RacingTrack();
+        this.track = new RacingTrack(this.selectedTrack);
+    }
+    
+    /**
+     * Show track selection screen
+     */
+    showTrackSelection() {
+        this.gameState = 'trackSelection';
+        document.getElementById('titleScreen').classList.remove('active');
+        document.getElementById('trackSelection').classList.add('active');
+    }
+    
+    /**
+     * Go back to title screen
+     */
+    backToTitle() {
+        this.gameState = 'title';
+        document.getElementById('trackSelection').classList.remove('active');
+        document.getElementById('titleScreen').classList.add('active');
+    }
+    
+    /**
+     * Select a track and start the race
+     */
+    selectTrack(trackType) {
+        this.selectedTrack = trackType;
+        this.createTrack();
+        this.createKarts();
+        this.startRace();
+    }
+    
+    /**
+     * Initialize track preview canvases
+     */
+    initializeTrackPreviews() {
+        const trackTypes = ['classic', 'figure8', 'mountain', 'city'];
+        
+        trackTypes.forEach(trackType => {
+            const canvas = document.querySelector(`[data-track="${trackType}"] .track-canvas`);
+            const ctx = canvas.getContext('2d');
+            
+            // Create a mini track for preview
+            const previewTrack = new RacingTrack(trackType);
+            this.renderTrackPreview(ctx, previewTrack, canvas.width, canvas.height);
+        });
+    }
+    
+    /**
+     * Render a small preview of the track
+     */
+    renderTrackPreview(ctx, track, width, height) {
+        ctx.clearRect(0, 0, width, height);
+        
+        // Calculate scale to fit track in canvas
+        const scaleX = width / track.width;
+        const scaleY = height / track.height;
+        const scale = Math.min(scaleX, scaleY) * 0.8;
+        
+        const offsetX = (width - track.width * scale) / 2;
+        const offsetY = (height - track.height * scale) / 2;
+        
+        // Draw track background
+        ctx.fillStyle = '#34495e';
+        ctx.fillRect(0, 0, width, height);
+        
+        // Draw track path
+        ctx.strokeStyle = '#95a5a6';
+        ctx.lineWidth = 8 * scale;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        ctx.beginPath();
+        track.trackPoints.forEach((point, index) => {
+            const x = point.x * scale + offsetX;
+            const y = point.y * scale + offsetY;
+            
+            if (index === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        });
+        ctx.closePath();
+        ctx.stroke();
+        
+        // Draw start/finish line
+        if (track.trackPoints.length > 0) {
+            const start = track.trackPoints[0];
+            const next = track.trackPoints[1];
+            
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            
+            const angle = Math.atan2(next.y - start.y, next.x - start.x) + Math.PI/2;
+            const lineLength = 20 * scale;
+            
+            const startX = start.x * scale + offsetX;
+            const startY = start.y * scale + offsetY;
+            
+            ctx.beginPath();
+            ctx.moveTo(
+                startX - Math.cos(angle) * lineLength,
+                startY - Math.sin(angle) * lineLength
+            );
+            ctx.lineTo(
+                startX + Math.cos(angle) * lineLength,
+                startY + Math.sin(angle) * lineLength
+            );
+            ctx.stroke();
+        }
     }
     
     /**
@@ -116,9 +243,14 @@ class HadleeKartGame {
         // Generate initial power-ups
         this.powerUpSystem.generatePowerUps(this.track);
         
-        // Switch UI
+        // Switch UI from track selection to game
         document.getElementById('titleScreen').classList.remove('active');
+        document.getElementById('trackSelection').classList.remove('active');
         document.getElementById('gameScreen').classList.add('active');
+        
+        // Reset camera position
+        this.camera.x = 0;
+        this.camera.y = 0;
         
         this.updateHUD();
     }
@@ -633,12 +765,13 @@ class Kart {
  * Racing Track Class - Defines the track layout and collision detection
  */
 class RacingTrack {
-    constructor() {
+    constructor(trackType = 'classic') {
+        this.trackType = trackType;
         this.width = 2000;
         this.height = 1400;
         
-        // Track path points (simplified oval with interesting turns)
-        this.trackPoints = this.generateTrackPoints();
+        // Track path points based on selected type
+        this.trackPoints = this.generateTrackPoints(trackType);
         this.trackWidth = 120;
         
         // Checkpoints for lap detection
@@ -648,10 +781,27 @@ class RacingTrack {
         this.startPositions = this.generateStartPositions();
     }
     
-    generateTrackPoints() {
+    generateTrackPoints(trackType = 'classic') {
         const points = [];
         const centerX = this.width / 2;
         const centerY = this.height / 2;
+        
+        switch (trackType) {
+            case 'classic':
+                return this.generateClassicOval(centerX, centerY);
+            case 'figure8':
+                return this.generateFigure8(centerX, centerY);
+            case 'mountain':
+                return this.generateMountainCircuit(centerX, centerY);
+            case 'city':
+                return this.generateCityStreets(centerX, centerY);
+            default:
+                return this.generateClassicOval(centerX, centerY);
+        }
+    }
+    
+    generateClassicOval(centerX, centerY) {
+        const points = [];
         const radiusX = 600;
         const radiusY = 400;
         
@@ -669,6 +819,116 @@ class RacingTrack {
             }
             
             points.push({ x, y });
+        }
+        
+        return points;
+    }
+    
+    generateFigure8(centerX, centerY) {
+        const points = [];
+        const radius = 350;
+        
+        // First loop (top)
+        for (let i = 0; i < 32; i++) {
+            const angle = (i / 32) * Math.PI * 2;
+            const x = centerX + Math.cos(angle) * radius;
+            const y = centerY - 200 + Math.sin(angle) * radius * 0.7;
+            points.push({ x, y });
+        }
+        
+        // Second loop (bottom)
+        for (let i = 0; i < 32; i++) {
+            const angle = (i / 32) * Math.PI * 2;
+            const x = centerX - Math.cos(angle) * radius;
+            const y = centerY + 200 + Math.sin(angle) * radius * 0.7;
+            points.push({ x, y });
+        }
+        
+        return points;
+    }
+    
+    generateMountainCircuit(centerX, centerY) {
+        const points = [];
+        const segments = [
+            // Straight section
+            { type: 'straight', startX: centerX - 400, startY: centerY + 300, endX: centerX + 400, endY: centerY + 300, points: 16 },
+            // Tight hairpin
+            { type: 'hairpin', centerX: centerX + 400, centerY: centerY + 150, radius: 150, points: 20 },
+            // Mountain climb
+            { type: 'spiral', centerX: centerX + 200, centerY: centerY - 100, radius: 200, points: 16 },
+            // Fast descent
+            { type: 'curve', centerX: centerX - 200, centerY: centerY - 200, radius: 250, points: 12 }
+        ];
+        
+        segments.forEach(segment => {
+            for (let i = 0; i < segment.points; i++) {
+                const t = i / segment.points;
+                let x, y;
+                
+                switch (segment.type) {
+                    case 'straight':
+                        x = segment.startX + (segment.endX - segment.startX) * t;
+                        y = segment.startY + (segment.endY - segment.startY) * t;
+                        break;
+                    case 'hairpin':
+                        const angle = Math.PI * (1 + t);
+                        x = segment.centerX + Math.cos(angle) * segment.radius;
+                        y = segment.centerY + Math.sin(angle) * segment.radius;
+                        break;
+                    case 'spiral':
+                        const spiralAngle = t * Math.PI * 1.5;
+                        x = segment.centerX + Math.cos(spiralAngle) * (segment.radius * (1 - t * 0.3));
+                        y = segment.centerY + Math.sin(spiralAngle) * (segment.radius * (1 - t * 0.3));
+                        break;
+                    case 'curve':
+                        const curveAngle = t * Math.PI;
+                        x = segment.centerX + Math.cos(curveAngle) * segment.radius;
+                        y = segment.centerY + Math.sin(curveAngle) * segment.radius;
+                        break;
+                }
+                
+                points.push({ x, y });
+            }
+        });
+        
+        return points;
+    }
+    
+    generateCityStreets(centerX, centerY) {
+        const points = [];
+        const blockSize = 200;
+        
+        // Create a street circuit through city blocks
+        const waypoints = [
+            { x: centerX - blockSize * 2, y: centerY + blockSize },
+            { x: centerX + blockSize * 2, y: centerY + blockSize },
+            { x: centerX + blockSize * 2, y: centerY - blockSize * 0.5 },
+            { x: centerX + blockSize, y: centerY - blockSize * 0.5 },
+            { x: centerX + blockSize, y: centerY - blockSize * 1.5 },
+            { x: centerX - blockSize, y: centerY - blockSize * 1.5 },
+            { x: centerX - blockSize, y: centerY },
+            { x: centerX - blockSize * 2, y: centerY }
+        ];
+        
+        // Connect waypoints with smooth curves
+        for (let i = 0; i < waypoints.length; i++) {
+            const start = waypoints[i];
+            const end = waypoints[(i + 1) % waypoints.length];
+            
+            // Add intermediate points for smooth curves
+            for (let j = 0; j < 8; j++) {
+                const t = j / 8;
+                const x = start.x + (end.x - start.x) * t;
+                const y = start.y + (end.y - start.y) * t;
+                
+                // Add some curve to corners
+                if (j < 4) {
+                    const curve = Math.sin(t * Math.PI) * 30;
+                    points.push({ x: x + curve, y: y + curve });
+                } else {
+                    points.push({ x, y });
+                }
+            }
         }
         
         return points;

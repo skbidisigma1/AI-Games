@@ -28,7 +28,57 @@
                         <p>W/A/S/D or Arrow Keys to drive</p>
                         <p>SHIFT to drift • SPACE to use power-up</p>
                     </div>
-                    <button id="startRace" class="racing-button">START RACING!</button>
+                    <button id="startRace" class="racing-button">SELECT TRACK!</button>
+                </div>
+            </div>
+            
+            <!-- Track Selection Screen -->
+            <div id="trackSelection" class="screen">
+                <div class="track-selection-content">
+                    <h1 class="racing-title">Choose Your Track</h1>
+                    <div class="track-grid">
+                        <div class="track-option" data-track="classic">
+                            <div class="track-preview">
+                                <canvas class="track-canvas" width="200" height="140"></canvas>
+                            </div>
+                            <h3>Classic Oval</h3>
+                            <p>Traditional racing circuit with smooth curves</p>
+                            <button class="track-button">RACE HERE!</button>
+                        </div>
+                        <div class="track-option" data-track="figure8">
+                            <div class="track-preview">
+                                <canvas class="track-canvas" width="200" height="140"></canvas>
+                            </div>
+                            <h3>Figure-8 Chaos</h3>
+                            <p>Challenging intersecting loops with excitement</p>
+                            <button class="track-button">RACE HERE!</button>
+                        </div>
+                        <div class="track-option" data-track="mountain">
+                            <div class="track-preview">
+                                <canvas class="track-canvas" width="200" height="140"></canvas>
+                            </div>
+                            <h3>Mountain Circuit</h3>
+                            <p>Winding mountain path with tight hairpins</p>
+                            <button class="track-button">RACE HERE!</button>
+                        </div>
+                        <div class="track-option" data-track="city">
+                            <div class="track-preview">
+                                <canvas class="track-canvas" width="200" height="140"></canvas>
+                            </div>
+                            <h3>City Streets</h3>
+                            <p>Urban racing through downtown blocks</p>
+                            <button class="track-button">RACE HERE!</button>
+                        </div>
+                    </div>
+                    <div class="lore-section">
+                        <h3>🏁 Luke's Racing Legend</h3>
+                        <p>Young Luke has been secretly racing to impress someone special... 
+                        He claims it's all about "Hadlee's racing skills," but everyone knows 
+                        he's actually trying to win the heart of <em>Eliza</em>, who goes by 
+                        Hadlee in the racing circuit. His dedication to kart racing is really 
+                        just a cover for his romantic pursuit!</p>
+                    </div>
+                    <button id="backToTitle" class="racing-button secondary">← BACK TO MENU</button>
                 </div>
             </div>
             
