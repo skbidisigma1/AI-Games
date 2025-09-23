@@ -89,25 +89,6 @@ A collection of innovative games exploring artificial intelligence, consciousnes
 
 **Gameplay**: Survive waves of horrible AI bots in a desert arena. The enemies are deliberately designed to be terrible at combat - they have poor aim, slow reactions, get confused easily, and make questionable tactical decisions. Use WASD to move, mouse to aim, and click to shoot your way through increasingly large waves of incompetent opponents!
 
-### 🏠 Eli Neilson's Adventure - House of Hazards
-*Help Eli navigate through a treacherous house filled with hazards and traps to reach his computer*
-
-**Location**: `/EliNeilson/`
-
-**Features**:
-- Multi-room house layout with entrance hall, dark hallway, and computer room
-- Variety of hazards including spikes, fire traps, lasers, and electric obstacles
-- Inventory system with keys, health packs, and protective shields
-- Progressive difficulty and room-based challenges
-- Health system with damage from hazards and healing items
-- Interactive objects and environmental storytelling
-
-**Play**: Open `EliNeilson/index.html` in a web browser
-
-**Controls**: Arrow keys to move, E to interact, W to use items
-
-**Story**: Guide Eli Neilson through his dangerous house filled with traps and hazards. Collect keys to unlock doors, avoid deadly obstacles, and use items strategically to survive. Your ultimate goal: reach Eli's computer safely so he can search for "Ryan Reynolds OF"!
-
 ## Getting Started
 
 Each game is self-contained in its own directory with:
