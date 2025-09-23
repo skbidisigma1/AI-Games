@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruleweaver - Reality Simulation Sandbox</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <header>
+            <h1>Ruleweaver</h1>
+            <p class="subtitle">Shape reality through rule manipulation</p>
+        </header>
+
+        <div id="gameContent">
+            <!-- Main simulation grid -->
+            <div id="simulationArea">
+                <canvas id="worldCanvas" width="600" height="400"></canvas>
+                <div id="simulationControls">
+                    <button id="playPauseBtn" class="control-btn">▶ Play</button>
+                    <button id="resetBtn" class="control-btn">🔄 Reset</button>
+                    <button id="saveBtn" class="control-btn">💾 Save</button>
+                    <button id="loadBtn" class="control-btn">📁 Load</button>
+                    <span id="tickCounter">Tick: 0</span>
+                </div>
+            </div>
+
+            <!-- Rule modification panel -->
+            <div id="rulePanel">
+                <h3>Universal Rules</h3>
+                
+                <div class="rule-section">
+                    <h4>Physics</h4>
+                    <div class="rule-control">
+                        <label for="gravitySlider">Gravity:</label>
+                        <input type="range" id="gravitySlider" min="0" max="2" step="0.1" value="1">
+                        <span id="gravityValue">1.0</span>
+                    </div>
+                    <div class="rule-control">
+                        <label for="energyDecaySlider">Energy Decay:</label>
+                        <input type="range" id="energyDecaySlider" min="0" max="0.1" step="0.01" value="0.02">
+                        <span id="energyDecayValue">0.02</span>
+                    </div>
+                </div>
+
+                <div class="rule-section">
+                    <h4>Biology</h4>
+                    <div class="rule-control">
+                        <label for="reproductionCostSlider">Reproduction Cost:</label>
+                        <input type="range" id="reproductionCostSlider" min="10" max="100" step="5" value="50">
+                        <span id="reproductionCostValue">50</span>
+                    </div>
+                    <div class="rule-control">
+                        <label for="mutationChanceSlider">Mutation Chance:</label>
+                        <input type="range" id="mutationChanceSlider" min="0" max="0.2" step="0.01" value="0.05">
+                        <span id="mutationChanceValue">0.05</span>
+                    </div>
+                </div>
+
+                <div class="rule-section">
+                    <h4>Economy</h4>
+                    <div class="rule-control">
+                        <label for="tradeEfficiencySlider">Trade Efficiency:</label>
+                        <input type="range" id="tradeEfficiencySlider" min="0.1" max="2" step="0.1" value="1">
+                        <span id="tradeEfficiencyValue">1.0</span>
+                    </div>
+                    <div class="rule-control">
+                        <label for="resourceAbundanceSlider">Resource Abundance:</label>
+                        <input type="range" id="resourceAbundanceSlider" min="0.1" max="3" step="0.1" value="1">
+                        <span id="resourceAbundanceValue">1.0</span>
+                    </div>
+                </div>
+
+                <div class="rule-section">
+                    <h4>Environment</h4>
+                    <div class="rule-control">
+                        <label for="enablePredatorsToggle">
+                            <input type="checkbox" id="enablePredatorsToggle">
+                            Enable Predators
+                        </label>
+                    </div>
+                    <div class="rule-control">
+                        <label for="enableWeatherToggle">
+                            <input type="checkbox" id="enableWeatherToggle">
+                            Enable Weather
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Objectives and status -->
+            <div id="statusPanel">
+                <div id="objectivesPanel">
+                    <h3>Objectives</h3>
+                    <div id="objectivesList">
+                        <div class="objective" data-type="population">
+                            <span class="objective-text">Sustain 100+ entities</span>
+                            <span class="objective-status">0/100</span>
+                        </div>
+                        <div class="objective" data-type="energy">
+                            <span class="objective-text">Reach 10,000 total energy</span>
+                            <span class="objective-status">0/10000</span>
+                        </div>
+                        <div class="objective" data-type="survival">
+                            <span class="objective-text">Prevent extinction for 500 ticks</span>
+                            <span class="objective-status">0/500</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="statsPanel">
+                    <h3>World Statistics</h3>
+                    <div class="stat-item">
+                        <span class="stat-label">Population:</span>
+                        <span id="populationStat">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Total Energy:</span>
+                        <span id="totalEnergyStat">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Average Age:</span>
+                        <span id="averageAgeStat">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Generations:</span>
+                        <span id="generationsStat">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event log -->
+        <div id="eventLog">
+            <h3>Event Log</h3>
+            <div id="logEntries">
+                <div class="log-entry">Game initialized. Welcome to Ruleweaver!</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="entities.js"></script>
+    <script src="rules.js"></script>
+    <script src="objectives.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>

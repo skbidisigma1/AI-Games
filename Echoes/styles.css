@@ -93,6 +93,13 @@ body {
     opacity: 0.8;
 }
 
+.title-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
 /* Cyber Button */
 .cyber-button {
     font-family: 'Share Tech Mono', monospace;
@@ -117,6 +124,77 @@ body {
     transform: translateY(0);
 }
 
+.cyber-button.secondary {
+    border-color: #88aaff;
+    color: #88aaff;
+}
+
+.cyber-button.secondary:hover {
+    background: #88aaff22;
+    box-shadow: 0 0 20px #88aaff;
+}
+
+/* Help Screen */
+#helpScreen {
+    background: linear-gradient(45deg, #000011, #001122);
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 20px;
+    overflow-y: auto;
+}
+
+.help-content {
+    max-width: 800px;
+    text-align: left;
+    animation: fadeInGlitch 1s ease-in-out;
+}
+
+.help-content h1 {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.help-sections {
+    display: grid;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.help-section {
+    background: rgba(0, 255, 136, 0.05);
+    border: 1px solid #00ff8844;
+    padding: 20px;
+    border-radius: 5px;
+}
+
+.help-section h3 {
+    color: #00ff88;
+    font-family: 'Orbitron', monospace;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}
+
+.help-section p {
+    color: #aaaaff;
+    line-height: 1.6;
+    margin-bottom: 8px;
+}
+
+.help-section p:last-child {
+    margin-bottom: 0;
+}
+
+.help-section strong {
+    color: #88ffaa;
+}
+
+.help-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
 /* Game Screen */
 #gameScreen {
     justify-content: flex-start;
@@ -128,14 +206,25 @@ body {
     top: 20px;
     left: 20px;
     right: 20px;
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: auto auto auto 1fr;
+    gap: 20px;
     align-items: center;
     background: rgba(0, 0, 17, 0.8);
     border: 1px solid #00ff88;
     padding: 10px 20px;
     font-size: 0.9rem;
     pointer-events: auto;
+}
+
+#helpHint {
+    justify-self: end;
+}
+
+#helpHint .help-text {
+    color: #ffaa88;
+    font-size: 0.8rem;
+    opacity: 0.7;
 }
 
 .hud-label {
