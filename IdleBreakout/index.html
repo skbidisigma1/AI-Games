@@ -87,15 +87,89 @@
                     <div id="powerupTimers"></div>
                 </div>
 
-                <!-- Upgrade Panel -->
-                <div id="upgradePanel" class="panel">
-                    <h3>BALL SHOP & UPGRADES</h3>
-                    <div id="ballUpgrades" class="upgrade-grid">
-                        <!-- Ball upgrades will be dynamically generated -->
+                <!-- Top Navigation Bar -->
+                <div id="topNavBar">
+                    <div class="nav-section" id="quickShop">
+                        <div class="nav-item" data-type="basic">
+                            <div class="nav-icon">⚪</div>
+                            <div class="nav-price">💰 15</div>
+                        </div>
+                        <div class="nav-item" data-type="power">
+                            <div class="nav-icon">🔴</div>
+                            <div class="nav-price">💰 100</div>
+                        </div>
+                        <div class="nav-item" data-type="speed">
+                            <div class="nav-icon">🟢</div>
+                            <div class="nav-price">💰 250</div>
+                        </div>
+                        <div class="nav-item" data-type="splash">
+                            <div class="nav-icon">🔵</div>
+                            <div class="nav-price">💰 500</div>
+                        </div>
                     </div>
-                    <div id="powerupShop" class="upgrade-grid">
-                        <h4>POWER-UPS</h4>
-                        <!-- Power-ups will be dynamically generated -->
+                    <div class="nav-section">
+                        <button id="expandShopBtn" class="nav-button">🛒 EXPAND SHOP</button>
+                    </div>
+                </div>
+
+                <!-- Compact Upgrade Panel -->
+                <div id="upgradePanel" class="panel compact">
+                    <div class="panel-tabs">
+                        <button class="tab-btn active" data-tab="balls">BALLS</button>
+                        <button class="tab-btn" data-tab="powerups">POWER-UPS</button>
+                    </div>
+                    <div id="ballsTab" class="tab-content active">
+                        <div id="ballUpgrades" class="upgrade-grid-compact">
+                            <!-- Ball upgrades will be dynamically generated -->
+                        </div>
+                    </div>
+                    <div id="powerupsTab" class="tab-content">
+                        <div id="powerupShop" class="upgrade-grid-compact">
+                            <!-- Power-ups will be dynamically generated -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expanded Shop Modal -->
+                <div id="expandedShopModal" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>🛒 EXPANDED SHOP</h2>
+                            <button id="closeModal" class="close-btn">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="shop-sections">
+                                <div class="shop-section">
+                                    <h3>⚽ BALL TYPES</h3>
+                                    <div id="modalBallShop" class="modal-shop-grid">
+                                        <!-- Generated dynamically -->
+                                    </div>
+                                </div>
+                                <div class="shop-section">
+                                    <h3>⚡ POWER-UPS</h3>
+                                    <div id="modalPowerupShop" class="modal-shop-grid">
+                                        <!-- Generated dynamically -->
+                                    </div>
+                                </div>
+                                <div class="shop-section">
+                                    <h3>⚙️ SETTINGS</h3>
+                                    <div class="settings-grid">
+                                        <div class="setting-item">
+                                            <label>Sound Effects:</label>
+                                            <input type="checkbox" id="modalSoundToggle" checked>
+                                        </div>
+                                        <div class="setting-item">
+                                            <label>Particles:</label>
+                                            <input type="checkbox" id="modalParticlesToggle" checked>
+                                        </div>
+                                        <div class="setting-item">
+                                            <label>Auto-Save:</label>
+                                            <input type="checkbox" id="modalAutosaveToggle" checked>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

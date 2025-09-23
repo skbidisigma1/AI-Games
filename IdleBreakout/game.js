@@ -56,6 +56,47 @@ const CONFIG = {
             splashRadius: 50,
             color: '#4444ff',
             description: 'Damages nearby bricks'
+        },
+        plasma: {
+            name: 'Plasma Ball',
+            baseCost: 1000,
+            costMultiplier: 1.9,
+            baseDamage: 4,
+            baseSpeed: 3.5,
+            penetration: 3,
+            color: '#ff44ff',
+            description: 'Passes through multiple bricks'
+        },
+        lightning: {
+            name: 'Lightning Ball',
+            baseCost: 2000,
+            costMultiplier: 2.0,
+            baseDamage: 2,
+            baseSpeed: 5,
+            chainLightning: true,
+            color: '#ffff44',
+            description: 'Chains between nearby bricks'
+        },
+        void: {
+            name: 'Void Ball',
+            baseCost: 5000,
+            costMultiplier: 2.2,
+            baseDamage: 8,
+            baseSpeed: 2,
+            voidRadius: 30,
+            color: '#8844ff',
+            description: 'Creates void zones that damage over time'
+        },
+        phoenix: {
+            name: 'Phoenix Ball',
+            baseCost: 10000,
+            costMultiplier: 2.5,
+            baseDamage: 6,
+            baseSpeed: 4,
+            rebirth: true,
+            fireTrail: true,
+            color: '#ff8844',
+            description: 'Resurrects and leaves burning trails'
         }
     },
     
@@ -140,7 +181,21 @@ class Ball {
         this.damage = ballConfig.baseDamage * (1 + level * 0.5);
         this.maxSpeed = ballConfig.baseSpeed * (1 + level * 0.1);
         this.color = ballConfig.color;
+        
+        // Special abilities
         this.splashRadius = ballConfig.splashRadius || 0;
+        this.penetration = ballConfig.penetration || 0;
+        this.chainLightning = ballConfig.chainLightning || false;
+        this.voidRadius = ballConfig.voidRadius || 0;
+        this.rebirth = ballConfig.rebirth || false;
+        this.fireTrail = ballConfig.fireTrail || false;
+        
+        // Special state
+        this.penetrationCount = 0;
+        this.isDead = false;
+        this.rebirthCooldown = 0;
+        this.voidZones = [];
+        this.fireTrailParticles = [];
         
         // Normalize initial velocity
         const speed = Math.sqrt(this.vx ** 2 + this.vy ** 2);
@@ -151,20 +206,39 @@ class Ball {
     }
     
     update(deltaTime, canvasWidth, canvasHeight) {
-        // Update position
-        this.x += this.vx * deltaTime / 16.67; // Normalize to 60 FPS
-        this.y += this.vy * deltaTime / 16.67;
+        // Handle death and rebirth for Phoenix balls
+        if (this.isDead && this.rebirth) {
+            this.rebirthCooldown -= deltaTime;
+            if (this.rebirthCooldown <= 0) {
+                this.isDead = false;
+                this.x = canvasWidth / 2;
+                this.y = canvasHeight / 2;
+                const angle = Math.random() * Math.PI * 2;
+                this.vx = Math.cos(angle) * this.maxSpeed;
+                this.vy = Math.sin(angle) * this.maxSpeed;
+            }
+            return; // Don't update position while dead
+        }
         
-        // Apply physics
+        // Normalize deltaTime for consistent physics at different framerates
+        const dt = deltaTime / 16.67; // 60 FPS baseline
+        
+        // Update position
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        
+        // Apply very minimal friction to prevent infinite acceleration
         this.vx *= CONFIG.physics.friction;
         this.vy *= CONFIG.physics.friction;
         
-        // Ensure minimum speed to prevent balls from stopping
+        // Check current speed
         const speed = Math.sqrt(this.vx ** 2 + this.vy ** 2);
-        if (speed < this.maxSpeed * 0.3) {
-            const angle = Math.random() * Math.PI * 2;
-            this.vx = Math.cos(angle) * this.maxSpeed * 0.5;
-            this.vy = Math.sin(angle) * this.maxSpeed * 0.5;
+        
+        // Only inject velocity if ball is completely stopped (very rare)
+        if (speed < 0.1) {
+            const angle = Math.atan2(this.vy, this.vx) || Math.random() * Math.PI * 2;
+            this.vx = Math.cos(angle) * this.maxSpeed * 0.3;
+            this.vy = Math.sin(angle) * this.maxSpeed * 0.3;
         }
         
         // Limit maximum speed
@@ -173,14 +247,48 @@ class Ball {
             this.vy = (this.vy / speed) * this.maxSpeed;
         }
         
-        // Bounce off walls
-        if (this.x <= this.radius || this.x >= canvasWidth - this.radius) {
-            this.vx *= -CONFIG.physics.bounceReduction;
-            this.x = Utils.clamp(this.x, this.radius, canvasWidth - this.radius);
+        // Improved wall bouncing with proper reflection
+        let wallBounced = false;
+        
+        // Left and right walls
+        if (this.x - this.radius <= 0) {
+            this.x = this.radius;
+            this.vx = Math.abs(this.vx) * CONFIG.physics.bounceReduction;
+            wallBounced = true;
+        } else if (this.x + this.radius >= canvasWidth) {
+            this.x = canvasWidth - this.radius;
+            this.vx = -Math.abs(this.vx) * CONFIG.physics.bounceReduction;
+            wallBounced = true;
         }
-        if (this.y <= this.radius || this.y >= canvasHeight - this.radius) {
-            this.vy *= -CONFIG.physics.bounceReduction;
-            this.y = Utils.clamp(this.y, this.radius, canvasHeight - this.radius);
+        
+        // Top and bottom walls
+        if (this.y - this.radius <= 0) {
+            this.y = this.radius;
+            this.vy = Math.abs(this.vy) * CONFIG.physics.bounceReduction;
+            wallBounced = true;
+        } else if (this.y + this.radius >= canvasHeight) {
+            this.y = canvasHeight - this.radius;
+            this.vy = -Math.abs(this.vy) * CONFIG.physics.bounceReduction;
+            wallBounced = true;
+        }
+        
+        // Ensure minimum speed after wall bounce
+        if (wallBounced) {
+            const newSpeed = Math.sqrt(this.vx ** 2 + this.vy ** 2);
+            if (newSpeed < this.maxSpeed * 0.2) {
+                const angle = Math.atan2(this.vy, this.vx);
+                this.vx = Math.cos(angle) * this.maxSpeed * 0.3;
+                this.vy = Math.sin(angle) * this.maxSpeed * 0.3;
+            }
+        }
+        
+        // Update special abilities
+        if (this.fireTrail) {
+            this.updateFireTrail();
+        }
+        
+        if (this.voidZones.length > 0) {
+            this.updateVoidZones(deltaTime);
         }
         
         // Update trail
@@ -195,12 +303,75 @@ class Ball {
         });
     }
     
+    updateFireTrail() {
+        // Add fire trail particles
+        if (Math.random() < 0.3) {
+            this.fireTrailParticles.push({
+                x: this.x + (Math.random() - 0.5) * 10,
+                y: this.y + (Math.random() - 0.5) * 10,
+                life: 500,
+                maxLife: 500
+            });
+        }
+        
+        // Update existing particles
+        this.fireTrailParticles = this.fireTrailParticles.filter(particle => {
+            particle.life -= 16.67;
+            return particle.life > 0;
+        });
+    }
+    
+    updateVoidZones(deltaTime) {
+        this.voidZones = this.voidZones.filter(zone => {
+            zone.life -= deltaTime;
+            return zone.life > 0;
+        });
+    }
+    
     render(ctx) {
-        // Draw trail
+        // Don't render if dead (Phoenix ball)
+        if (this.isDead) return;
+        
+        // Draw fire trail particles for Phoenix balls
+        if (this.fireTrail && this.fireTrailParticles.length > 0) {
+            this.fireTrailParticles.forEach(particle => {
+                const alpha = particle.life / particle.maxLife;
+                ctx.globalAlpha = alpha * 0.8;
+                ctx.fillStyle = '#ff4400';
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, 3 * alpha, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+        }
+        
+        // Draw void zones
+        if (this.voidZones.length > 0) {
+            this.voidZones.forEach(zone => {
+                const alpha = zone.life / zone.maxLife;
+                ctx.globalAlpha = alpha * 0.3;
+                ctx.fillStyle = '#440088';
+                ctx.beginPath();
+                ctx.arc(zone.x, zone.y, this.voidRadius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+        }
+        
+        // Draw trail with special effects
         this.trail.forEach((point, index) => {
             if (index === 0) return;
             ctx.globalAlpha = point.alpha;
-            ctx.fillStyle = this.color;
+            
+            // Special trail colors based on ball type
+            let trailColor = this.color;
+            if (this.type === 'lightning') {
+                trailColor = `hsl(${60 + Math.sin(Date.now() * 0.01) * 30}, 100%, 70%)`;
+            } else if (this.type === 'void') {
+                trailColor = `hsl(${280 + Math.sin(Date.now() * 0.005) * 20}, 80%, 60%)`;
+            }
+            
+            ctx.fillStyle = trailColor;
             ctx.beginPath();
             ctx.arc(point.x, point.y, this.radius * point.alpha, 0, Math.PI * 2);
             ctx.fill();
@@ -208,18 +379,53 @@ class Ball {
         
         ctx.globalAlpha = 1;
         
-        // Draw ball
+        // Draw ball with special effects
+        if (this.type === 'plasma') {
+            // Plasma ball pulsing effect
+            const pulse = 0.8 + 0.3 * Math.sin(Date.now() * 0.01);
+            ctx.shadowColor = this.color;
+            ctx.shadowBlur = 15 * pulse;
+        } else if (this.type === 'lightning') {
+            // Lightning ball crackling effect
+            ctx.shadowColor = '#ffff44';
+            ctx.shadowBlur = 20;
+        } else if (this.type === 'void') {
+            // Void ball dark aura
+            ctx.shadowColor = '#8844ff';
+            ctx.shadowBlur = 25;
+        } else if (this.type === 'phoenix') {
+            // Phoenix ball fire glow
+            ctx.shadowColor = '#ff8844';
+            ctx.shadowBlur = 15;
+        } else {
+            // Default glow
+            ctx.shadowColor = this.color;
+            ctx.shadowBlur = 10;
+        }
+        
+        // Main ball body
         ctx.fillStyle = this.color;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
         
-        // Draw glow effect
-        ctx.shadowColor = this.color;
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fill();
+        // Special visual effects
+        if (this.type === 'lightning') {
+            // Draw electric arcs
+            for (let i = 0; i < 3; i++) {
+                const angle = (Date.now() * 0.01 + i * Math.PI * 2 / 3) % (Math.PI * 2);
+                const x = this.x + Math.cos(angle) * (this.radius + 3);
+                const y = this.y + Math.sin(angle) * (this.radius + 3);
+                
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+            }
+        }
+        
         ctx.shadowBlur = 0;
         
         // Draw level indicator for upgraded balls
@@ -229,27 +435,88 @@ class Ball {
             ctx.textAlign = 'center';
             ctx.fillText(this.level.toString(), this.x, this.y + 3);
         }
+        
+        // Draw penetration counter for plasma balls
+        if (this.type === 'plasma' && this.penetration > 0) {
+            ctx.fillStyle = '#ff44ff';
+            ctx.font = '8px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`P${this.penetration}`, this.x, this.y - this.radius - 5);
+        }
     }
     
     // Check collision with brick and apply damage
     checkBrickCollision(brick) {
-        const dx = this.x - Utils.clamp(this.x, brick.x, brick.x + brick.width);
-        const dy = this.y - Utils.clamp(this.y, brick.y, brick.y + brick.height);
+        // Find closest point on brick to ball center
+        const closestX = Utils.clamp(this.x, brick.x, brick.x + brick.width);
+        const closestY = Utils.clamp(this.y, brick.y, brick.y + brick.height);
+        
+        // Calculate distance from ball center to closest point
+        const dx = this.x - closestX;
+        const dy = this.y - closestY;
         const distance = Math.sqrt(dx ** 2 + dy ** 2);
         
         if (distance < this.radius && Date.now() - this.lastHit > 100) {
             this.lastHit = Date.now();
             
-            // Bounce off brick
-            if (Math.abs(dx) > Math.abs(dy)) {
-                this.vx *= -CONFIG.physics.bounceReduction;
-            } else {
-                this.vy *= -CONFIG.physics.bounceReduction;
+            // Handle penetration for plasma balls
+            if (this.penetration > 0 && this.penetrationCount < this.penetration) {
+                this.penetrationCount++;
+                // Don't bounce, just pass through
+                return true;
             }
             
-            // Add some randomness to prevent balls from getting stuck
-            this.vx += (Math.random() - 0.5) * 0.5;
-            this.vy += (Math.random() - 0.5) * 0.5;
+            // Create void zone for void balls
+            if (this.voidRadius > 0) {
+                this.voidZones.push({
+                    x: this.x,
+                    y: this.y,
+                    life: 3000,
+                    maxLife: 3000
+                });
+            }
+            
+            // Calculate collision normal
+            let normalX = dx;
+            let normalY = dy;
+            
+            // Handle edge cases where ball is inside brick
+            if (distance === 0) {
+                // Default to horizontal collision if ball is exactly at corner
+                normalX = this.x < brick.x + brick.width / 2 ? -1 : 1;
+                normalY = 0;
+            } else {
+                // Normalize the collision normal
+                normalX /= distance;
+                normalY /= distance;
+            }
+            
+            // Reflect velocity based on collision normal (unless penetrating)
+            if (this.penetrationCount >= this.penetration) {
+                const dotProduct = this.vx * normalX + this.vy * normalY;
+                this.vx -= 2 * dotProduct * normalX;
+                this.vy -= 2 * dotProduct * normalY;
+                
+                // Apply bounce reduction to prevent infinite bouncing
+                this.vx *= CONFIG.physics.bounceReduction;
+                this.vy *= CONFIG.physics.bounceReduction;
+                
+                // Push ball out of brick to prevent sticking
+                const pushDistance = this.radius - distance + 1;
+                this.x += normalX * pushDistance;
+                this.y += normalY * pushDistance;
+                
+                // Reset penetration counter after bouncing
+                this.penetrationCount = 0;
+            }
+            
+            // Ensure minimum speed to prevent balls from stopping
+            const speed = Math.sqrt(this.vx ** 2 + this.vy ** 2);
+            if (speed < this.maxSpeed * 0.2) {
+                const angle = Math.atan2(this.vy, this.vx);
+                this.vx = Math.cos(angle) * this.maxSpeed * 0.3;
+                this.vy = Math.sin(angle) * this.maxSpeed * 0.3;
+            }
             
             return true;
         }
@@ -372,13 +639,21 @@ class EconomyManager {
             basic: 1,
             power: 0,
             speed: 0,
-            splash: 0
+            splash: 0,
+            plasma: 0,
+            lightning: 0,
+            void: 0,
+            phoenix: 0
         };
         this.ballLevels = {
             basic: 1,
             power: 1,
             speed: 1,
-            splash: 1
+            splash: 1,
+            plasma: 1,
+            lightning: 1,
+            void: 1,
+            phoenix: 1
         };
         this.prestigeLevel = 0;
         this.prestigeMultiplier = 1;
@@ -472,8 +747,8 @@ class EconomyManager {
             // Reset progress but keep prestige bonuses
             this.coins = 100;
             this.totalCoinsEarned = 0;
-            this.ballCounts = { basic: 1, power: 0, speed: 0, splash: 0 };
-            this.ballLevels = { basic: 1, power: 1, speed: 1, splash: 1 };
+            this.ballCounts = { basic: 1, power: 0, speed: 0, splash: 0, plasma: 0, lightning: 0, void: 0, phoenix: 0 };
+            this.ballLevels = { basic: 1, power: 1, speed: 1, splash: 1, plasma: 1, lightning: 1, void: 1, phoenix: 1 };
             
             return true;
         }
@@ -499,8 +774,14 @@ class EconomyManager {
             const data = JSON.parse(saveData);
             this.coins = data.coins || 100;
             this.totalCoinsEarned = data.totalCoinsEarned || 0;
-            this.ballCounts = data.ballCounts || { basic: 1, power: 0, speed: 0, splash: 0 };
-            this.ballLevels = data.ballLevels || { basic: 1, power: 1, speed: 1, splash: 1 };
+            
+            // Ensure all ball types are initialized
+            const defaultBallCounts = { basic: 1, power: 0, speed: 0, splash: 0, plasma: 0, lightning: 0, void: 0, phoenix: 0 };
+            const defaultBallLevels = { basic: 1, power: 1, speed: 1, splash: 1, plasma: 1, lightning: 1, void: 1, phoenix: 1 };
+            
+            this.ballCounts = { ...defaultBallCounts, ...data.ballCounts };
+            this.ballLevels = { ...defaultBallLevels, ...data.ballLevels };
+            
             this.prestigeLevel = data.prestigeLevel || 0;
             this.prestigeMultiplier = data.prestigeMultiplier || 1;
             this.lastSaveTime = data.lastSaveTime || Date.now();
@@ -582,6 +863,8 @@ class GameManager {
         
         // Check ball-brick collisions
         balls.forEach(ball => {
+            if (ball.isDead) return; // Skip dead balls (Phoenix resurrection)
+            
             this.bricks.forEach(brick => {
                 if (!brick.destroyed && ball.checkBrickCollision(brick)) {
                     let damage = ball.damage;
@@ -589,6 +872,11 @@ class GameManager {
                     // Apply splash damage if ball has splash ability
                     if (ball.splashRadius > 0) {
                         this.applySplashDamage(ball, ball.damage * 0.5, economy);
+                    }
+                    
+                    // Apply chain lightning if ball has chain lightning ability
+                    if (ball.chainLightning) {
+                        this.applyChainLightning(ball, brick, ball.damage * 0.3, economy);
                     }
                     
                     const coins = brick.takeDamage(damage);
@@ -601,6 +889,16 @@ class GameManager {
                     }
                 }
             });
+            
+            // Check void zone damage
+            if (ball.voidZones.length > 0) {
+                this.applyVoidDamage(ball, economy, deltaTime);
+            }
+            
+            // Check fire trail damage
+            if (ball.fireTrail && ball.fireTrailParticles.length > 0) {
+                this.applyFireTrailDamage(ball, economy);
+            }
         });
         
         // Remove destroyed bricks
@@ -610,6 +908,95 @@ class GameManager {
         if (this.bricks.length === 0 && !this.levelComplete) {
             this.completeLevel(economy);
         }
+    }
+    
+    applyChainLightning(ball, sourceBrick, damage, economy) {
+        const chainRange = 80;
+        const maxChains = 3;
+        let chainsUsed = 0;
+        const processedBricks = new Set([sourceBrick]);
+        
+        const chainToNearby = (fromBrick) => {
+            if (chainsUsed >= maxChains) return;
+            
+            this.bricks.forEach(brick => {
+                if (brick.destroyed || processedBricks.has(brick)) return;
+                
+                const distance = Utils.distance(
+                    fromBrick.x + fromBrick.width / 2,
+                    fromBrick.y + fromBrick.height / 2,
+                    brick.x + brick.width / 2,
+                    brick.y + brick.height / 2
+                );
+                
+                if (distance <= chainRange) {
+                    processedBricks.add(brick);
+                    const coins = brick.takeDamage(damage);
+                    if (coins > 0) {
+                        economy.addCoins(coins);
+                        this.bricksDestroyed++;
+                        this.createDestructionParticles(brick.x + brick.width / 2, brick.y + brick.height / 2);
+                    }
+                    chainsUsed++;
+                    
+                    // Chain further if brick was destroyed
+                    if (coins > 0) {
+                        chainToNearby(brick);
+                    }
+                }
+            });
+        };
+        
+        chainToNearby(sourceBrick);
+    }
+    
+    applyVoidDamage(ball, economy, deltaTime) {
+        ball.voidZones.forEach(zone => {
+            this.bricks.forEach(brick => {
+                if (brick.destroyed) return;
+                
+                const distance = Utils.distance(
+                    zone.x, zone.y,
+                    brick.x + brick.width / 2,
+                    brick.y + brick.height / 2
+                );
+                
+                if (distance <= ball.voidRadius) {
+                    // Damage over time based on deltaTime
+                    const dotDamage = ball.damage * 0.1 * (deltaTime / 16.67);
+                    const coins = brick.takeDamage(dotDamage);
+                    if (coins > 0) {
+                        economy.addCoins(coins);
+                        this.bricksDestroyed++;
+                        this.createDestructionParticles(brick.x + brick.width / 2, brick.y + brick.height / 2);
+                    }
+                }
+            });
+        });
+    }
+    
+    applyFireTrailDamage(ball, economy) {
+        ball.fireTrailParticles.forEach(particle => {
+            this.bricks.forEach(brick => {
+                if (brick.destroyed) return;
+                
+                const distance = Utils.distance(
+                    particle.x, particle.y,
+                    brick.x + brick.width / 2,
+                    brick.y + brick.height / 2
+                );
+                
+                if (distance <= 15) { // Fire trail damage radius
+                    const burnDamage = ball.damage * 0.05;
+                    const coins = brick.takeDamage(burnDamage);
+                    if (coins > 0) {
+                        economy.addCoins(coins);
+                        this.bricksDestroyed++;
+                        this.createDestructionParticles(brick.x + brick.width / 2, brick.y + brick.height / 2);
+                    }
+                }
+            });
+        });
     }
     
     applySplashDamage(ball, damage, economy) {
@@ -723,15 +1110,53 @@ class UIManager {
         document.getElementById('settingsTab').addEventListener('click', () => this.showPanel('settings'));
         document.getElementById('pauseButton').addEventListener('click', () => this.game.togglePause());
         
-        // Settings
+        // Top navigation quick shop
+        document.getElementById('quickShop').addEventListener('click', (e) => {
+            const navItem = e.target.closest('.nav-item');
+            if (navItem) {
+                const ballType = navItem.dataset.type;
+                this.handleQuickBuy(ballType);
+            }
+        });
+        
+        // Expanded shop modal
+        document.getElementById('expandShopBtn').addEventListener('click', () => this.showExpandedShop());
+        document.getElementById('closeModal').addEventListener('click', () => this.hideExpandedShop());
+        
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabName = btn.dataset.tab;
+                this.switchTab(tabName);
+            });
+        });
+        
+        // Settings - both main and modal
         document.getElementById('soundToggle').addEventListener('change', (e) => {
             this.game.settings.soundEnabled = e.target.checked;
+            document.getElementById('modalSoundToggle').checked = e.target.checked;
         });
         document.getElementById('particlesToggle').addEventListener('change', (e) => {
             this.game.settings.particlesEnabled = e.target.checked;
+            document.getElementById('modalParticlesToggle').checked = e.target.checked;
         });
         document.getElementById('autosaveToggle').addEventListener('change', (e) => {
             this.game.settings.autosaveEnabled = e.target.checked;
+            document.getElementById('modalAutosaveToggle').checked = e.target.checked;
+        });
+        
+        // Modal settings sync
+        document.getElementById('modalSoundToggle').addEventListener('change', (e) => {
+            this.game.settings.soundEnabled = e.target.checked;
+            document.getElementById('soundToggle').checked = e.target.checked;
+        });
+        document.getElementById('modalParticlesToggle').addEventListener('change', (e) => {
+            this.game.settings.particlesEnabled = e.target.checked;
+            document.getElementById('particlesToggle').checked = e.target.checked;
+        });
+        document.getElementById('modalAutosaveToggle').addEventListener('change', (e) => {
+            this.game.settings.autosaveEnabled = e.target.checked;
+            document.getElementById('autosaveToggle').checked = e.target.checked;
         });
         
         // Prestige button
@@ -748,6 +1173,13 @@ class UIManager {
             document.getElementById('offlineEarnings').classList.add('hidden');
         });
         
+        // Close modal when clicking outside
+        document.getElementById('expandedShopModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('expandedShopModal')) {
+                this.hideExpandedShop();
+            }
+        });
+        
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             switch(e.code) {
@@ -757,7 +1189,11 @@ class UIManager {
                     break;
                 case 'Escape':
                     e.preventDefault();
-                    this.toggleHelp();
+                    if (!document.getElementById('expandedShopModal').classList.contains('hidden')) {
+                        this.hideExpandedShop();
+                    } else {
+                        this.toggleHelp();
+                    }
                     break;
             }
         });
@@ -822,53 +1258,34 @@ class UIManager {
         const powerupShop = document.getElementById('powerupShop');
         
         // Clear existing content
-        ballUpgrades.innerHTML = '<h4>BALL SHOP</h4>';
-        powerupShop.innerHTML = '<h4>POWER-UPS</h4>';
+        ballUpgrades.innerHTML = '';
+        powerupShop.innerHTML = '';
         
-        // Generate ball upgrades
+        // Update top navigation
+        this.updateTopNavigation();
+        
+        // Generate compact ball upgrades for the main panel
         Object.entries(CONFIG.balls).forEach(([type, config]) => {
             const count = this.game.economy.ballCounts[type];
             const level = this.game.economy.ballLevels[type];
             const buyCost = this.game.economy.getBallCost(type);
             const upgradeCost = this.game.economy.getUpgradeCost(type);
             
-            // Buy ball button
-            const buyItem = document.createElement('div');
-            buyItem.className = 'upgrade-item';
-            if (!this.game.economy.canAfford(buyCost)) {
-                buyItem.classList.add('disabled');
-            }
-            
-            buyItem.innerHTML = `
-                <div class="upgrade-name">${config.name}</div>
-                <div class="upgrade-description">${config.description}</div>
-                <div class="upgrade-cost">💰 ${Utils.formatNumber(buyCost)}</div>
-                <div class="upgrade-level">Owned: ${count}</div>
-            `;
-            
-            buyItem.addEventListener('click', () => {
-                if (this.game.economy.buyBall(type)) {
-                    this.game.addBall(type, level);
-                    this.playSound('upgradeSound');
-                    this.updateUpgradesPanel();
-                }
-            });
-            
-            ballUpgrades.appendChild(buyItem);
-            
-            // Upgrade ball button (only if owned)
+            // Only show owned balls in compact view
             if (count > 0) {
+                // Upgrade ball button
                 const upgradeItem = document.createElement('div');
-                upgradeItem.className = 'upgrade-item';
+                upgradeItem.className = 'upgrade-item-compact';
                 if (!this.game.economy.canAfford(upgradeCost)) {
                     upgradeItem.classList.add('disabled');
                 }
                 
                 upgradeItem.innerHTML = `
-                    <div class="upgrade-name">Upgrade ${config.name}</div>
-                    <div class="upgrade-description">Increase damage and speed</div>
-                    <div class="upgrade-cost">💰 ${Utils.formatNumber(upgradeCost)}</div>
-                    <div class="upgrade-level">Level: ${level}</div>
+                    <div class="upgrade-info">
+                        <div class="upgrade-name-compact">Upgrade ${config.name}</div>
+                        <div class="upgrade-level-compact">Level: ${level} | Owned: ${count}</div>
+                    </div>
+                    <div class="upgrade-cost-compact">💰 ${Utils.formatNumber(upgradeCost)}</div>
                 `;
                 
                 upgradeItem.addEventListener('click', () => {
@@ -883,18 +1300,20 @@ class UIManager {
             }
         });
         
-        // Generate power-ups
+        // Generate compact power-ups
         Object.entries(CONFIG.powerups).forEach(([type, config]) => {
             const powerupItem = document.createElement('div');
-            powerupItem.className = 'upgrade-item';
+            powerupItem.className = 'upgrade-item-compact';
             if (!this.game.economy.canAfford(config.cost)) {
                 powerupItem.classList.add('disabled');
             }
             
             powerupItem.innerHTML = `
-                <div class="upgrade-name">${config.name}</div>
-                <div class="upgrade-description">${config.description}</div>
-                <div class="upgrade-cost">💰 ${Utils.formatNumber(config.cost)}</div>
+                <div class="upgrade-info">
+                    <div class="upgrade-name-compact">${config.name}</div>
+                    <div class="upgrade-level-compact">${config.description}</div>
+                </div>
+                <div class="upgrade-cost-compact">💰 ${Utils.formatNumber(config.cost)}</div>
             `;
             
             powerupItem.addEventListener('click', () => {
@@ -907,6 +1326,151 @@ class UIManager {
             
             powerupShop.appendChild(powerupItem);
         });
+    }
+    
+    updateTopNavigation() {
+        const quickShop = document.getElementById('quickShop');
+        quickShop.querySelectorAll('.nav-item').forEach(item => {
+            const type = item.dataset.type;
+            const config = CONFIG.balls[type];
+            const cost = this.game.economy.getBallCost(type);
+            const canAfford = this.game.economy.canAfford(cost);
+            
+            item.querySelector('.nav-price').textContent = `💰 ${Utils.formatNumber(cost)}`;
+            item.dataset.tooltip = `${config.name} - ${config.description}`;
+            
+            if (canAfford) {
+                item.classList.remove('disabled');
+            } else {
+                item.classList.add('disabled');
+            }
+        });
+    }
+    
+    handleQuickBuy(ballType) {
+        const cost = this.game.economy.getBallCost(ballType);
+        if (this.game.economy.spendCoins(cost)) {
+            this.game.economy.ballCounts[ballType]++;
+            const level = this.game.economy.ballLevels[ballType];
+            this.game.addBall(ballType, level);
+            this.playSound('upgradeSound');
+            this.updateUpgradesPanel();
+        }
+    }
+    
+    showExpandedShop() {
+        const modal = document.getElementById('expandedShopModal');
+        modal.classList.remove('hidden');
+        this.updateExpandedShop();
+    }
+    
+    hideExpandedShop() {
+        const modal = document.getElementById('expandedShopModal');
+        modal.classList.add('hidden');
+    }
+    
+    updateExpandedShop() {
+        const ballShop = document.getElementById('modalBallShop');
+        const powerupShop = document.getElementById('modalPowerupShop');
+        
+        // Clear existing content
+        ballShop.innerHTML = '';
+        powerupShop.innerHTML = '';
+        
+        // Generate detailed ball shop
+        Object.entries(CONFIG.balls).forEach(([type, config]) => {
+            const count = this.game.economy.ballCounts[type];
+            const level = this.game.economy.ballLevels[type];
+            const buyCost = this.game.economy.getBallCost(type);
+            const upgradeCost = this.game.economy.getUpgradeCost(type);
+            
+            const ballSection = document.createElement('div');
+            ballSection.className = 'ball-shop-section';
+            ballSection.innerHTML = `
+                <div class="ball-header">
+                    <h4>${config.name}</h4>
+                    <div class="ball-stats">Owned: ${count} | Level: ${level}</div>
+                </div>
+                <div class="ball-description">${config.description}</div>
+                <div class="ball-actions">
+                    <button class="shop-btn buy-btn ${!this.game.economy.canAfford(buyCost) ? 'disabled' : ''}" 
+                            data-type="${type}" data-action="buy">
+                        Buy (💰 ${Utils.formatNumber(buyCost)})
+                    </button>
+                    ${count > 0 ? `
+                        <button class="shop-btn upgrade-btn ${!this.game.economy.canAfford(upgradeCost) ? 'disabled' : ''}" 
+                                data-type="${type}" data-action="upgrade">
+                            Upgrade (💰 ${Utils.formatNumber(upgradeCost)})
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+            
+            ballShop.appendChild(ballSection);
+        });
+        
+        // Generate detailed power-up shop
+        Object.entries(CONFIG.powerups).forEach(([type, config]) => {
+            const powerupSection = document.createElement('div');
+            powerupSection.className = 'powerup-shop-section';
+            powerupSection.innerHTML = `
+                <div class="powerup-header">
+                    <h4>${config.name}</h4>
+                </div>
+                <div class="powerup-description">${config.description}</div>
+                <button class="shop-btn powerup-btn ${!this.game.economy.canAfford(config.cost) ? 'disabled' : ''}" 
+                        data-type="${type}" data-action="powerup">
+                    Activate (💰 ${Utils.formatNumber(config.cost)})
+                </button>
+            `;
+            
+            powerupShop.appendChild(powerupSection);
+        });
+        
+        // Add event listeners for shop buttons
+        document.querySelectorAll('.shop-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const type = btn.dataset.type;
+                const action = btn.dataset.action;
+                
+                if (btn.classList.contains('disabled')) return;
+                
+                switch(action) {
+                    case 'buy':
+                        this.handleQuickBuy(type);
+                        break;
+                    case 'upgrade':
+                        if (this.game.economy.upgradeBall(type)) {
+                            this.game.upgradeBalls(type);
+                            this.playSound('upgradeSound');
+                        }
+                        break;
+                    case 'powerup':
+                        if (this.game.economy.spendCoins(CONFIG.powerups[type].cost)) {
+                            this.game.activatePowerup(type);
+                            this.playSound('powerupSound');
+                        }
+                        break;
+                }
+                
+                this.updateExpandedShop();
+                this.updateUpgradesPanel();
+            });
+        });
+    }
+    
+    switchTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        
+        // Update tab content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(`${tabName}Tab`).classList.add('active');
     }
     
     updatePrestigePanel() {
