@@ -13,7 +13,8 @@ class HadleeKartGame {
         this.minimapCtx = this.minimapCanvas.getContext('2d');
         
         // Game state
-        this.gameState = 'title'; // 'title', 'racing', 'paused', 'complete'
+        this.gameState = 'title'; // 'title', 'trackSelection', 'racing', 'paused', 'complete'
+        this.selectedTrack = 'classic';
         this.currentLap = 1;
         this.totalLaps = 3;
         this.raceTime = 0;
@@ -35,8 +36,8 @@ class HadleeKartGame {
         this.powerUps = [];
         this.particles = [];
         
-        // Camera
-        this.camera = { x: 0, y: 0 };
+        // Camera with zoom scale for closer view
+        this.camera = { x: 0, y: 0, scale: 1.5 };
         
         this.init();
     }
@@ -55,9 +56,23 @@ class HadleeKartGame {
      * Setup all event listeners for UI and controls
      */
     setupEventListeners() {
-        // Start race button
+        // Start race button (now opens track selection)
         document.getElementById('startRace').addEventListener('click', () => {
-            this.startRace();
+            this.showTrackSelection();
+        });
+        
+        // Back to title button
+        document.getElementById('backToTitle').addEventListener('click', () => {
+            this.backToTitle();
+        });
+        
+        // Track selection buttons
+        document.querySelectorAll('.track-button').forEach((button, index) => {
+            button.addEventListener('click', () => {
+                const trackOption = button.closest('.track-option');
+                const trackType = trackOption.getAttribute('data-track');
+                this.selectTrack(trackType);
+            });
         });
         
         // Restart race button
@@ -72,13 +87,125 @@ class HadleeKartGame {
         
         // Input handling
         this.inputHandler.setupEventListeners();
+        
+        // Initialize track previews
+        this.initializeTrackPreviews();
     }
     
     /**
      * Create the racing track with checkpoints and visual elements
      */
     createTrack() {
-        this.track = new RacingTrack();
+        this.track = new RacingTrack(this.selectedTrack);
+    }
+    
+    /**
+     * Show track selection screen
+     */
+    showTrackSelection() {
+        this.gameState = 'trackSelection';
+        document.getElementById('titleScreen').classList.remove('active');
+        document.getElementById('trackSelection').classList.add('active');
+    }
+    
+    /**
+     * Go back to title screen
+     */
+    backToTitle() {
+        this.gameState = 'title';
+        document.getElementById('trackSelection').classList.remove('active');
+        document.getElementById('titleScreen').classList.add('active');
+    }
+    
+    /**
+     * Select a track and start the race
+     */
+    selectTrack(trackType) {
+        this.selectedTrack = trackType;
+        this.createTrack();
+        this.createKarts();
+        this.startRace();
+    }
+    
+    /**
+     * Initialize track preview canvases
+     */
+    initializeTrackPreviews() {
+        const trackTypes = ['classic', 'figure8', 'mountain', 'city'];
+        
+        trackTypes.forEach(trackType => {
+            const canvas = document.querySelector(`[data-track="${trackType}"] .track-canvas`);
+            const ctx = canvas.getContext('2d');
+            
+            // Create a mini track for preview
+            const previewTrack = new RacingTrack(trackType);
+            this.renderTrackPreview(ctx, previewTrack, canvas.width, canvas.height);
+        });
+    }
+    
+    /**
+     * Render a small preview of the track
+     */
+    renderTrackPreview(ctx, track, width, height) {
+        ctx.clearRect(0, 0, width, height);
+        
+        // Calculate scale to fit track in canvas
+        const scaleX = width / track.width;
+        const scaleY = height / track.height;
+        const scale = Math.min(scaleX, scaleY) * 0.8;
+        
+        const offsetX = (width - track.width * scale) / 2;
+        const offsetY = (height - track.height * scale) / 2;
+        
+        // Draw track background
+        ctx.fillStyle = '#34495e';
+        ctx.fillRect(0, 0, width, height);
+        
+        // Draw track path
+        ctx.strokeStyle = '#95a5a6';
+        ctx.lineWidth = 8 * scale;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        ctx.beginPath();
+        track.trackPoints.forEach((point, index) => {
+            const x = point.x * scale + offsetX;
+            const y = point.y * scale + offsetY;
+            
+            if (index === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        });
+        ctx.closePath();
+        ctx.stroke();
+        
+        // Draw start/finish line
+        if (track.trackPoints.length > 0) {
+            const start = track.trackPoints[0];
+            const next = track.trackPoints[1];
+            
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            
+            const angle = Math.atan2(next.y - start.y, next.x - start.x) + Math.PI/2;
+            const lineLength = 20 * scale;
+            
+            const startX = start.x * scale + offsetX;
+            const startY = start.y * scale + offsetY;
+            
+            ctx.beginPath();
+            ctx.moveTo(
+                startX - Math.cos(angle) * lineLength,
+                startY - Math.sin(angle) * lineLength
+            );
+            ctx.lineTo(
+                startX + Math.cos(angle) * lineLength,
+                startY + Math.sin(angle) * lineLength
+            );
+            ctx.stroke();
+        }
     }
     
     /**
@@ -116,9 +243,14 @@ class HadleeKartGame {
         // Generate initial power-ups
         this.powerUpSystem.generatePowerUps(this.track);
         
-        // Switch UI
+        // Switch UI from track selection to game
         document.getElementById('titleScreen').classList.remove('active');
+        document.getElementById('trackSelection').classList.remove('active');
         document.getElementById('gameScreen').classList.add('active');
+        
+        // Reset camera position
+        this.camera.x = 0;
+        this.camera.y = 0;
         
         this.updateHUD();
     }
@@ -229,22 +361,45 @@ class HadleeKartGame {
         
         // Power-up collisions
         this.powerUpSystem.checkCollisions(allKarts, this.track);
+        
+        // Oil slick collisions
+        if (window.oilSlicks) {
+            window.oilSlicks = window.oilSlicks.filter(oilSlick => {
+                if (!oilSlick.active) return false;
+                
+                // Update oil slick
+                oilSlick.update(1/60);
+                
+                // Check collision with all karts
+                allKarts.forEach(kart => {
+                    if (oilSlick.checkCollision(kart)) {
+                        this.createCollisionParticles(kart, { x: oilSlick.x, y: oilSlick.y });
+                    }
+                });
+                
+                return oilSlick.active;
+            });
+        }
     }
     
     /**
      * Update camera to follow player
      */
     updateCamera() {
-        const targetX = this.playerKart.x - this.canvas.width / 2;
-        const targetY = this.playerKart.y - this.canvas.height / 2;
+        // Calculate viewport size based on zoom
+        const viewportWidth = this.canvas.width / this.camera.scale;
+        const viewportHeight = this.canvas.height / this.camera.scale;
         
-        // Smooth camera following
-        this.camera.x += (targetX - this.camera.x) * 0.1;
-        this.camera.y += (targetY - this.camera.y) * 0.1;
+        const targetX = this.playerKart.x - viewportWidth / 2;
+        const targetY = this.playerKart.y - viewportHeight / 2;
         
-        // Keep camera within track bounds
-        this.camera.x = Math.max(0, Math.min(this.camera.x, this.track.width - this.canvas.width));
-        this.camera.y = Math.max(0, Math.min(this.camera.y, this.track.height - this.canvas.height));
+        // More responsive camera following for better control feel
+        this.camera.x += (targetX - this.camera.x) * 0.15;
+        this.camera.y += (targetY - this.camera.y) * 0.15;
+        
+        // Keep camera within track bounds considering zoom
+        this.camera.x = Math.max(0, Math.min(this.camera.x, this.track.width - viewportWidth));
+        this.camera.y = Math.max(0, Math.min(this.camera.y, this.track.height - viewportHeight));
     }
     
     /**
@@ -255,10 +410,20 @@ class HadleeKartGame {
         
         allKarts.forEach(kart => {
             if (this.track.checkLapCompletion(kart)) {
+                const lapTime = kart.raceTime - (kart.lastLapTime || 0);
                 kart.completeLap();
+                kart.lastLapTime = kart.raceTime;
                 
                 if (kart.isPlayer) {
                     this.currentLap = kart.lapsCompleted + 1;
+                    
+                    // Show lap notification for player
+                    this.showLapNotification(lapTime);
+                    
+                    // Update best lap time
+                    if (lapTime < this.bestLapTime) {
+                        this.bestLapTime = lapTime;
+                    }
                     
                     if (kart.lapsCompleted >= this.totalLaps) {
                         this.completeRace();
@@ -266,6 +431,23 @@ class HadleeKartGame {
                 }
             }
         });
+    }
+    
+    /**
+     * Show lap completion notification
+     */
+    showLapNotification(lapTime) {
+        const notification = document.getElementById('lapNotification');
+        const timeElement = document.getElementById('lapNotificationTime');
+        
+        timeElement.textContent = `Lap Time: ${this.formatTime(lapTime)}`;
+        
+        notification.classList.remove('hidden');
+        
+        // Hide after animation completes
+        setTimeout(() => {
+            notification.classList.add('hidden');
+        }, 3000);
     }
     
     /**
@@ -299,13 +481,15 @@ class HadleeKartGame {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.minimapCtx.clearRect(0, 0, this.minimapCanvas.width, this.minimapCanvas.height);
         
-        // Set camera transform
+        // Set camera transform with zoom
         this.ctx.save();
+        this.ctx.scale(this.camera.scale, this.camera.scale);
         this.ctx.translate(-this.camera.x, -this.camera.y);
         
         // Render game elements
         this.renderer.renderTrack(this.track);
         this.renderer.renderPowerUps(this.powerUpSystem.powerUps);
+        this.renderer.renderOilSlicks(window.oilSlicks || []);
         this.renderer.renderKarts(this.getAllKarts());
         this.renderer.renderParticles(this.particles);
         
@@ -448,8 +632,8 @@ class InputHandler {
  */
 class PhysicsEngine {
     constructor() {
-        this.maxSpeed = 8;
-        this.acceleration = 0.3;
+        this.maxSpeed = 5; // Reduced from 8 for better control
+        this.acceleration = 0.25; // Reduced from 0.3 for smoother acceleration
         this.deceleration = 0.95;
         this.turnSpeed = 0.08;
         this.driftFactor = 0.85;
@@ -628,12 +812,13 @@ class Kart {
  * Racing Track Class - Defines the track layout and collision detection
  */
 class RacingTrack {
-    constructor() {
+    constructor(trackType = 'classic') {
+        this.trackType = trackType;
         this.width = 2000;
         this.height = 1400;
         
-        // Track path points (simplified oval with interesting turns)
-        this.trackPoints = this.generateTrackPoints();
+        // Track path points based on selected type
+        this.trackPoints = this.generateTrackPoints(trackType);
         this.trackWidth = 120;
         
         // Checkpoints for lap detection
@@ -643,10 +828,27 @@ class RacingTrack {
         this.startPositions = this.generateStartPositions();
     }
     
-    generateTrackPoints() {
+    generateTrackPoints(trackType = 'classic') {
         const points = [];
         const centerX = this.width / 2;
         const centerY = this.height / 2;
+        
+        switch (trackType) {
+            case 'classic':
+                return this.generateClassicOval(centerX, centerY);
+            case 'figure8':
+                return this.generateFigure8(centerX, centerY);
+            case 'mountain':
+                return this.generateMountainCircuit(centerX, centerY);
+            case 'city':
+                return this.generateCityStreets(centerX, centerY);
+            default:
+                return this.generateClassicOval(centerX, centerY);
+        }
+    }
+    
+    generateClassicOval(centerX, centerY) {
+        const points = [];
         const radiusX = 600;
         const radiusY = 400;
         
@@ -664,6 +866,116 @@ class RacingTrack {
             }
             
             points.push({ x, y });
+        }
+        
+        return points;
+    }
+    
+    generateFigure8(centerX, centerY) {
+        const points = [];
+        const radius = 350;
+        
+        // First loop (top)
+        for (let i = 0; i < 32; i++) {
+            const angle = (i / 32) * Math.PI * 2;
+            const x = centerX + Math.cos(angle) * radius;
+            const y = centerY - 200 + Math.sin(angle) * radius * 0.7;
+            points.push({ x, y });
+        }
+        
+        // Second loop (bottom)
+        for (let i = 0; i < 32; i++) {
+            const angle = (i / 32) * Math.PI * 2;
+            const x = centerX - Math.cos(angle) * radius;
+            const y = centerY + 200 + Math.sin(angle) * radius * 0.7;
+            points.push({ x, y });
+        }
+        
+        return points;
+    }
+    
+    generateMountainCircuit(centerX, centerY) {
+        const points = [];
+        const segments = [
+            // Straight section
+            { type: 'straight', startX: centerX - 400, startY: centerY + 300, endX: centerX + 400, endY: centerY + 300, points: 16 },
+            // Tight hairpin
+            { type: 'hairpin', centerX: centerX + 400, centerY: centerY + 150, radius: 150, points: 20 },
+            // Mountain climb
+            { type: 'spiral', centerX: centerX + 200, centerY: centerY - 100, radius: 200, points: 16 },
+            // Fast descent
+            { type: 'curve', centerX: centerX - 200, centerY: centerY - 200, radius: 250, points: 12 }
+        ];
+        
+        segments.forEach(segment => {
+            for (let i = 0; i < segment.points; i++) {
+                const t = i / segment.points;
+                let x, y;
+                
+                switch (segment.type) {
+                    case 'straight':
+                        x = segment.startX + (segment.endX - segment.startX) * t;
+                        y = segment.startY + (segment.endY - segment.startY) * t;
+                        break;
+                    case 'hairpin':
+                        const angle = Math.PI * (1 + t);
+                        x = segment.centerX + Math.cos(angle) * segment.radius;
+                        y = segment.centerY + Math.sin(angle) * segment.radius;
+                        break;
+                    case 'spiral':
+                        const spiralAngle = t * Math.PI * 1.5;
+                        x = segment.centerX + Math.cos(spiralAngle) * (segment.radius * (1 - t * 0.3));
+                        y = segment.centerY + Math.sin(spiralAngle) * (segment.radius * (1 - t * 0.3));
+                        break;
+                    case 'curve':
+                        const curveAngle = t * Math.PI;
+                        x = segment.centerX + Math.cos(curveAngle) * segment.radius;
+                        y = segment.centerY + Math.sin(curveAngle) * segment.radius;
+                        break;
+                }
+                
+                points.push({ x, y });
+            }
+        });
+        
+        return points;
+    }
+    
+    generateCityStreets(centerX, centerY) {
+        const points = [];
+        const blockSize = 200;
+        
+        // Create a street circuit through city blocks
+        const waypoints = [
+            { x: centerX - blockSize * 2, y: centerY + blockSize },
+            { x: centerX + blockSize * 2, y: centerY + blockSize },
+            { x: centerX + blockSize * 2, y: centerY - blockSize * 0.5 },
+            { x: centerX + blockSize, y: centerY - blockSize * 0.5 },
+            { x: centerX + blockSize, y: centerY - blockSize * 1.5 },
+            { x: centerX - blockSize, y: centerY - blockSize * 1.5 },
+            { x: centerX - blockSize, y: centerY },
+            { x: centerX - blockSize * 2, y: centerY }
+        ];
+        
+        // Connect waypoints with smooth curves
+        for (let i = 0; i < waypoints.length; i++) {
+            const start = waypoints[i];
+            const end = waypoints[(i + 1) % waypoints.length];
+            
+            // Add intermediate points for smooth curves
+            for (let j = 0; j < 8; j++) {
+                const t = j / 8;
+                const x = start.x + (end.x - start.x) * t;
+                const y = start.y + (end.y - start.y) * t;
+                
+                // Add some curve to corners
+                if (j < 4) {
+                    const curve = Math.sin(t * Math.PI) * 30;
+                    points.push({ x: x + curve, y: y + curve });
+                } else {
+                    points.push({ x, y });
+                }
+            }
         }
         
         return points;
@@ -860,10 +1172,14 @@ class PowerUpSystem {
     constructor() {
         this.powerUps = [];
         this.powerUpTypes = [
-            { type: 'mushroom', name: '🍄', spawnRate: 0.4 },
-            { type: 'banana', name: '🍌', spawnRate: 0.3 },
-            { type: 'shell', name: '🔴', spawnRate: 0.2 },
-            { type: 'lightning', name: '⚡', spawnRate: 0.1 }
+            { type: 'mushroom', name: '🍄', spawnRate: 0.25 },
+            { type: 'banana', name: '🍌', spawnRate: 0.20 },
+            { type: 'shell', name: '🔴', spawnRate: 0.15 },
+            { type: 'lightning', name: '⚡', spawnRate: 0.05 },
+            { type: 'oil', name: '🛢️', spawnRate: 0.15 },
+            { type: 'shield', name: '🛡️', spawnRate: 0.10 },
+            { type: 'teleporter', name: '🌀', spawnRate: 0.05 },
+            { type: 'star', name: '⭐', spawnRate: 0.05 }
         ];
     }
     
@@ -949,6 +1265,18 @@ class PowerUpSystem {
             case 'lightning':
                 this.castLightning(kart, allKarts);
                 break;
+            case 'oil':
+                this.deployOilSlick(kart);
+                break;
+            case 'shield':
+                this.activateShield(kart);
+                break;
+            case 'teleporter':
+                this.teleportAhead(kart, allKarts);
+                break;
+            case 'star':
+                this.activateSuperStar(kart);
+                break;
         }
     }
     
@@ -1012,6 +1340,66 @@ class PowerUpSystem {
                 }, 3000);
             }
         });
+    }
+    
+    deployOilSlick(kart) {
+        // Create oil slick behind the kart
+        const oilSlick = new OilSlick(
+            kart.x - Math.cos(kart.angle) * 30,
+            kart.y - Math.sin(kart.angle) * 30
+        );
+        
+        // Add to a global oil slicks array that would be checked for collisions
+        if (!window.oilSlicks) window.oilSlicks = [];
+        window.oilSlicks.push(oilSlick);
+        
+        // Auto-remove after 15 seconds
+        setTimeout(() => {
+            const index = window.oilSlicks.indexOf(oilSlick);
+            if (index > -1) window.oilSlicks.splice(index, 1);
+        }, 15000);
+    }
+    
+    activateShield(kart) {
+        kart.hasShield = true;
+        kart.shieldTime = 8000; // 8 seconds of protection
+        
+        // Remove shield after duration
+        setTimeout(() => {
+            kart.hasShield = false;
+            kart.shieldTime = 0;
+        }, 8000);
+    }
+    
+    teleportAhead(kart, allKarts) {
+        // Find kart ahead of current kart
+        const sortedKarts = [...allKarts].sort((a, b) => {
+            const aProgress = a.lapsCompleted + (a.lastCheckpoint / 8);
+            const bProgress = b.lapsCompleted + (b.lastCheckpoint / 8);
+            return bProgress - aProgress;
+        });
+        
+        const currentIndex = sortedKarts.indexOf(kart);
+        if (currentIndex > 0) {
+            const targetKart = sortedKarts[currentIndex - 1];
+            // Teleport slightly behind the target kart
+            kart.x = targetKart.x - Math.cos(targetKart.angle) * 50;
+            kart.y = targetKart.y - Math.sin(targetKart.angle) * 50;
+        }
+    }
+    
+    activateSuperStar(kart) {
+        kart.superStar = true;
+        kart.originalMaxSpeed = kart.speed;
+        kart.speed *= 2; // Double speed
+        kart.invulnerable = true; // Can't be affected by other power-ups
+        
+        // Effect lasts 5 seconds
+        setTimeout(() => {
+            kart.superStar = false;
+            kart.invulnerable = false;
+            kart.speed = Math.min(kart.speed, kart.originalMaxSpeed || 5);
+        }, 5000);
     }
     
     respawnPowerUp(track) {
@@ -1106,9 +1494,46 @@ class HomingShell extends PowerUp {
     
     hitTarget() {
         if (this.target) {
-            this.target.speed *= 0.3; // Slow down target
+        }
+    }
+}
+
+/**
+ * Oil Slick Class - Causes karts to skid and lose control
+ */
+class OilSlick {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.radius = 25;
+        this.active = true;
+        this.lifetime = 15000; // 15 seconds
+        this.animationTime = 0;
+    }
+    
+    update(deltaTime) {
+        this.animationTime += deltaTime;
+        this.lifetime -= deltaTime * 1000;
+        
+        if (this.lifetime <= 0) {
             this.active = false;
         }
+    }
+    
+    checkCollision(kart) {
+        if (!this.active || kart.hasShield || kart.invulnerable) return false;
+        
+        const dx = kart.x - this.x;
+        const dy = kart.y - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < this.radius + kart.radius) {
+            // Apply slippery effect
+            kart.speed *= 0.5;
+            kart.angle += (Math.random() - 0.5) * 0.5; // Random skid
+            return true;
+        }
+        return false;
     }
 }
 
@@ -1241,6 +1666,42 @@ class RenderingEngine {
             }
             
             ctx.restore();
+            
+            // Draw shield effect (after restore to avoid rotation)
+            if (kart.hasShield) {
+                ctx.save();
+                ctx.translate(kart.x, kart.y);
+                
+                const time = Date.now() * 0.01;
+                ctx.strokeStyle = `rgba(52, 152, 219, ${0.7 + Math.sin(time) * 0.3})`;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(0, 0, kart.radius + 8, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                ctx.restore();
+            }
+            
+            // Draw super star effect
+            if (kart.superStar) {
+                ctx.save();
+                ctx.translate(kart.x, kart.y);
+                
+                const time = Date.now() * 0.02;
+                for (let i = 0; i < 5; i++) {
+                    const angle = (i / 5) * Math.PI * 2 + time;
+                    const x = Math.cos(angle) * (kart.radius + 15);
+                    const y = Math.sin(angle) * (kart.radius + 15);
+                    
+                    ctx.fillStyle = `rgba(241, 196, 15, ${0.8 + Math.sin(time + i) * 0.2})`;
+                    ctx.font = '16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('⭐', x, y);
+                }
+                
+                ctx.restore();
+            }
         });
     }
     
@@ -1268,6 +1729,37 @@ class RenderingEngine {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(powerUp.type.name, 0, 0);
+            
+            ctx.restore();
+        });
+    }
+    
+    renderOilSlicks(oilSlicks) {
+        const ctx = this.ctx;
+        
+        oilSlicks.forEach(oilSlick => {
+            if (!oilSlick.active) return;
+            
+            ctx.save();
+            ctx.translate(oilSlick.x, oilSlick.y);
+            
+            // Draw oil slick with gradient
+            const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, oilSlick.radius);
+            gradient.addColorStop(0, 'rgba(44, 62, 80, 0.8)');
+            gradient.addColorStop(0.7, 'rgba(44, 62, 80, 0.4)');
+            gradient.addColorStop(1, 'rgba(44, 62, 80, 0.1)');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, oilSlick.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Add some shine effect
+            const time = oilSlick.animationTime * 2;
+            ctx.fillStyle = `rgba(127, 140, 141, ${0.3 + Math.sin(time) * 0.2})`;
+            ctx.beginPath();
+            ctx.arc(-5, -5, oilSlick.radius * 0.3, 0, Math.PI * 2);
+            ctx.fill();
             
             ctx.restore();
         });
