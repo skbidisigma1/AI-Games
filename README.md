@@ -4,6 +4,23 @@ A collection of innovative games exploring artificial intelligence, consciousnes
 
 ## Games
 
+### 🏎️ HadleeKart
+*A complete top-down 2D racing game with competitive AI and strategic power-ups*
+
+**Location**: `/HadleeKart/`
+
+**Features**:
+- 8-kart racing with 7 unique AI personalities
+- Realistic physics: acceleration, braking, turning, and drifting
+- Strategic power-up system: speed boosts, banana peels, homing shells, lightning strikes
+- Beautiful track design with lap counting and position tracking
+- Smooth camera system and real-time minimap
+- Professional racing HUD with live statistics
+
+**Play**: Open `HadleeKart/index.html` in a web browser
+
+**Gameplay**: Race against intelligent AI opponents through 3 laps of intense competition. Collect and use power-ups strategically while mastering drift mechanics and racing lines. Each AI opponent has unique racing personality, from aggressive to cautious, creating dynamic and unpredictable races.
+
 ### 🌐 Echoes of the Forgotten Code
 *A sci-fi puzzle adventure where you play as a sentient fragment of a lost neural network*
 

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HadleeKart - Racing Adventure</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="1000" height="700"></canvas>
+        
+        <!-- UI Overlays -->
+        <div id="ui">
+            <!-- Title Screen -->
+            <div id="titleScreen" class="screen active">
+                <div class="title-content">
+                    <h1 class="racing-title">HadleeKart</h1>
+                    <h2 class="subtitle">High-Speed Racing Adventure</h2>
+                    <p class="game-description">
+                        Race against 7 AI opponents in thrilling kart racing action!<br>
+                        🏎️ Use power-ups strategically • 🍄 Speed boost mushrooms<br>
+                        🍌 Banana peels • 🔴 Homing red shells • ⚡ Lightning strikes<br>
+                        Complete 3 laps to win the race!
+                    </p>
+                    <div class="controls-info">
+                        <p><strong>Controls:</strong></p>
+                        <p>W/A/S/D or Arrow Keys to drive</p>
+                        <p>SHIFT to drift • SPACE to use power-up</p>
+                    </div>
+                    <button id="startRace" class="racing-button">START RACING!</button>
+                </div>
+            </div>
+            
+            <!-- Game Screen -->
+            <div id="gameScreen" class="screen">
+                <!-- Racing HUD -->
+                <div id="racingHUD">
+                    <div id="positionDisplay">
+                        <span class="hud-label">POSITION:</span>
+                        <span id="currentPosition" class="position-large">1</span>
+                        <span class="position-total">/8</span>
+                    </div>
+                    <div id="lapDisplay">
+                        <span class="hud-label">LAP:</span>
+                        <span id="currentLap">1</span> / <span id="totalLaps">3</span>
+                    </div>
+                    <div id="speedDisplay">
+                        <span class="hud-label">SPEED:</span>
+                        <span id="currentSpeed">0</span> <span class="speed-unit">mph</span>
+                    </div>
+                    <div id="powerUpDisplay">
+                        <span class="hud-label">POWER-UP:</span>
+                        <div id="powerUpIcon" class="powerup-empty">NONE</div>
+                    </div>
+                </div>
+
+                <!-- Minimap -->
+                <div id="minimap">
+                    <canvas id="minimapCanvas" width="150" height="150"></canvas>
+                </div>
+                
+                <!-- Race Complete Dialog -->
+                <div id="raceComplete" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2 id="raceResultTitle">Race Complete!</h2>
+                        <p id="raceResultText">Congratulations on finishing the race!</p>
+                        <div id="finalStats">
+                            <p>Final Position: <span id="finalPosition">1st</span></p>
+                            <p>Best Lap Time: <span id="bestLapTime">1:23.45</span></p>
+                        </div>
+                        <button id="restartRace" class="racing-button">Race Again</button>
+                        <button id="backToMenu" class="racing-button">Back to Menu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Audio -->
+    <audio id="engineSound" preload="auto" loop>
+        <source src="audio/engine.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="powerUpSound" preload="auto">
+        <source src="audio/powerup.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="collisionSound" preload="auto">
+        <source src="audio/collision.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="driftSound" preload="auto">
+        <source src="audio/drift.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="lightningSound" preload="auto">
+        <source src="audio/lightning.mp3" type="audio/mpeg">
+    </audio>
+    
+    <script src="game.js"></script>
+</body>
+</html>

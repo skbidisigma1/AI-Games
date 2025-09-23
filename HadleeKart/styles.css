@@ -1,0 +1,376 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(135deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+    background-size: 400% 400%;
+    animation: gradientShift 8s ease infinite;
+    overflow: hidden;
+    cursor: default;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+#gameContainer {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#gameCanvas {
+    border: 3px solid #2c3e50;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    background: #34495e;
+}
+
+/* UI Styling */
+#ui {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* Title Screen */
+#titleScreen {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+}
+
+.title-content {
+    text-align: center;
+    padding: 3rem;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    max-width: 600px;
+    backdrop-filter: blur(10px);
+}
+
+.racing-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 4rem;
+    color: #e74c3c;
+    text-shadow: 4px 4px 0px #c0392b;
+    margin-bottom: 0.5rem;
+    letter-spacing: 3px;
+}
+
+.subtitle {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.5rem;
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 2rem;
+}
+
+.game-description {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #34495e;
+    margin-bottom: 2rem;
+}
+
+.controls-info {
+    background: rgba(52, 73, 94, 0.1);
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+
+.controls-info p {
+    color: #2c3e50;
+    font-weight: 600;
+    margin: 0.5rem 0;
+}
+
+.controls-info p:first-child {
+    font-size: 1.2rem;
+    color: #e74c3c;
+}
+
+/* Racing Button */
+.racing-button {
+    font-family: 'Fredoka One', cursive;
+    background: linear-gradient(45deg, #e74c3c, #c0392b);
+    border: none;
+    color: white;
+    padding: 15px 40px;
+    font-size: 1.3rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+    pointer-events: auto;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.racing-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(231, 76, 60, 0.6);
+    background: linear-gradient(45deg, #c0392b, #a93226);
+}
+
+.racing-button:active {
+    transform: translateY(-1px);
+}
+
+/* Game Screen */
+#gameScreen {
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+/* Racing HUD */
+#racingHUD {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 200px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(44, 62, 80, 0.9);
+    border: 2px solid #e74c3c;
+    border-radius: 15px;
+    padding: 15px 25px;
+    font-size: 1rem;
+    pointer-events: auto;
+    backdrop-filter: blur(10px);
+}
+
+.hud-label {
+    color: #ecf0f1;
+    font-weight: 700;
+    margin-right: 8px;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+}
+
+#currentPosition {
+    color: #f1c40f;
+    font-size: 2rem;
+    font-weight: 800;
+    text-shadow: 2px 2px 0px #f39c12;
+}
+
+.position-total {
+    color: #bdc3c7;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+#currentLap, #totalLaps {
+    color: #3498db;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+#currentSpeed {
+    color: #e74c3c;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.speed-unit {
+    color: #95a5a6;
+    font-size: 0.9rem;
+}
+
+#powerUpIcon {
+    background: #34495e;
+    color: #ecf0f1;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-weight: 700;
+    min-width: 60px;
+    text-align: center;
+    border: 2px solid #2c3e50;
+}
+
+.powerup-empty {
+    color: #7f8c8d !important;
+    border-color: #7f8c8d !important;
+}
+
+.powerup-mushroom {
+    background: #f39c12 !important;
+    color: #fff !important;
+    border-color: #e67e22 !important;
+}
+
+.powerup-banana {
+    background: #f1c40f !important;
+    color: #fff !important;
+    border-color: #f39c12 !important;
+}
+
+.powerup-shell {
+    background: #e74c3c !important;
+    color: #fff !important;
+    border-color: #c0392b !important;
+}
+
+.powerup-lightning {
+    background: #9b59b6 !important;
+    color: #fff !important;
+    border-color: #8e44ad !important;
+}
+
+/* Minimap */
+#minimap {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(44, 62, 80, 0.9);
+    border: 2px solid #e74c3c;
+    border-radius: 10px;
+    padding: 10px;
+    pointer-events: auto;
+    backdrop-filter: blur(10px);
+}
+
+#minimapCanvas {
+    border-radius: 5px;
+    background: #2c3e50;
+}
+
+/* Dialog */
+.dialog {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    pointer-events: auto;
+}
+
+.dialog.hidden {
+    display: none;
+}
+
+.dialog-content {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 3rem;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    backdrop-filter: blur(10px);
+}
+
+.dialog-content h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2.5rem;
+    color: #e74c3c;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 0px #c0392b;
+}
+
+.dialog-content p {
+    font-size: 1.1rem;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+#finalStats {
+    background: rgba(52, 73, 94, 0.1);
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin: 1.5rem 0;
+}
+
+#finalStats p {
+    margin: 0.5rem 0;
+    font-weight: 600;
+}
+
+#finalPosition {
+    color: #f1c40f;
+    font-weight: 800;
+}
+
+#bestLapTime {
+    color: #3498db;
+    font-weight: 800;
+}
+
+/* Lightning effect */
+.lightning-flash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.8);
+    pointer-events: none;
+    z-index: 9999;
+    animation: flash 0.3s ease-out;
+}
+
+@keyframes flash {
+    0% { opacity: 0; }
+    50% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .racing-title {
+        font-size: 3rem;
+    }
+    
+    .title-content {
+        padding: 2rem;
+        max-width: 90%;
+    }
+    
+    #racingHUD {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+    
+    #racingHUD > div {
+        margin: 2px 0;
+    }
+}
