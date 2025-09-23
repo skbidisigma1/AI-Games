@@ -35,8 +35,8 @@ class HadleeKartGame {
         this.powerUps = [];
         this.particles = [];
         
-        // Camera
-        this.camera = { x: 0, y: 0 };
+        // Camera with zoom scale for closer view
+        this.camera = { x: 0, y: 0, scale: 1.5 };
         
         this.init();
     }
@@ -235,16 +235,20 @@ class HadleeKartGame {
      * Update camera to follow player
      */
     updateCamera() {
-        const targetX = this.playerKart.x - this.canvas.width / 2;
-        const targetY = this.playerKart.y - this.canvas.height / 2;
+        // Calculate viewport size based on zoom
+        const viewportWidth = this.canvas.width / this.camera.scale;
+        const viewportHeight = this.canvas.height / this.camera.scale;
         
-        // Smooth camera following
-        this.camera.x += (targetX - this.camera.x) * 0.1;
-        this.camera.y += (targetY - this.camera.y) * 0.1;
+        const targetX = this.playerKart.x - viewportWidth / 2;
+        const targetY = this.playerKart.y - viewportHeight / 2;
         
-        // Keep camera within track bounds
-        this.camera.x = Math.max(0, Math.min(this.camera.x, this.track.width - this.canvas.width));
-        this.camera.y = Math.max(0, Math.min(this.camera.y, this.track.height - this.canvas.height));
+        // More responsive camera following for better control feel
+        this.camera.x += (targetX - this.camera.x) * 0.15;
+        this.camera.y += (targetY - this.camera.y) * 0.15;
+        
+        // Keep camera within track bounds considering zoom
+        this.camera.x = Math.max(0, Math.min(this.camera.x, this.track.width - viewportWidth));
+        this.camera.y = Math.max(0, Math.min(this.camera.y, this.track.height - viewportHeight));
     }
     
     /**
@@ -299,8 +303,9 @@ class HadleeKartGame {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.minimapCtx.clearRect(0, 0, this.minimapCanvas.width, this.minimapCanvas.height);
         
-        // Set camera transform
+        // Set camera transform with zoom
         this.ctx.save();
+        this.ctx.scale(this.camera.scale, this.camera.scale);
         this.ctx.translate(-this.camera.x, -this.camera.y);
         
         // Render game elements
@@ -448,8 +453,8 @@ class InputHandler {
  */
 class PhysicsEngine {
     constructor() {
-        this.maxSpeed = 8;
-        this.acceleration = 0.3;
+        this.maxSpeed = 5; // Reduced from 8 for better control
+        this.acceleration = 0.25; // Reduced from 0.3 for smoother acceleration
         this.deceleration = 0.95;
         this.turnSpeed = 0.08;
         this.driftFactor = 0.85;
@@ -860,10 +865,14 @@ class PowerUpSystem {
     constructor() {
         this.powerUps = [];
         this.powerUpTypes = [
-            { type: 'mushroom', name: '🍄', spawnRate: 0.4 },
-            { type: 'banana', name: '🍌', spawnRate: 0.3 },
-            { type: 'shell', name: '🔴', spawnRate: 0.2 },
-            { type: 'lightning', name: '⚡', spawnRate: 0.1 }
+            { type: 'mushroom', name: '🍄', spawnRate: 0.25 },
+            { type: 'banana', name: '🍌', spawnRate: 0.20 },
+            { type: 'shell', name: '🔴', spawnRate: 0.15 },
+            { type: 'lightning', name: '⚡', spawnRate: 0.05 },
+            { type: 'oil', name: '🛢️', spawnRate: 0.15 },
+            { type: 'shield', name: '🛡️', spawnRate: 0.10 },
+            { type: 'teleporter', name: '🌀', spawnRate: 0.05 },
+            { type: 'star', name: '⭐', spawnRate: 0.05 }
         ];
     }
     
@@ -949,6 +958,18 @@ class PowerUpSystem {
             case 'lightning':
                 this.castLightning(kart, allKarts);
                 break;
+            case 'oil':
+                this.deployOilSlick(kart);
+                break;
+            case 'shield':
+                this.activateShield(kart);
+                break;
+            case 'teleporter':
+                this.teleportAhead(kart, allKarts);
+                break;
+            case 'star':
+                this.activateSuperStar(kart);
+                break;
         }
     }
     
@@ -1012,6 +1033,66 @@ class PowerUpSystem {
                 }, 3000);
             }
         });
+    }
+    
+    deployOilSlick(kart) {
+        // Create oil slick behind the kart
+        const oilSlick = new OilSlick(
+            kart.x - Math.cos(kart.angle) * 30,
+            kart.y - Math.sin(kart.angle) * 30
+        );
+        
+        // Add to a global oil slicks array that would be checked for collisions
+        if (!window.oilSlicks) window.oilSlicks = [];
+        window.oilSlicks.push(oilSlick);
+        
+        // Auto-remove after 15 seconds
+        setTimeout(() => {
+            const index = window.oilSlicks.indexOf(oilSlick);
+            if (index > -1) window.oilSlicks.splice(index, 1);
+        }, 15000);
+    }
+    
+    activateShield(kart) {
+        kart.hasShield = true;
+        kart.shieldTime = 8000; // 8 seconds of protection
+        
+        // Remove shield after duration
+        setTimeout(() => {
+            kart.hasShield = false;
+            kart.shieldTime = 0;
+        }, 8000);
+    }
+    
+    teleportAhead(kart, allKarts) {
+        // Find kart ahead of current kart
+        const sortedKarts = [...allKarts].sort((a, b) => {
+            const aProgress = a.lapsCompleted + (a.lastCheckpoint / 8);
+            const bProgress = b.lapsCompleted + (b.lastCheckpoint / 8);
+            return bProgress - aProgress;
+        });
+        
+        const currentIndex = sortedKarts.indexOf(kart);
+        if (currentIndex > 0) {
+            const targetKart = sortedKarts[currentIndex - 1];
+            // Teleport slightly behind the target kart
+            kart.x = targetKart.x - Math.cos(targetKart.angle) * 50;
+            kart.y = targetKart.y - Math.sin(targetKart.angle) * 50;
+        }
+    }
+    
+    activateSuperStar(kart) {
+        kart.superStar = true;
+        kart.originalMaxSpeed = kart.speed;
+        kart.speed *= 2; // Double speed
+        kart.invulnerable = true; // Can't be affected by other power-ups
+        
+        // Effect lasts 5 seconds
+        setTimeout(() => {
+            kart.superStar = false;
+            kart.invulnerable = false;
+            kart.speed = Math.min(kart.speed, kart.originalMaxSpeed || 5);
+        }, 5000);
     }
     
     respawnPowerUp(track) {
@@ -1106,9 +1187,46 @@ class HomingShell extends PowerUp {
     
     hitTarget() {
         if (this.target) {
-            this.target.speed *= 0.3; // Slow down target
+        }
+    }
+}
+
+/**
+ * Oil Slick Class - Causes karts to skid and lose control
+ */
+class OilSlick {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.radius = 25;
+        this.active = true;
+        this.lifetime = 15000; // 15 seconds
+        this.animationTime = 0;
+    }
+    
+    update(deltaTime) {
+        this.animationTime += deltaTime;
+        this.lifetime -= deltaTime * 1000;
+        
+        if (this.lifetime <= 0) {
             this.active = false;
         }
+    }
+    
+    checkCollision(kart) {
+        if (!this.active || kart.hasShield || kart.invulnerable) return false;
+        
+        const dx = kart.x - this.x;
+        const dy = kart.y - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < this.radius + kart.radius) {
+            // Apply slippery effect
+            kart.speed *= 0.5;
+            kart.angle += (Math.random() - 0.5) * 0.5; // Random skid
+            return true;
+        }
+        return false;
     }
 }
 
