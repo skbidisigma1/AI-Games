@@ -148,6 +148,7 @@ Feel free to extend existing games or create new ones that explore these themes!
 ## Technical Notes
 
 All games are designed to be:
+- COOL
 - **Accessible**: Run in any modern web browser
 - **Self-contained**: No external dependencies required
 - **Extensible**: Well-documented code for easy modification
