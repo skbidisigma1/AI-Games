@@ -78,6 +78,16 @@ class GameBrowser {
                 fullDescription: 'Control a happy cube through platforming challenges. Collect all stars and reach the exit using different block types.'
             },
             {
+                name: 'PixelVault',
+                displayName: 'PixelVault',
+                icon: '💎',
+                genre: 'platformer',
+                description: 'A challenging digital platformer with advanced movement mechanics and 12 progressive levels',
+                features: ['wall jumping', 'double jump', 'dash ability', '12 challenging levels', 'corrupted platforms', 'moving platforms'],
+                path: 'AI-Games/PixelVault',
+                fullDescription: 'Navigate corrupted data vaults as a digital entity. Master wall-jumping, double-jumping, and dash abilities to collect all data fragments and breach the system across 12 increasingly challenging levels.'
+            },
+            {
                 name: 'HillRider',
                 displayName: 'HillRider',
                 icon: '🌄',
@@ -289,11 +299,22 @@ class GameDetector {
         }
     }
     
-    async scanDirectories() {
-        // Placeholder for directory scanning
-        // In a real implementation, this would use File System Access API or server-side scanning
-        return ['BounceBlox', 'DataStream', 'Dune', 'Echoes', 'HadleeKart', 'HillRider', 'IdleBreakout', 'Ruleweaver', 'SpaceGuardian'];
-    }
+async scanDirectories() {
+    // Placeholder for directory scanning
+    // In a real implementation, this would use File System Access API or server-side scanning
+    return [
+        'BounceBlox',
+        'DataStream',
+        'Dune',
+        'Echoes',
+        'HadleeKart',
+        'HillRider',
+        'IdleBreakout',
+        'PixelVault',
+        'Ruleweaver',
+        'SpaceGuardian'
+    ];
+}
     
     notifyNewGames(newGames) {
         // Create a notification for new games
