@@ -726,26 +726,58 @@ class PhysicsEngine {
     }
     
     resolveTrackCollision(kart, track) {
-        // Simple bounce off track boundaries
-        if (kart.x < kart.radius) {
-            kart.x = kart.radius;
+        // Enhanced collision resolution with stronger penalties
+        const margin = 30;
+        
+        // Harsher boundary enforcement
+        if (kart.x < margin) {
+            kart.x = margin;
             kart.vx = Math.abs(kart.vx);
-            kart.speed *= 0.5;
+            kart.speed *= 0.2; // Much harsher speed penalty
+            kart.angle += (Math.random() - 0.5) * 0.3; // Add some random spin
         }
-        if (kart.x > track.width - kart.radius) {
-            kart.x = track.width - kart.radius;
+        if (kart.x > track.width - margin) {
+            kart.x = track.width - margin;
             kart.vx = -Math.abs(kart.vx);
-            kart.speed *= 0.5;
+            kart.speed *= 0.2;
+            kart.angle += (Math.random() - 0.5) * 0.3;
         }
-        if (kart.y < kart.radius) {
-            kart.y = kart.radius;
+        if (kart.y < margin) {
+            kart.y = margin;
             kart.vy = Math.abs(kart.vy);
-            kart.speed *= 0.5;
+            kart.speed *= 0.2;
+            kart.angle += (Math.random() - 0.5) * 0.3;
         }
-        if (kart.y > track.height - kart.radius) {
-            kart.y = track.height - kart.radius;
+        if (kart.y > track.height - margin) {
+            kart.y = track.height - margin;
             kart.vy = -Math.abs(kart.vy);
-            kart.speed *= 0.5;
+            kart.speed *= 0.2;
+            kart.angle += (Math.random() - 0.5) * 0.3;
+        }
+        
+        // If too far from track, push back towards nearest track point
+        if (track.trackPoints.length > 0) {
+            let closestPoint = track.trackPoints[0];
+            let minDistance = Infinity;
+            
+            for (const point of track.trackPoints) {
+                const dx = kart.x - point.x;
+                const dy = kart.y - point.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestPoint = point;
+                }
+            }
+            
+            if (minDistance > 120) {
+                // Push kart back towards track
+                const pushX = (closestPoint.x - kart.x) * 0.1;
+                const pushY = (closestPoint.y - kart.y) * 0.1;
+                kart.x += pushX;
+                kart.y += pushY;
+                kart.speed *= 0.1; // Very harsh penalty for being off-track
+            }
         }
     }
 }
@@ -1030,9 +1062,35 @@ class RacingTrack {
     }
     
     checkCollision(kart) {
-        // Simple track boundary collision (can be enhanced with proper track collision)
-        return kart.x < 50 || kart.x > this.width - 50 || 
-               kart.y < 50 || kart.y > this.height - 50;
+        // Enhanced track boundary collision with stronger barriers
+        const margin = 30; // Smaller margin means stricter boundaries
+        let collision = false;
+        
+        // Check basic canvas boundaries first
+        if (kart.x < margin || kart.x > this.width - margin || 
+            kart.y < margin || kart.y > this.height - margin) {
+            collision = true;
+        }
+        
+        // Additional check: prevent escaping by ensuring kart stays near track
+        if (!collision && this.trackPoints.length > 0) {
+            let minDistanceToTrack = Infinity;
+            
+            // Find closest track point
+            for (const point of this.trackPoints) {
+                const dx = kart.x - point.x;
+                const dy = kart.y - point.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                minDistanceToTrack = Math.min(minDistanceToTrack, distance);
+            }
+            
+            // If too far from track, consider it a collision
+            if (minDistanceToTrack > 120) { // Track width allowance
+                collision = true;
+            }
+        }
+        
+        return collision;
     }
     
     checkLapCompletion(kart) {
@@ -1069,13 +1127,13 @@ class RacingTrack {
 class AISystem {
     constructor() {
         this.personalityTypes = [
-            { aggression: 0.8, skill: 0.9, riskTaking: 0.7, name: 'Aggressive' },
-            { aggression: 0.3, skill: 0.8, riskTaking: 0.4, name: 'Cautious' },
-            { aggression: 0.6, skill: 0.95, riskTaking: 0.5, name: 'Skilled' },
-            { aggression: 0.7, skill: 0.6, riskTaking: 0.8, name: 'Risky' },
-            { aggression: 0.4, skill: 0.7, riskTaking: 0.3, name: 'Defensive' },
-            { aggression: 0.9, skill: 0.7, riskTaking: 0.9, name: 'Reckless' },
-            { aggression: 0.5, skill: 0.85, riskTaking: 0.6, name: 'Balanced' }
+            { aggression: 0.9, skill: 0.95, riskTaking: 0.8, name: 'Aggressive' },
+            { aggression: 0.6, skill: 0.92, riskTaking: 0.5, name: 'Cautious' },
+            { aggression: 0.8, skill: 0.98, riskTaking: 0.7, name: 'Skilled' },
+            { aggression: 0.85, skill: 0.88, riskTaking: 0.9, name: 'Risky' },
+            { aggression: 0.7, skill: 0.9, riskTaking: 0.4, name: 'Defensive' },
+            { aggression: 0.95, skill: 0.85, riskTaking: 0.95, name: 'Reckless' },
+            { aggression: 0.75, skill: 0.94, riskTaking: 0.7, name: 'Balanced' }
         ];
     }
     
@@ -1171,6 +1229,7 @@ class AISystem {
 class PowerUpSystem {
     constructor() {
         this.powerUps = [];
+        this.maxPowerUps = 15; // Limit max power-ups on track
         this.powerUpTypes = [
             { type: 'mushroom', name: '🍄', spawnRate: 0.25 },
             { type: 'banana', name: '🍌', spawnRate: 0.20 },
@@ -1186,8 +1245,8 @@ class PowerUpSystem {
     generatePowerUps(track) {
         this.powerUps = [];
         
-        // Generate power-ups around the track
-        for (let i = 0; i < 15; i++) {
+        // Generate fewer initial power-ups
+        for (let i = 0; i < 8; i++) {
             const randomPoint = track.trackPoints[Math.floor(Math.random() * track.trackPoints.length)];
             const powerUpType = this.getRandomPowerUpType();
             
@@ -1229,10 +1288,10 @@ class PowerUpSystem {
                         kart.powerUp = powerUp.type;
                         this.powerUps.splice(i, 1);
                         
-                        // Respawn power-up elsewhere after delay
+                        // Respawn power-up elsewhere after much longer delay (1/10 frequency)
                         setTimeout(() => {
                             this.respawnPowerUp(track);
-                        }, 5000 + Math.random() * 5000);
+                        }, 50000 + Math.random() * 50000); // 50-100 seconds instead of 5-10
                     }
                 }
             }
@@ -1403,6 +1462,11 @@ class PowerUpSystem {
     }
     
     respawnPowerUp(track) {
+        // Only respawn if under the limit
+        if (this.powerUps.length >= this.maxPowerUps) {
+            return;
+        }
+        
         const randomPoint = track.trackPoints[Math.floor(Math.random() * track.trackPoints.length)];
         const powerUpType = this.getRandomPowerUpType();
         
