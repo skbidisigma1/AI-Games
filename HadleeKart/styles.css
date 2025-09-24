@@ -411,6 +411,137 @@ body {
     }
 }
 
+/* Story Mode Screen */
+.story-content {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.story-subtitle {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.8rem;
+    color: #9b59b6;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.story-intro {
+    background: rgba(52, 152, 219, 0.1);
+    border: 2px solid #3498db;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+    text-align: center;
+}
+
+.story-intro p {
+    font-size: 1.2rem;
+    color: #2c3e50;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.story-races {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.story-race {
+    background: rgba(46, 204, 113, 0.1);
+    border: 2px solid #2ecc71;
+    border-radius: 15px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    text-align: left;
+}
+
+.story-race.locked {
+    background: rgba(149, 165, 166, 0.1);
+    border-color: #95a5a6;
+    opacity: 0.6;
+}
+
+.story-race:not(.locked):hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(46, 204, 113, 0.3);
+}
+
+.story-race h3 {
+    font-family: 'Fredoka One', cursive;
+    color: #27ae60;
+    margin-bottom: 0.5rem;
+    font-size: 1.3rem;
+}
+
+.story-race.locked h3 {
+    color: #7f8c8d;
+}
+
+.story-race p {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.story-race-button {
+    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    pointer-events: auto;
+}
+
+.story-race.locked .story-race-button {
+    background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+    cursor: not-allowed;
+}
+
+.story-race-button:hover:not(.story-race.locked .story-race-button) {
+    background: linear-gradient(45deg, #27ae60, #229954);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+}
+
+.story-dialog-content {
+    max-width: 600px;
+    text-align: left;
+}
+
+.story-dialog-content h2 {
+    color: #e74c3c;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+#storyDialogText {
+    background: rgba(52, 73, 94, 0.1);
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin: 1.5rem 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#storyDialogText p {
+    margin: 1rem 0;
+    line-height: 1.6;
+}
+
 /* Track Selection Screen */
 .track-selection-content {
     max-width: 1000px;

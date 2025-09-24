@@ -61,8 +61,18 @@ class HadleeKartGame {
             this.showTrackSelection();
         });
         
+        // Story mode button
+        document.getElementById('storyMode').addEventListener('click', () => {
+            this.showStoryMode();
+        });
+        
         // Back to title button
         document.getElementById('backToTitle').addEventListener('click', () => {
+            this.backToTitle();
+        });
+        
+        // Back to title from story mode
+        document.getElementById('backToTitleFromStory').addEventListener('click', () => {
             this.backToTitle();
         });
         
@@ -114,7 +124,235 @@ class HadleeKartGame {
     backToTitle() {
         this.gameState = 'title';
         document.getElementById('trackSelection').classList.remove('active');
+        document.getElementById('storyModeScreen').classList.remove('active');
         document.getElementById('titleScreen').classList.add('active');
+    }
+    
+    /**
+     * Show story mode screen
+     */
+    showStoryMode() {
+        this.gameState = 'storyMode';
+        document.getElementById('titleScreen').classList.remove('active');
+        document.getElementById('storyModeScreen').classList.add('active');
+        this.updateStoryProgress();
+    }
+    
+    /**
+     * Update story progress and unlock races
+     */
+    updateStoryProgress() {
+        const completedRaces = parseInt(localStorage.getItem('hadleeKartStoryProgress') || '0');
+        
+        document.querySelectorAll('.story-race').forEach((raceEl, index) => {
+            const raceNum = index + 1;
+            const button = raceEl.querySelector('.story-race-button');
+            
+            if (raceNum <= completedRaces + 1) {
+                raceEl.classList.remove('locked');
+                button.textContent = 'START RACE';
+                button.onclick = () => this.startStoryRace(raceNum);
+            } else {
+                raceEl.classList.add('locked');
+                button.textContent = 'LOCKED';
+                button.onclick = null;
+            }
+        });
+    }
+    
+    /**
+     * Start a story mode race
+     */
+    startStoryRace(raceNumber) {
+        this.currentStoryRace = raceNumber;
+        this.showStoryDialog(raceNumber);
+    }
+    
+    /**
+     * Show story dialog before race
+     */
+    showStoryDialog(raceNumber) {
+        const storyData = this.getStoryData(raceNumber);
+        
+        document.getElementById('storyDialogTitle').textContent = storyData.title;
+        document.getElementById('storyDialogText').innerHTML = storyData.preRaceText;
+        document.getElementById('storyDialog').classList.remove('hidden');
+        
+        document.getElementById('continueStory').onclick = () => {
+            document.getElementById('storyDialog').classList.add('hidden');
+            this.selectedTrack = storyData.track;
+            this.createTrack();
+            this.createKarts();
+            this.startRace();
+        };
+        
+        document.getElementById('skipStory').onclick = () => {
+            document.getElementById('storyDialog').classList.add('hidden');
+            this.selectedTrack = storyData.track;
+            this.createTrack();
+            this.createKarts();
+            this.startRace();
+        };
+    }
+    
+    /**
+     * Get story data for each race
+     */
+    getStoryData(raceNumber) {
+        const stories = {
+            1: {
+                title: "Race 1: First Impressions",
+                track: "classic",
+                preRaceText: `
+                    <p><strong>Luke's First Race</strong></p>
+                    <p>Luke nervously adjusts his helmet as he prepares for his debut race in the Apex Circuit. 
+                    His heart pounds - not just from the anticipation of racing, but because <em>she</em> will be watching.</p>
+                    <p>"Just focus on the track," he tells himself, but his eyes keep drifting to Hadlee's kart. 
+                    The reigning champion looks effortlessly confident, already a legend at just 22.</p>
+                    <p>"This is it," Luke whispers. "Time to show her what I can do."</p>
+                `,
+                postRaceText: `
+                    <p>Luke crosses the finish line, his first official race complete. Win or lose, 
+                    he's proven he belongs here. As he climbs out of his kart, he notices someone watching 
+                    from the pit crew - a quiet figure with a clipboard, taking notes...</p>
+                `
+            },
+            2: {
+                title: "Race 2: Rising Stakes",
+                track: "figure8",
+                preRaceText: `
+                    <p><strong>Growing Confidence</strong></p>
+                    <p>Luke's first race gave him confidence, but the Figure-8 track is known for its chaos. 
+                    Drivers crossing paths, close calls, and split-second decisions.</p>
+                    <p>As he waits for the green flag, Luke catches Hadlee's eye. She nods - was that 
+                    acknowledgment? Respect? His heart skips a beat.</p>
+                    <p>"Focus, Luke," he reminds himself. "Drive like your life depends on it."</p>
+                `,
+                postRaceText: `
+                    <p>The crossing sections were brutal, but Luke held his own. After the race, 
+                    he finds a note tucked into his helmet: "Good driving on turn 3. You've got potential. -E"</p>
+                    <p>E? Luke looks around confused. Who could have left this?</p>
+                `
+            },
+            3: {
+                title: "Race 3: Mysterious Messages",
+                track: "mountain",
+                preRaceText: `
+                    <p><strong>The Mountain Circuit</strong></p>
+                    <p>Luke's been getting more notes signed "E" - tips about racing lines, 
+                    brake points, even which opponents to watch out for. The advice is incredibly good.</p>
+                    <p>The mountain track is treacherous, full of hairpin turns and elevation changes. 
+                    Luke needs all the help he can get, even mysterious help.</p>
+                    <p>Before the race, another note appears: "Trust your instincts on the hairpins. 
+                    Don't brake too early. You're better than you think. -E"</p>
+                `,
+                postRaceText: `
+                    <p>Following E's advice paid off - Luke navigated the mountain track like a veteran. 
+                    But who is this mysterious advisor? Luke starts studying the pit crew more carefully, 
+                    trying to spot anyone who might be watching him with particular interest...</p>
+                `
+            },
+            4: {
+                title: "Race 4: Growing Doubts",
+                track: "city",
+                preRaceText: `
+                    <p><strong>Urban Jungle</strong></p>
+                    <p>The city street circuit is unforgiving - concrete barriers and tight corners. 
+                    Luke's been racing well, but lately he's been wondering... is he really doing this for Hadlee?</p>
+                    <p>The notes from E have become more personal: "You don't have to prove anything to anyone. 
+                    Race for yourself." But Luke still can't figure out who E is.</p>
+                    <p>As the engines rev, Luke finds himself looking less at Hadlee and more at the 
+                    strategic team members analyzing data sheets...</p>
+                `,
+                postRaceText: `
+                    <p>Luke's driving was more confident today, less desperate to impress. 
+                    After the race, he notices one of the strategy analysts - a young woman 
+                    with intelligent eyes - quickly look away when he glances over. 
+                    Could she be...?</p>
+                `
+            },
+            5: {
+                title: "Race 5: The Connection",
+                track: "desert",
+                preRaceText: `
+                    <p><strong>Desert Heat</strong></p>
+                    <p>The desert track is brutal - heat, dust, and long sweeping turns. 
+                    Luke's latest note from E was different: "Sometimes the person you're meant to 
+                    impress is right beside you, not ahead of you."</p>
+                    <p>Luke's starting to put pieces together. The handwriting, the strategic insights, 
+                    the way someone always seems to be watching his progress...</p>
+                    <p>He spots the analyst again - Eliza, he overheard someone call her. 
+                    She's brilliant, always three steps ahead in race strategy. Could E stand for...?</p>
+                `,
+                postRaceText: `
+                    <p>After the race, Luke makes a decision. He approaches the strategy table, 
+                    his heart pounding harder than during any race. "Eliza?" he calls out. 
+                    She turns, and for a moment, their eyes meet with perfect understanding.</p>
+                    <p>"The notes..." Luke begins. Eliza smiles softly. "I was wondering when you'd figure it out."</p>
+                `
+            },
+            6: {
+                title: "Race 6: Revelation",
+                track: "forest",
+                preRaceText: `
+                    <p><strong>Forest Path</strong></p>
+                    <p>Everything makes sense now. Eliza - "E" - has been helping him all along. 
+                    Not because she needed him to win, but because she saw potential in him 
+                    that he didn't see in himself.</p>
+                    <p>"I never cared about Hadlee," Luke realizes. "I was just intimidated by success. 
+                    But with Eliza... she makes me want to be better."</p>
+                    <p>The forest track winds through tall trees, much like the winding path 
+                    that led Luke to discover what really mattered to him.</p>
+                `,
+                postRaceText: `
+                    <p>Luke races with a new confidence - not to impress anyone, but because 
+                    Eliza believed in him when he couldn't believe in himself. They've been 
+                    talking more, working together on strategy. It's not just racing anymore... 
+                    it's partnership.</p>
+                `
+            },
+            7: {
+                title: "Race 7: Championship Final",
+                track: "speedway",
+                preRaceText: `
+                    <p><strong>The High-Speed Showdown</strong></p>
+                    <p>The championship comes down to this - Luke versus Hadlee on the speedway. 
+                    The fastest track, the highest stakes. But Luke's perspective has completely changed.</p>
+                    <p>Eliza squeezes his hand before he gets in the kart. "Just drive your race," she says. 
+                    "Win or lose, I'm proud of who you've become."</p>
+                    <p>Luke realizes he's already won something more valuable than any championship...</p>
+                `,
+                postRaceText: `
+                    <p>The race is intense, wheel-to-wheel with Hadlee. But in the final turn, 
+                    Luke makes a decision that shocks everyone...</p>
+                `
+            },
+            8: {
+                title: "Race 8: True Love Wins",
+                track: "twisted",
+                preRaceText: `
+                    <p><strong>The Twisted Finale</strong></p>
+                    <p>Luke's shocking move in the championship - slowing down to let Hadlee pass, 
+                    then hitting her kart and launching her into orbit - made headlines worldwide.</p>
+                    <p>"I don't need to beat her to prove my worth," Luke declared to the media. 
+                    "I've already found everything I was looking for."</p>
+                    <p>This final exhibition race on the twisted circuit is just for fun. 
+                    Luke and Eliza, now officially together, racing side by side...</p>
+                `,
+                postRaceText: `
+                    <p><strong>EPILOGUE: Six Months Later</strong></p>
+                    <p>Luke and Eliza work as a perfect team - she handles strategy, he handles driving. 
+                    They've won three races together and are planning their future.</p>
+                    <p>There's just one small problem... Luke has developed a slight gambling addiction 
+                    after discovering how thrilling it is to bet on race outcomes. 
+                    Eliza is working on helping him with that too.</p>
+                    <p><em>"Every love story has its quirks,"</em> she says with a laugh.</p>
+                    <p><strong>THE END</strong></p>
+                `
+            }
+        };
+        
+        return stories[raceNumber] || stories[1];
     }
     
     /**
@@ -131,15 +369,17 @@ class HadleeKartGame {
      * Initialize track preview canvases
      */
     initializeTrackPreviews() {
-        const trackTypes = ['classic', 'figure8', 'mountain', 'city'];
+        const trackTypes = ['classic', 'figure8', 'mountain', 'city', 'desert', 'forest', 'speedway', 'twisted'];
         
         trackTypes.forEach(trackType => {
             const canvas = document.querySelector(`[data-track="${trackType}"] .track-canvas`);
-            const ctx = canvas.getContext('2d');
-            
-            // Create a mini track for preview
-            const previewTrack = new RacingTrack(trackType);
-            this.renderTrackPreview(ctx, previewTrack, canvas.width, canvas.height);
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                
+                // Create a mini track for preview
+                const previewTrack = new RacingTrack(trackType);
+                this.renderTrackPreview(ctx, previewTrack, canvas.width, canvas.height);
+            }
         });
     }
     
@@ -467,10 +707,56 @@ class HadleeKartGame {
         
         const finalPosition = allKarts.findIndex(kart => kart.isPlayer) + 1;
         
-        // Update UI
-        document.getElementById('finalPosition').textContent = this.getOrdinalNumber(finalPosition);
-        document.getElementById('bestLapTime').textContent = this.formatTime(this.bestLapTime);
-        document.getElementById('raceComplete').classList.remove('hidden');
+        // Handle story mode progression
+        if (this.currentStoryRace) {
+            // Story mode - show story completion dialog
+            this.completeStoryRace(finalPosition);
+        } else {
+            // Regular race - show normal completion dialog
+            document.getElementById('finalPosition').textContent = this.getOrdinalNumber(finalPosition);
+            document.getElementById('bestLapTime').textContent = this.formatTime(this.bestLapTime);
+            document.getElementById('raceComplete').classList.remove('hidden');
+        }
+    }
+    
+    /**
+     * Complete a story mode race
+     */
+    completeStoryRace(position) {
+        const storyData = this.getStoryData(this.currentStoryRace);
+        const completedRaces = parseInt(localStorage.getItem('hadleeKartStoryProgress') || '0');
+        
+        // Update progress if this is a new completion
+        if (this.currentStoryRace > completedRaces) {
+            localStorage.setItem('hadleeKartStoryProgress', this.currentStoryRace.toString());
+        }
+        
+        // Show story completion dialog
+        document.getElementById('storyDialogTitle').textContent = `${storyData.title} - Complete!`;
+        document.getElementById('storyDialogText').innerHTML = `
+            <div style="text-align: center; margin-bottom: 1rem;">
+                <h3>Race Result: ${this.getOrdinalNumber(position)} Place</h3>
+                <p>Best Lap: ${this.formatTime(this.bestLapTime)}</p>
+            </div>
+            ${storyData.postRaceText}
+        `;
+        
+        document.getElementById('continueStory').textContent = 'CONTINUE';
+        document.getElementById('skipStory').style.display = 'none';
+        
+        document.getElementById('continueStory').onclick = () => {
+            document.getElementById('storyDialog').classList.add('hidden');
+            document.getElementById('skipStory').style.display = 'inline-block';
+            
+            // Return to story mode screen
+            this.gameState = 'storyMode';
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('storyModeScreen').classList.add('active');
+            this.updateStoryProgress();
+            this.currentStoryRace = null;
+        };
+        
+        document.getElementById('storyDialog').classList.remove('hidden');
     }
     
     /**
@@ -874,6 +1160,14 @@ class RacingTrack {
                 return this.generateMountainCircuit(centerX, centerY);
             case 'city':
                 return this.generateCityStreets(centerX, centerY);
+            case 'desert':
+                return this.generateDesertDunes(centerX, centerY);
+            case 'forest':
+                return this.generateForestTrail(centerX, centerY);
+            case 'speedway':
+                return this.generateSpeedSpeedway(centerX, centerY);
+            case 'twisted':
+                return this.generateTwistedCircuit(centerX, centerY);
             default:
                 return this.generateClassicOval(centerX, centerY);
         }
@@ -1008,6 +1302,109 @@ class RacingTrack {
                     points.push({ x, y });
                 }
             }
+        }
+        
+        return points;
+    }
+    
+    generateDesertDunes(centerX, centerY) {
+        const points = [];
+        const numPoints = 80;
+        const baseRadius = 500;
+        
+        // Create a wavy desert track with dune-like curves
+        for (let i = 0; i < numPoints; i++) {
+            const angle = (i / numPoints) * Math.PI * 2;
+            let radius = baseRadius;
+            
+            // Add dune-like variations
+            radius += Math.sin(angle * 3) * 100; // Large dunes
+            radius += Math.sin(angle * 8) * 30;  // Smaller ripples
+            
+            const x = centerX + Math.cos(angle) * radius;
+            const y = centerY + Math.sin(angle) * (radius * 0.7); // Slightly oval
+            
+            points.push({ x, y });
+        }
+        
+        return points;
+    }
+    
+    generateForestTrail(centerX, centerY) {
+        const points = [];
+        const numPoints = 72;
+        
+        // Create a winding forest path
+        for (let i = 0; i < numPoints; i++) {
+            const t = i / numPoints;
+            const angle = t * Math.PI * 2;
+            
+            // Base circular path
+            let x = centerX + Math.cos(angle) * 400;
+            let y = centerY + Math.sin(angle) * 350;
+            
+            // Add forest-like winding
+            x += Math.sin(angle * 5) * 80;  // Quick zigzags
+            y += Math.cos(angle * 3) * 60;  // Gentle curves
+            
+            // Add some random variation for natural feel
+            x += (Math.random() - 0.5) * 20;
+            y += (Math.random() - 0.5) * 20;
+            
+            points.push({ x, y });
+        }
+        
+        return points;
+    }
+    
+    generateSpeedSpeedway(centerX, centerY) {
+        const points = [];
+        const numPoints = 40; // Fewer points for smoother high-speed turns
+        const radiusX = 700;
+        const radiusY = 300;
+        
+        // Create a simple high-speed oval with banked turns
+        for (let i = 0; i < numPoints; i++) {
+            const angle = (i / numPoints) * Math.PI * 2;
+            const x = centerX + Math.cos(angle) * radiusX;
+            const y = centerY + Math.sin(angle) * radiusY;
+            
+            points.push({ x, y });
+        }
+        
+        return points;
+    }
+    
+    generateTwistedCircuit(centerX, centerY) {
+        const points = [];
+        const numPoints = 96;
+        
+        // Create a complex track with multiple loops and twists
+        for (let i = 0; i < numPoints; i++) {
+            const t = i / numPoints;
+            const angle = t * Math.PI * 2;
+            
+            // Base path
+            let x = centerX + Math.cos(angle) * 450;
+            let y = centerY + Math.sin(angle) * 400;
+            
+            // Add primary twist
+            x += Math.cos(angle * 3) * 150;
+            y += Math.sin(angle * 2) * 100;
+            
+            // Add secondary complexity
+            x += Math.sin(angle * 7) * 40;
+            y += Math.cos(angle * 5) * 50;
+            
+            // Add some chicanes
+            if (t > 0.2 && t < 0.3) {
+                x += Math.sin(t * 50) * 30;
+            }
+            if (t > 0.6 && t < 0.7) {
+                y += Math.cos(t * 40) * 35;
+            }
+            
+            points.push({ x, y });
         }
         
         return points;
@@ -1644,16 +2041,42 @@ class RenderingEngine {
         this.minimapCtx = minimapCtx;
     }
     
+    // Helper function to lighten a color
+    lightenColor(color, percent) {
+        const num = parseInt(color.replace("#",""), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = (num >> 16) + amt;
+        const B = (num >> 8 & 0x00FF) + amt;
+        const G = (num & 0x0000FF) + amt;
+        return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (B<255?B<1?0:B:255)*0x100 + (G<255?G<1?0:G:255)).toString(16).slice(1);
+    }
+    
+    // Helper function to darken a color
+    darkenColor(color, percent) {
+        const num = parseInt(color.replace("#",""), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = (num >> 16) - amt;
+        const B = (num >> 8 & 0x00FF) - amt;
+        const G = (num & 0x0000FF) - amt;
+        return "#" + (0x1000000 + (R>255?255:R<0?0:R)*0x10000 + (B>255?255:B<0?0:B)*0x100 + (G>255?255:G<0?0:G)).toString(16).slice(1);
+    }
+    
     renderTrack(track) {
         const ctx = this.ctx;
         
-        // Draw track surface
-        ctx.fillStyle = '#34495e';
+        // Draw track surface with gradient
+        const gradient = ctx.createRadialGradient(
+            track.width/2, track.height/2, 0,
+            track.width/2, track.height/2, Math.max(track.width, track.height)/2
+        );
+        gradient.addColorStop(0, '#2c3e50');
+        gradient.addColorStop(1, '#1a252f');
+        ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, track.width, track.height);
         
-        // Draw track path
-        ctx.strokeStyle = '#2c3e50';
-        ctx.lineWidth = track.trackWidth;
+        // Draw track outer border
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.lineWidth = track.trackWidth + 10;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         
@@ -1668,35 +2091,64 @@ class RenderingEngine {
         ctx.closePath();
         ctx.stroke();
         
-        // Draw track inner surface
-        ctx.strokeStyle = '#95a5a6';
+        // Draw track path with enhanced styling
+        ctx.strokeStyle = '#34495e';
+        ctx.lineWidth = track.trackWidth;
+        ctx.stroke();
+        
+        // Draw track inner surface with gradient
+        const trackGradient = ctx.createLinearGradient(0, 0, track.width, track.height);
+        trackGradient.addColorStop(0, '#95a5a6');
+        trackGradient.addColorStop(0.5, '#bdc3c7');
+        trackGradient.addColorStop(1, '#95a5a6');
+        ctx.strokeStyle = trackGradient;
         ctx.lineWidth = track.trackWidth - 20;
         ctx.stroke();
         
-        // Draw lane markings
+        // Draw lane markings with improved style
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([20, 20]);
+        ctx.lineWidth = 3;
+        ctx.setLineDash([30, 30]);
+        ctx.globalAlpha = 0.8;
         ctx.stroke();
         ctx.setLineDash([]);
+        ctx.globalAlpha = 1.0;
         
-        // Draw checkpoints (for debugging - can be removed)
+        // Draw checkpoints with glow effect
         track.checkpoints.forEach((checkpoint, index) => {
+            // Glow effect
+            ctx.shadowColor = index === 0 ? '#e74c3c' : '#f39c12';
+            ctx.shadowBlur = 15;
             ctx.beginPath();
             ctx.arc(checkpoint.x, checkpoint.y, checkpoint.radius, 0, Math.PI * 2);
             ctx.strokeStyle = index === 0 ? '#e74c3c' : '#f39c12';
-            ctx.lineWidth = 3;
+            ctx.lineWidth = 4;
             ctx.stroke();
+            ctx.shadowBlur = 0;
         });
         
-        // Draw start/finish line
+        // Draw enhanced start/finish line
         const startPoint = track.trackPoints[0];
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 8;
-        ctx.beginPath();
-        ctx.moveTo(startPoint.x - 50, startPoint.y);
-        ctx.lineTo(startPoint.x + 50, startPoint.y);
-        ctx.stroke();
+        const nextPoint = track.trackPoints[1];
+        const angle = Math.atan2(nextPoint.y - startPoint.y, nextPoint.x - startPoint.x) + Math.PI/2;
+        
+        // Create checkered pattern
+        ctx.save();
+        ctx.translate(startPoint.x, startPoint.y);
+        ctx.rotate(angle);
+        
+        const lineWidth = 100;
+        const checkSize = 10;
+        
+        for (let i = -lineWidth/2; i < lineWidth/2; i += checkSize) {
+            for (let j = -5; j < 5; j += checkSize) {
+                const isWhite = Math.floor(i/checkSize) % 2 === Math.floor(j/checkSize) % 2;
+                ctx.fillStyle = isWhite ? '#ffffff' : '#000000';
+                ctx.fillRect(i, j, checkSize, checkSize);
+            }
+        }
+        
+        ctx.restore();
     }
     
     renderKarts(karts) {
@@ -1707,25 +2159,63 @@ class RenderingEngine {
             ctx.translate(kart.x, kart.y);
             ctx.rotate(kart.angle);
             
-            // Draw kart shadow
+            // Draw kart shadow with blur effect
+            ctx.save();
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowBlur = 8;
+            ctx.shadowOffsetX = 3;
+            ctx.shadowOffsetY = 3;
             ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
             ctx.fillRect(-kart.radius + 2, -kart.radius/2 + 2, kart.radius * 2, kart.radius);
+            ctx.restore();
             
-            // Draw kart body
-            ctx.fillStyle = kart.color;
+            // Draw kart body with gradient
+            const gradient = ctx.createLinearGradient(-kart.radius, -kart.radius/2, kart.radius, kart.radius/2);
+            gradient.addColorStop(0, kart.color);
+            gradient.addColorStop(0.5, this.lightenColor(kart.color, 20));
+            gradient.addColorStop(1, this.darkenColor(kart.color, 20));
+            ctx.fillStyle = gradient;
             ctx.fillRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
             
-            // Draw kart details
+            // Draw kart outline
+            ctx.strokeStyle = this.darkenColor(kart.color, 40);
+            ctx.lineWidth = 2;
+            ctx.strokeRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+            
+            // Draw kart details (spoiler)
             ctx.fillStyle = '#2c3e50';
             ctx.fillRect(kart.radius - 4, -kart.radius/3, 6, kart.radius/1.5);
             
-            // Draw drift smoke
+            // Draw windshield
+            ctx.fillStyle = 'rgba(135, 206, 235, 0.7)';
+            ctx.fillRect(-kart.radius/3, -kart.radius/3, kart.radius/1.5, kart.radius/1.5);
+            
+            // Draw wheels
+            ctx.fillStyle = '#34495e';
+            ctx.fillRect(-kart.radius + 2, -kart.radius/2 - 3, 4, 6);
+            ctx.fillRect(-kart.radius + 2, kart.radius/2 - 3, 4, 6);
+            ctx.fillRect(kart.radius - 6, -kart.radius/2 - 3, 4, 6);
+            ctx.fillRect(kart.radius - 6, kart.radius/2 - 3, 4, 6);
+            
+            // Draw enhanced drift smoke
             if (kart.isDrifting && kart.speed > 2) {
-                for (let i = 0; i < 3; i++) {
-                    ctx.fillStyle = `rgba(200, 200, 200, ${0.3 - i * 0.1})`;
+                for (let i = 0; i < 5; i++) {
+                    ctx.fillStyle = `rgba(200, 200, 200, ${0.4 - i * 0.08})`;
                     ctx.beginPath();
-                    ctx.arc(-kart.radius - i * 8, 0, 4 + i * 2, 0, Math.PI * 2);
+                    ctx.arc(-kart.radius - i * 6, (Math.random() - 0.5) * 10, 3 + i * 1.5, 0, Math.PI * 2);
                     ctx.fill();
+                }
+            }
+            
+            // Speed lines effect when going fast
+            if (kart.speed > 8) {
+                ctx.strokeStyle = `rgba(255, 255, 255, ${(kart.speed - 8) * 0.1})`;
+                ctx.lineWidth = 1;
+                for (let i = 0; i < 3; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(-kart.radius - 20 - i * 5, (i - 1) * 3);
+                    ctx.lineTo(-kart.radius - 30 - i * 5, (i - 1) * 3);
+                    ctx.stroke();
                 }
             }
             

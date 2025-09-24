@@ -29,6 +29,74 @@
                         <p>SHIFT to drift • SPACE to use power-up</p>
                     </div>
                     <button id="startRace" class="racing-button">SELECT TRACK!</button>
+                    <button id="storyMode" class="racing-button" style="margin-top: 15px;">STORY MODE</button>
+                </div>
+            </div>
+            
+            <!-- Story Mode Screen -->
+            <div id="storyModeScreen" class="screen">
+                <div class="story-content">
+                    <h1 class="racing-title">Story Mode</h1>
+                    <h2 class="story-subtitle">Luke's Racing Journey</h2>
+                    <div class="story-intro">
+                        <p>Follow Luke through his racing career as he competes to impress Hadlee... 
+                        or is it really someone else? Each race reveals more of the story.</p>
+                    </div>
+                    <div class="story-races">
+                        <div class="story-race" data-race="1">
+                            <h3>Race 1: First Impressions</h3>
+                            <p>Luke's debut race. He's eager to prove himself to Hadlee.</p>
+                            <button class="story-race-button">START RACE</button>
+                        </div>
+                        <div class="story-race locked" data-race="2">
+                            <h3>Race 2: Rising Stakes</h3>
+                            <p>Luke gains confidence, but competition heats up...</p>
+                            <button class="story-race-button">LOCKED</button>
+                        </div>
+                        <div class="story-race locked" data-race="3">
+                            <h3>Race 3: Mysterious Messages</h3>
+                            <p>Someone called "E" starts giving Luke advice...</p>
+                            <button class="story-race-button">LOCKED</button>
+                        </div>
+                        <div class="story-race locked" data-race="4">
+                            <h3>Race 4: Growing Doubts</h3>
+                            <p>Luke begins to question his true motivations...</p>
+                            <button class="story-race-button">LOCKED</button>
+                        </div>
+                        <div class="story-race locked" data-race="5">
+                            <h3>Race 5: The Connection</h3>
+                            <p>Luke realizes "E" might be closer than he thought...</p>
+                            <button class="story-race-button">LOCKED</button>
+                        </div>
+                        <div class="story-race locked" data-race="6">
+                            <h3>Race 6: Revelation</h3>
+                            <p>The truth about "E" comes to light...</p>
+                            <button class="story-race-button">LOCKED</button>
+                        </div>
+                        <div class="story-race locked" data-race="7">
+                            <h3>Race 7: Championship Final</h3>
+                            <p>The ultimate showdown with Hadlee...</p>
+                            <button class="story-race-button">LOCKED</button>
+                        </div>
+                        <div class="story-race locked" data-race="8">
+                            <h3>Race 8: True Love Wins</h3>
+                            <p>Luke's shocking finale and happy ending...</p>
+                            <button class="story-race-button">LOCKED</button>
+                        </div>
+                    </div>
+                    <button id="backToTitleFromStory" class="racing-button secondary">← BACK TO MENU</button>
+                </div>
+            </div>
+            
+            <!-- Story Dialog Screen -->
+            <div id="storyDialog" class="dialog hidden">
+                <div class="dialog-content story-dialog-content">
+                    <h2 id="storyDialogTitle">Race Story</h2>
+                    <div id="storyDialogText">
+                        <p>Story content will appear here...</p>
+                    </div>
+                    <button id="continueStory" class="racing-button">CONTINUE</button>
+                    <button id="skipStory" class="racing-button secondary">SKIP</button>
                 </div>
             </div>
             
@@ -67,6 +135,38 @@
                             </div>
                             <h3>City Streets</h3>
                             <p>Urban racing through downtown blocks</p>
+                            <button class="track-button">RACE HERE!</button>
+                        </div>
+                        <div class="track-option" data-track="desert">
+                            <div class="track-preview">
+                                <canvas class="track-canvas" width="200" height="140"></canvas>
+                            </div>
+                            <h3>Desert Dunes</h3>
+                            <p>Sandy curves through scorching desert terrain</p>
+                            <button class="track-button">RACE HERE!</button>
+                        </div>
+                        <div class="track-option" data-track="forest">
+                            <div class="track-preview">
+                                <canvas class="track-canvas" width="200" height="140"></canvas>
+                            </div>
+                            <h3>Forest Trail</h3>
+                            <p>Winding path through dense woodland</p>
+                            <button class="track-button">RACE HERE!</button>
+                        </div>
+                        <div class="track-option" data-track="speedway">
+                            <div class="track-preview">
+                                <canvas class="track-canvas" width="200" height="140"></canvas>
+                            </div>
+                            <h3>Speed Speedway</h3>
+                            <p>High-speed oval with banked turns</p>
+                            <button class="track-button">RACE HERE!</button>
+                        </div>
+                        <div class="track-option" data-track="twisted">
+                            <div class="track-preview">
+                                <canvas class="track-canvas" width="200" height="140"></canvas>
+                            </div>
+                            <h3>Twisted Circuit</h3>
+                            <p>Complex track with multiple loops and turns</p>
                             <button class="track-button">RACE HERE!</button>
                         </div>
                     </div>
