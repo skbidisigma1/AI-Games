@@ -570,10 +570,21 @@ class Brick {
         
         if (this.hp <= 0) {
             this.destroyed = true;
-            return this.maxHP; // Return original HP as coin reward
+            
+            // Calculate rewards
+            let coinReward = this.maxHP;
+            let goldReward = 0;
+            
+            // Gold bricks give gold rewards using the specified formula
+            if (this.isGoldBrick) {
+                goldReward = Math.floor(this.maxHP / 100) + 1;
+                coinReward = this.maxHP * 2; // Gold bricks also give bonus coins
+            }
+            
+            return { coins: coinReward, gold: goldReward };
         }
         
-        return 0;
+        return { coins: 0, gold: 0 };
     }
     
     update(deltaTime) {
@@ -667,6 +678,32 @@ class EconomyManager {
             void: 1,
             phoenix: 1
         };
+        // Separate speed and damage upgrade levels
+        this.ballSpeedLevels = {
+            basic: 1,
+            power: 1,
+            speed: 1,
+            splash: 1,
+            plasma: 1,
+            lightning: 1,
+            void: 1,
+            phoenix: 1
+        };
+        this.ballDamageLevels = {
+            basic: 1,
+            power: 1,
+            speed: 1,
+            splash: 1,
+            plasma: 1,
+            lightning: 1,
+            void: 1,
+            phoenix: 1
+        };
+        // Click damage system
+        this.clickDamageLevel = 1;
+        // Gold currency system
+        this.gold = 0;
+        this.totalGoldEarned = 0;
         this.prestigeLevel = 0;
         this.prestigeMultiplier = 1;
     }
@@ -723,6 +760,26 @@ class EconomyManager {
         return Utils.calculateCost(config.baseCost * 5, level - 1, 2);
     }
     
+    getSpeedUpgradeCost(type) {
+        const config = CONFIG.balls[type];
+        const level = this.ballSpeedLevels[type];
+        return Utils.calculateCost(config.baseCost * 3, level - 1, 1.8);
+    }
+    
+    getDamageUpgradeCost(type) {
+        const config = CONFIG.balls[type];
+        const level = this.ballDamageLevels[type];
+        return Utils.calculateCost(config.baseCost * 4, level - 1, 1.9);
+    }
+    
+    getClickDamageUpgradeCost() {
+        return Utils.calculateCost(
+            CONFIG.gameplay.clickDamageUpgradeCost, 
+            this.clickDamageLevel - 1, 
+            CONFIG.gameplay.clickDamageUpgradeMultiplier
+        );
+    }
+    
     canAfford(amount) {
         return this.coins >= amount;
     }
@@ -747,6 +804,56 @@ class EconomyManager {
         return false;
     }
     
+    upgradeSpeedBall(type) {
+        const cost = this.getSpeedUpgradeCost(type);
+        if (this.spendCoins(cost)) {
+            this.ballSpeedLevels[type]++;
+            this.updateCPS();
+            return true;
+        }
+        return false;
+    }
+    
+    upgradeDamageBall(type) {
+        const cost = this.getDamageUpgradeCost(type);
+        if (this.spendCoins(cost)) {
+            this.ballDamageLevels[type]++;
+            this.updateCPS();
+            return true;
+        }
+        return false;
+    }
+    
+    upgradeClickDamage() {
+        const cost = this.getClickDamageUpgradeCost();
+        if (this.spendCoins(cost)) {
+            this.clickDamageLevel++;
+            return true;
+        }
+        return false;
+    }
+    
+    getClickDamage() {
+        return CONFIG.gameplay.clickDamageBase * this.clickDamageLevel;
+    }
+    
+    addGold(amount) {
+        this.gold += amount;
+        this.totalGoldEarned += amount;
+    }
+    
+    spendGold(amount) {
+        if (this.gold >= amount) {
+            this.gold -= amount;
+            return true;
+        }
+        return false;
+    }
+    
+    canAffordGold(amount) {
+        return this.gold >= amount;
+    }
+    
     canPrestige() {
         return this.totalCoinsEarned >= 10000 * Math.pow(10, this.prestigeLevel);
     }
@@ -761,6 +868,10 @@ class EconomyManager {
             this.totalCoinsEarned = 0;
             this.ballCounts = { basic: 1, power: 0, speed: 0, splash: 0, plasma: 0, lightning: 0, void: 0, phoenix: 0 };
             this.ballLevels = { basic: 1, power: 1, speed: 1, splash: 1, plasma: 1, lightning: 1, void: 1, phoenix: 1 };
+            this.ballSpeedLevels = { basic: 1, power: 1, speed: 1, splash: 1, plasma: 1, lightning: 1, void: 1, phoenix: 1 };
+            this.ballDamageLevels = { basic: 1, power: 1, speed: 1, splash: 1, plasma: 1, lightning: 1, void: 1, phoenix: 1 };
+            this.clickDamageLevel = 1;
+            // Note: Gold and gold upgrades persist through prestige
             
             return true;
         }
@@ -773,6 +884,11 @@ class EconomyManager {
             totalCoinsEarned: this.totalCoinsEarned,
             ballCounts: this.ballCounts,
             ballLevels: this.ballLevels,
+            ballSpeedLevels: this.ballSpeedLevels,
+            ballDamageLevels: this.ballDamageLevels,
+            clickDamageLevel: this.clickDamageLevel,
+            gold: this.gold,
+            totalGoldEarned: this.totalGoldEarned,
             prestigeLevel: this.prestigeLevel,
             prestigeMultiplier: this.prestigeMultiplier,
             lastSaveTime: Date.now()
@@ -793,7 +909,12 @@ class EconomyManager {
             
             this.ballCounts = { ...defaultBallCounts, ...data.ballCounts };
             this.ballLevels = { ...defaultBallLevels, ...data.ballLevels };
+            this.ballSpeedLevels = { ...defaultBallLevels, ...data.ballSpeedLevels };
+            this.ballDamageLevels = { ...defaultBallLevels, ...data.ballDamageLevels };
             
+            this.clickDamageLevel = data.clickDamageLevel || 1;
+            this.gold = data.gold || 0;
+            this.totalGoldEarned = data.totalGoldEarned || 0;
             this.prestigeLevel = data.prestigeLevel || 0;
             this.prestigeMultiplier = data.prestigeMultiplier || 1;
             this.lastSaveTime = data.lastSaveTime || Date.now();
@@ -821,6 +942,12 @@ class GameManager {
         this.levelComplete = false;
         this.levelStartTime = Date.now();
         this.bricksDestroyed = 0;
+        
+        // Check if this is a gold brick level (every 20th level)
+        if (level > 0 && level % CONFIG.levels.goldBrickInterval === 0) {
+            this.generateGoldBrickLevel(level);
+            return;
+        }
         
         const brickWidth = 45;
         const brickHeight = 20;
@@ -869,6 +996,24 @@ class GameManager {
         this.totalBricks = this.bricks.length;
     }
     
+    generateGoldBrickLevel(level) {
+        // Generate one big gold brick in the center
+        const brickWidth = 200;
+        const brickHeight = 100;
+        const x = (CONFIG.canvas.width - brickWidth) / 2;
+        const y = 150;
+        
+        // Gold brick has massive HP
+        const goldHP = Math.floor(level * CONFIG.levels.brickHPMultiplier * 50);
+        
+        const goldBrick = new Brick(x, y, brickWidth, brickHeight, goldHP, 'gold');
+        goldBrick.color = '#ffd700'; // Gold color
+        goldBrick.isGoldBrick = true;
+        
+        this.bricks = [goldBrick];
+        this.totalBricks = 1;
+    }
+    
     update(deltaTime, balls, economy) {
         // Update all bricks
         this.bricks.forEach(brick => brick.update(deltaTime));
@@ -891,9 +1036,12 @@ class GameManager {
                         this.applyChainLightning(ball, brick, ball.damage * 0.3, economy);
                     }
                     
-                    const coins = brick.takeDamage(damage);
-                    if (coins > 0) {
-                        economy.addCoins(coins);
+                    const reward = brick.takeDamage(damage);
+                    if (reward.coins > 0 || reward.gold > 0) {
+                        economy.addCoins(reward.coins);
+                        if (reward.gold > 0) {
+                            economy.addGold(reward.gold);
+                        }
                         this.bricksDestroyed++;
                         
                         // Create particle effect
@@ -943,16 +1091,19 @@ class GameManager {
                 
                 if (distance <= chainRange) {
                     processedBricks.add(brick);
-                    const coins = brick.takeDamage(damage);
-                    if (coins > 0) {
-                        economy.addCoins(coins);
+                    const reward = brick.takeDamage(damage);
+                    if (reward.coins > 0 || reward.gold > 0) {
+                        economy.addCoins(reward.coins);
+                        if (reward.gold > 0) {
+                            economy.addGold(reward.gold);
+                        }
                         this.bricksDestroyed++;
                         this.createDestructionParticles(brick.x + brick.width / 2, brick.y + brick.height / 2);
                     }
                     chainsUsed++;
                     
                     // Chain further if brick was destroyed
-                    if (coins > 0) {
+                    if (reward.coins > 0 || reward.gold > 0) {
                         chainToNearby(brick);
                     }
                 }
@@ -976,9 +1127,12 @@ class GameManager {
                 if (distance <= ball.voidRadius) {
                     // Damage over time based on deltaTime
                     const dotDamage = ball.damage * 0.1 * (deltaTime / 16.67);
-                    const coins = brick.takeDamage(dotDamage);
-                    if (coins > 0) {
-                        economy.addCoins(coins);
+                    const reward = brick.takeDamage(dotDamage);
+                    if (reward.coins > 0 || reward.gold > 0) {
+                        economy.addCoins(reward.coins);
+                        if (reward.gold > 0) {
+                            economy.addGold(reward.gold);
+                        }
                         this.bricksDestroyed++;
                         this.createDestructionParticles(brick.x + brick.width / 2, brick.y + brick.height / 2);
                     }
@@ -1000,9 +1154,12 @@ class GameManager {
                 
                 if (distance <= 15) { // Fire trail damage radius
                     const burnDamage = ball.damage * 0.05;
-                    const coins = brick.takeDamage(burnDamage);
-                    if (coins > 0) {
-                        economy.addCoins(coins);
+                    const reward = brick.takeDamage(burnDamage);
+                    if (reward.coins > 0 || reward.gold > 0) {
+                        economy.addCoins(reward.coins);
+                        if (reward.gold > 0) {
+                            economy.addGold(reward.gold);
+                        }
                         this.bricksDestroyed++;
                         this.createDestructionParticles(brick.x + brick.width / 2, brick.y + brick.height / 2);
                     }
@@ -1022,9 +1179,12 @@ class GameManager {
             );
             
             if (distance <= ball.splashRadius) {
-                const coins = brick.takeDamage(damage);
-                if (coins > 0) {
-                    economy.addCoins(coins);
+                const reward = brick.takeDamage(damage);
+                if (reward.coins > 0 || reward.gold > 0) {
+                    economy.addCoins(reward.coins);
+                    if (reward.gold > 0) {
+                        economy.addGold(reward.gold);
+                    }
                     this.bricksDestroyed++;
                 }
             }
@@ -1618,6 +1778,9 @@ class IdleBreakoutGame {
         // Generate initial level
         this.gameManager.generateLevel(this.gameManager.currentLevel);
         
+        // Add click-to-damage event listener
+        this.canvas.addEventListener('click', (event) => this.handleCanvasClick(event));
+        
         // Show offline earnings if any
         if (offlineEarnings > 0) {
             this.economy.addCoins(offlineEarnings);
@@ -1647,6 +1810,55 @@ class IdleBreakoutGame {
             this.uiManager.startUpdateLoop();
             this.gameLoop();
         }
+    }
+    
+    handleCanvasClick(event) {
+        if (this.gameState !== 'playing') return;
+        
+        const rect = this.canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        
+        // Check if click hit any brick
+        this.gameManager.bricks.forEach(brick => {
+            if (!brick.destroyed && 
+                x >= brick.x && x <= brick.x + brick.width &&
+                y >= brick.y && y <= brick.y + brick.height) {
+                
+                const clickDamage = this.economy.getClickDamage();
+                const reward = brick.takeDamage(clickDamage);
+                
+                if (reward.coins > 0 || reward.gold > 0) {
+                    this.economy.addCoins(reward.coins);
+                    if (reward.gold > 0) {
+                        this.economy.addGold(reward.gold);
+                    }
+                    this.gameManager.bricksDestroyed++;
+                    this.gameManager.createDestructionParticles(
+                        brick.x + brick.width / 2, 
+                        brick.y + brick.height / 2
+                    );
+                }
+                
+                // Create click effect particle
+                this.createClickEffect(x, y, clickDamage);
+            }
+        });
+    }
+    
+    createClickEffect(x, y, damage) {
+        // Create visual effect for click damage
+        this.particles.push({
+            x: x,
+            y: y,
+            vx: (Math.random() - 0.5) * 2,
+            vy: -2 - Math.random() * 2,
+            life: 30,
+            maxLife: 30,
+            text: `-${damage}`,
+            color: '#ffff00',
+            type: 'text'
+        });
     }
     
     gameLoop(currentTime = 0) {
@@ -1702,7 +1914,9 @@ class IdleBreakoutGame {
     addBall(type, level) {
         const x = this.canvas.width / 2 + (Math.random() - 0.5) * 100;
         const y = this.canvas.height / 2 + (Math.random() - 0.5) * 100;
-        const ball = new Ball(x, y, type, level);
+        const speedLevel = this.economy.ballSpeedLevels[type];
+        const damageLevel = this.economy.ballDamageLevels[type];
+        const ball = new Ball(x, y, type, level, speedLevel, damageLevel);
         this.balls.push(ball);
     }
     
@@ -1710,9 +1924,11 @@ class IdleBreakoutGame {
         this.balls.forEach(ball => {
             if (ball.type === type) {
                 ball.level = this.economy.ballLevels[type];
+                ball.speedLevel = this.economy.ballSpeedLevels[type];
+                ball.damageLevel = this.economy.ballDamageLevels[type];
                 const config = CONFIG.balls[type];
-                ball.damage = config.baseDamage * (1 + ball.level * 0.5);
-                ball.maxSpeed = config.baseSpeed * (1 + ball.level * 0.1);
+                ball.damage = config.baseDamage * (1 + (ball.damageLevel - 1) * 0.5);
+                ball.maxSpeed = config.baseSpeed * (1 + (ball.speedLevel - 1) * 0.15);
             }
         });
     }
