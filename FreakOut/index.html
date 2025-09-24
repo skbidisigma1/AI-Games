@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freak Out - Surreal Story Experience</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <!-- Background Effects -->
+        <div id="backgroundEffects">
+            <div class="glitch-overlay"></div>
+            <div class="static-noise"></div>
+        </div>
+        
+        <!-- UI Overlays -->
+        <div id="ui">
+            <!-- Title Screen -->
+            <div id="titleScreen" class="screen active">
+                <div class="title-content">
+                    <h1 class="freaky-title glitch-text">FREAK OUT</h1>
+                    <h2 class="subtitle">Reality.exe has stopped working</h2>
+                    <p class="story-intro">
+                        Where nightmares meet reality<br>
+                        Where logic goes to die<br>
+                        Where you question everything<br>
+                        <span class="warning">⚠️ Warning: Contains surreal content ⚠️</span>
+                    </p>
+                    <div class="title-buttons">
+                        <button id="startGame" class="freaky-button">ENTER THE VOID</button>
+                        <button id="loadGame" class="freaky-button secondary">CONTINUE NIGHTMARE</button>
+                        <button id="showHelp" class="freaky-button tertiary">INSTRUCTIONS</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Help Screen -->
+            <div id="helpScreen" class="screen">
+                <div class="help-content">
+                    <h1 class="freaky-title">How to Survive</h1>
+                    <div class="help-sections">
+                        <div class="help-section">
+                            <h3>🎯 OBJECTIVE</h3>
+                            <p>Navigate through increasingly surreal scenarios. Make choices that will determine your path through the madness. There are multiple endings - if you can call them endings.</p>
+                        </div>
+                        
+                        <div class="help-section">
+                            <h3>🕹️ CONTROLS</h3>
+                            <p><strong>CLICK</strong>: Make choices and advance text</p>
+                            <p><strong>ESC</strong>: Return to main menu (if reality allows)</p>
+                            <p><strong>S</strong>: Save your progress in the void</p>
+                        </div>
+                        
+                        <div class="help-section">
+                            <h3>⚠️ WARNING</h3>
+                            <p>This experience contains:</p>
+                            <ul>
+                                <li>Reality distortions</li>
+                                <li>Time paradoxes</li>
+                                <li>Existential crises</li>
+                                <li>Impossible scenarios</li>
+                                <li>Fourth wall breaks</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <button id="backToTitle" class="freaky-button">BACK TO VOID</button>
+                </div>
+            </div>
+            
+            <!-- Main Game Screen -->
+            <div id="gameScreen" class="screen">
+                <div class="game-content">
+                    <!-- Story Display -->
+                    <div id="storyContainer">
+                        <div id="sceneTitle" class="scene-title"></div>
+                        <div id="storyText" class="story-text"></div>
+                        <div id="choicesContainer" class="choices-container"></div>
+                    </div>
+                    
+                    <!-- Game HUD -->
+                    <div id="gameHUD">
+                        <div class="hud-item">
+                            <span class="hud-label">Reality Level:</span>
+                            <span id="realityLevel" class="hud-value">100%</span>
+                        </div>
+                        <div class="hud-item">
+                            <span class="hud-label">Sanity:</span>
+                            <span id="sanityLevel" class="hud-value">Normal</span>
+                        </div>
+                        <div class="hud-item">
+                            <span class="hud-label">Chapter:</span>
+                            <span id="currentChapter" class="hud-value">1</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Control Buttons -->
+                    <div id="gameControls">
+                        <button id="saveProgress" class="control-button">SAVE</button>
+                        <button id="autoMode" class="control-button">AUTO</button>
+                        <button id="exitGame" class="control-button danger">EXIT</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Save/Load Screen -->
+            <div id="saveLoadScreen" class="screen">
+                <div class="save-content">
+                    <h2>Save/Load Progress</h2>
+                    <div id="saveSlots" class="save-slots">
+                        <!-- Save slots will be generated dynamically -->
+                    </div>
+                    <button id="backFromSave" class="freaky-button">BACK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
