@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Guardian - AI Games</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="titleScreen" class="screen active">
+            <div class="title-content">
+                <h1 class="glitch-text">SPACE GUARDIAN</h1>
+                <h2 class="subtitle">DEFEND THE COSMOS</h2>
+                <p class="story-intro">
+                    As the last guardian of an ancient space station,<br>
+                    protect it from waves of cosmic debris and hostile entities.<br>
+                    Use your energy shield to deflect threats and survive!
+                </p>
+                <div class="title-buttons">
+                    <button id="startGame" class="cyber-button">ENGAGE SHIELDS</button>
+                    <button id="showHelp" class="cyber-button secondary">HOW TO PLAY</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="helpScreen" class="screen">
+            <div class="help-content">
+                <h1>HOW TO PLAY</h1>
+                <div class="help-sections">
+                    <div class="help-section">
+                        <h3>🛡️ CONTROLS</h3>
+                        <p>• <strong>Mouse</strong>: Move your energy shield</p>
+                        <p>• <strong>Left Click</strong>: Boost shield power (limited energy)</p>
+                        <p>• Shield automatically deflects threats it touches</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h3>⚡ GAMEPLAY</h3>
+                        <p>• Deflect incoming asteroids and enemies</p>
+                        <p>• Protect the space station in the center</p>
+                        <p>• Station takes damage if threats reach it</p>
+                        <p>• Survive as long as possible!</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h3>🎯 SCORING</h3>
+                        <p><strong>Asteroid Deflection</strong>: +10 points</p>
+                        <p><strong>Enemy Deflection</strong>: +25 points</p>
+                        <p><strong>Survival Bonus</strong>: +1 point per second</p>
+                        <p><strong>Perfect Defense</strong>: Extra points for no damage taken</p>
+                    </div>
+                </div>
+                <div class="help-buttons">
+                    <button id="startFromHelp" class="cyber-button">ENGAGE SHIELDS</button>
+                    <button id="backToTitle" class="cyber-button secondary">BACK TO TITLE</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="gameScreen" class="screen">
+            <div id="gameHUD">
+                <div class="hud-left">
+                    <div class="hud-item">
+                        <span class="hud-label">SCORE</span>
+                        <span id="score" class="hud-value">0</span>
+                    </div>
+                    <div class="hud-item">
+                        <span class="hud-label">WAVE</span>
+                        <span id="wave" class="hud-value">1</span>
+                    </div>
+                </div>
+                <div class="hud-center">
+                    <div class="station-health">
+                        <span class="hud-label">STATION INTEGRITY</span>
+                        <div class="health-bar">
+                            <div id="healthFill" class="health-fill"></div>
+                        </div>
+                        <span id="healthText" class="health-text">100%</span>
+                    </div>
+                </div>
+                <div class="hud-right">
+                    <div class="hud-item">
+                        <span class="hud-label">ENERGY</span>
+                        <div class="energy-bar">
+                            <div id="energyFill" class="energy-fill"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+            
+            <div id="gameOverScreen" class="overlay hidden">
+                <div class="overlay-content">
+                    <h2>STATION DESTROYED</h2>
+                    <div id="finalStats">
+                        <p>Final Score: <span id="finalScore">0</span></p>
+                        <p>Waves Survived: <span id="finalWave">0</span></p>
+                        <p>Survival Time: <span id="survivalTime">0s</span></p>
+                    </div>
+                    <div class="overlay-buttons">
+                        <button id="restartGame" class="cyber-button">TRY AGAIN</button>
+                        <button id="backToMenu" class="cyber-button secondary">MAIN MENU</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

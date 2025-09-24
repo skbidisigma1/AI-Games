@@ -44,7 +44,7 @@ class GameBrowser {
                 genre: 'racing',
                 description: 'A complete top-down 2D racing game with competitive AI and strategic power-ups',
                 features: ['8-kart racing', '7 unique AI personalities', 'realistic physics', 'power-up system', 'professional HUD'],
-                path: 'AI-Games/HadleeKart',
+                path: 'HadleeKart',
                 fullDescription: 'Race against intelligent AI opponents through 3 laps of intense competition. Collect and use power-ups strategically while mastering drift mechanics and racing lines.'
             },
             {
@@ -116,6 +116,16 @@ class GameBrowser {
                 features: ['rule-based mechanics', 'strategic thinking', 'emergent gameplay', 'complex systems'],
                 path: 'Ruleweaver',
                 fullDescription: 'Explore strategic rule-based systems in this innovative puzzle game that challenges your understanding of cause and effect.'
+            },
+            {
+                name: 'SpaceGuardian',
+                displayName: 'Space Guardian',
+                icon: '🛡️',
+                genre: 'arcade',
+                description: 'Defend an ancient space station using your energy shield to deflect cosmic threats',
+                features: ['shield mechanics', 'wave-based survival', 'energy management', 'particle effects', 'space theme'],
+                path: 'SpaceGuardian',
+                fullDescription: 'As the last guardian of an ancient space station, use your energy shield to deflect waves of asteroids and hostile entities. Master energy management and precise positioning to survive!'
             }
         ];
         
@@ -257,7 +267,7 @@ class GameDetector {
     
     initKnownGames() {
         // Initialize with current known games
-        const currentGames = ['BounceBlox', 'DataStream', 'Dune', 'Echoes', 'HadleeKart', 'HillRider', 'IdleBreakout', 'Ruleweaver'];
+        const currentGames = ['BounceBlox', 'DataStream', 'Dune', 'Echoes', 'HadleeKart', 'HillRider', 'IdleBreakout', 'Ruleweaver', 'SpaceGuardian'];
         currentGames.forEach(game => this.knownGames.add(game));
     }
     
@@ -282,7 +292,7 @@ class GameDetector {
     async scanDirectories() {
         // Placeholder for directory scanning
         // In a real implementation, this would use File System Access API or server-side scanning
-        return ['BounceBlox', 'DataStream', 'Dune', 'Echoes', 'HadleeKart', 'HillRider', 'IdleBreakout', 'Ruleweaver'];
+        return ['BounceBlox', 'DataStream', 'Dune', 'Echoes', 'HadleeKart', 'HillRider', 'IdleBreakout', 'Ruleweaver', 'SpaceGuardian'];
     }
     
     notifyNewGames(newGames) {
