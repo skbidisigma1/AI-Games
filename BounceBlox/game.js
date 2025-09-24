@@ -13,7 +13,7 @@ class BounceBloxGame {
         
         // Game state
         this.currentLevel = 1;
-        this.maxLevel = 3;
+        this.maxLevel = 12;
         this.keys = {};
         this.particles = [];
         this.gravityReversed = false;
@@ -109,6 +109,24 @@ class BounceBloxGame {
             this.loadLevel2();
         } else if (levelNum === 3) {
             this.loadLevel3();
+        } else if (levelNum === 4) {
+            this.loadLevel4();
+        } else if (levelNum === 5) {
+            this.loadLevel5();
+        } else if (levelNum === 6) {
+            this.loadLevel6();
+        } else if (levelNum === 7) {
+            this.loadLevel7();
+        } else if (levelNum === 8) {
+            this.loadLevel8();
+        } else if (levelNum === 9) {
+            this.loadLevel9();
+        } else if (levelNum === 10) {
+            this.loadLevel10();
+        } else if (levelNum === 11) {
+            this.loadLevel11();
+        } else if (levelNum === 12) {
+            this.loadLevel12();
         }
         
         this.totalStars = this.stars.length;
@@ -212,6 +230,385 @@ class BounceBloxGame {
         this.exit = {x: 670, y: 120, width: 60, height: 80};
     }
     
+    loadLevel4() {
+        // Precision jumping level
+        const blocks = [
+            // Boundaries
+            {x: 0, y: 560, width: 800, height: 40, type: 'solid', color: '#4ecdc4'},
+            {x: 0, y: 0, width: 20, height: 600, type: 'solid', color: '#4ecdc4'},
+            {x: 780, y: 0, width: 20, height: 600, type: 'solid', color: '#4ecdc4'},
+            {x: 0, y: 0, width: 800, height: 20, type: 'solid', color: '#4ecdc4'},
+            
+            // Narrow platforms requiring precise jumps
+            {x: 80, y: 520, width: 40, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 180, y: 480, width: 40, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 280, y: 440, width: 40, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 380, y: 400, width: 40, height: 20, type: 'launch', color: '#96ceb4'},
+            {x: 520, y: 320, width: 40, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 620, y: 280, width: 40, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 700, y: 240, width: 60, height: 20, type: 'solid', color: '#4ecdc4'},
+            
+            // Upper challenge
+            {x: 600, y: 180, width: 40, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 500, y: 120, width: 40, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 400, y: 80, width: 40, height: 20, type: 'launch', color: '#96ceb4'},
+            {x: 250, y: 60, width: 100, height: 20, type: 'solid', color: '#4ecdc4'}
+        ];
+        
+        this.blocks = blocks;
+        
+        this.stars = [
+            {x: 200, y: 440, collected: false},
+            {x: 540, y: 280, collected: false},
+            {x: 520, y: 80, collected: false},
+            {x: 280, y: 20, collected: false}
+        ];
+        
+        this.exit = {x: 280, y: 30, width: 60, height: 30};
+    }
+    
+    loadLevel5() {
+        // Gravity reversal maze
+        const blocks = [
+            // Boundaries
+            {x: 0, y: 560, width: 800, height: 40, type: 'solid', color: '#4ecdc4'},
+            {x: 0, y: 0, width: 20, height: 600, type: 'solid', color: '#4ecdc4'},
+            {x: 780, y: 0, width: 20, height: 600, type: 'solid', color: '#4ecdc4'},
+            {x: 0, y: 0, width: 800, height: 20, type: 'solid', color: '#4ecdc4'},
+            
+            // Maze-like structure with gravity blocks
+            {x: 100, y: 500, width: 200, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 350, y: 460, width: 60, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 450, y: 500, width: 150, height: 20, type: 'solid', color: '#4ecdc4'},
+            
+            // Middle section
+            {x: 150, y: 400, width: 80, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 300, y: 360, width: 200, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 550, y: 400, width: 80, height: 20, type: 'gravity', color: '#b968c7'},
+            
+            // Upper maze
+            {x: 50, y: 280, width: 100, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 200, y: 240, width: 60, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 320, y: 200, width: 120, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 500, y: 160, width: 60, height: 20, type: 'launch', color: '#96ceb4'},
+            {x: 620, y: 120, width: 100, height: 20, type: 'solid', color: '#4ecdc4'}
+        ];
+        
+        this.blocks = blocks;
+        
+        this.stars = [
+            {x: 200, y: 460, collected: false},
+            {x: 380, y: 320, collected: false},
+            {x: 100, y: 240, collected: false},
+            {x: 530, y: 120, collected: false},
+            {x: 650, y: 80, collected: false}
+        ];
+        
+        this.exit = {x: 650, y: 40, width: 60, height: 80};
+    }
+    
+    loadLevel6() {
+        // Launch pad challenge
+        const blocks = [
+            // Boundaries
+            {x: 0, y: 560, width: 800, height: 40, type: 'solid', color: '#4ecdc4'},
+            {x: 0, y: 0, width: 20, height: 600, type: 'solid', color: '#4ecdc4'},
+            {x: 780, y: 0, width: 20, height: 600, type: 'solid', color: '#4ecdc4'},
+            {x: 0, y: 0, width: 800, height: 20, type: 'solid', color: '#4ecdc4'},
+            
+            // Launch pad sequence
+            {x: 80, y: 520, width: 60, height: 20, type: 'launch', color: '#96ceb4'},
+            {x: 200, y: 400, width: 60, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 320, y: 480, width: 60, height: 20, type: 'launch', color: '#96ceb4'},
+            {x: 440, y: 300, width: 60, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 560, y: 420, width: 60, height: 20, type: 'launch', color: '#96ceb4'},
+            
+            // High platforms
+            {x: 120, y: 200, width: 80, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 280, y: 160, width: 80, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 440, y: 120, width: 80, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 600, y: 180, width: 80, height: 20, type: 'launch', color: '#96ceb4'},
+            
+            // Final challenge
+            {x: 680, y: 80, width: 80, height: 20, type: 'solid', color: '#4ecdc4'}
+        ];
+        
+        this.blocks = blocks;
+        
+        this.stars = [
+            {x: 110, y: 480, collected: false},
+            {x: 230, y: 360, collected: false},
+            {x: 470, y: 260, collected: false},
+            {x: 630, y: 140, collected: false}
+        ];
+        
+        this.exit = {x: 700, y: 20, width: 60, height: 60};
+    }
+    
+    loadLevel7() {
+        // Crumbling tower
+        const blocks = [
+            // Boundaries
+            {x: 0, y: 560, width: 800, height: 40, type: 'solid', color: '#4ecdc4'},
+            {x: 0, y: 0, width: 20, height: 600, type: 'solid', color: '#4ecdc4'},
+            {x: 780, y: 0, width: 20, height: 600, type: 'solid', color: '#4ecdc4'},
+            {x: 0, y: 0, width: 800, height: 20, type: 'solid', color: '#4ecdc4'},
+            
+            // Tower of crumbling blocks - speed challenge
+            {x: 100, y: 520, width: 100, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 250, y: 480, width: 100, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 400, y: 440, width: 100, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 550, y: 400, width: 100, height: 20, type: 'solid', color: '#4ecdc4'},
+            
+            {x: 500, y: 360, width: 80, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 380, y: 320, width: 80, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 260, y: 280, width: 80, height: 20, type: 'launch', color: '#96ceb4'},
+            {x: 140, y: 240, width: 80, height: 20, type: 'crumble', color: '#ff6b6b'},
+            
+            {x: 80, y: 200, width: 100, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 220, y: 160, width: 80, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 340, y: 120, width: 80, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 460, y: 80, width: 120, height: 20, type: 'solid', color: '#4ecdc4'}
+        ];
+        
+        this.blocks = blocks;
+        
+        this.stars = [
+            {x: 150, y: 480, collected: false},
+            {x: 430, y: 280, collected: false},
+            {x: 170, y: 120, collected: false},
+            {x: 380, y: 80, collected: false},
+            {x: 520, y: 40, collected: false}
+        ];
+        
+        this.exit = {x: 500, y: 20, width: 60, height: 60};
+    }
+    
+    loadLevel8() {
+        // Multi-path challenge
+        const blocks = [
+            // Boundaries
+            {x: 0, y: 560, width: 800, height: 40, type: 'solid', color: '#4ecdc4'},
+            {x: 0, y: 0, width: 20, height: 600, type: 'solid', color: '#4ecdc4'},
+            {x: 780, y: 0, width: 20, height: 600, type: 'solid', color: '#4ecdc4'},
+            {x: 0, y: 0, width: 800, height: 20, type: 'solid', color: '#4ecdc4'},
+            
+            // Three different paths
+            // Left path - gravity heavy
+            {x: 80, y: 500, width: 60, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 60, y: 400, width: 60, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 80, y: 300, width: 60, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 60, y: 200, width: 60, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 80, y: 100, width: 60, height: 20, type: 'launch', color: '#96ceb4'},
+            
+            // Middle path - mixed
+            {x: 370, y: 480, width: 60, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 350, y: 420, width: 60, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 380, y: 360, width: 60, height: 20, type: 'launch', color: '#96ceb4'},
+            {x: 360, y: 280, width: 60, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 380, y: 180, width: 60, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 360, y: 100, width: 60, height: 20, type: 'solid', color: '#4ecdc4'},
+            
+            // Right path - launch heavy
+            {x: 660, y: 520, width: 60, height: 20, type: 'launch', color: '#96ceb4'},
+            {x: 680, y: 400, width: 60, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 660, y: 320, width: 60, height: 20, type: 'launch', color: '#96ceb4'},
+            {x: 680, y: 220, width: 60, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 660, y: 140, width: 60, height: 20, type: 'launch', color: '#96ceb4'},
+            
+            // Connecting platforms
+            {x: 200, y: 60, width: 400, height: 20, type: 'solid', color: '#4ecdc4'}
+        ];
+        
+        this.blocks = blocks;
+        
+        this.stars = [
+            {x: 110, y: 260, collected: false},
+            {x: 390, y: 240, collected: false},
+            {x: 690, y: 280, collected: false},
+            {x: 300, y: 20, collected: false},
+            {x: 500, y: 20, collected: false}
+        ];
+        
+        this.exit = {x: 400, y: 20, width: 60, height: 40};
+    }
+    
+    loadLevel9() {
+        // Spiral ascent
+        const blocks = [
+            // Boundaries
+            {x: 0, y: 560, width: 800, height: 40, type: 'solid', color: '#4ecdc4'},
+            {x: 0, y: 0, width: 20, height: 600, type: 'solid', color: '#4ecdc4'},
+            {x: 780, y: 0, width: 20, height: 600, type: 'solid', color: '#4ecdc4'},
+            {x: 0, y: 0, width: 800, height: 20, type: 'solid', color: '#4ecdc4'},
+            
+            // Spiral structure
+            {x: 100, y: 520, width: 120, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 300, y: 500, width: 100, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 500, y: 480, width: 120, height: 20, type: 'launch', color: '#96ceb4'},
+            {x: 650, y: 440, width: 100, height: 20, type: 'solid', color: '#4ecdc4'},
+            
+            {x: 600, y: 380, width: 120, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 450, y: 340, width: 100, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 280, y: 300, width: 120, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 100, y: 260, width: 100, height: 20, type: 'launch', color: '#96ceb4'},
+            
+            {x: 60, y: 200, width: 120, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 220, y: 160, width: 100, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 380, y: 120, width: 120, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 550, y: 80, width: 100, height: 20, type: 'solid', color: '#4ecdc4'},
+            
+            // Center platform for exit
+            {x: 350, y: 40, width: 100, height: 20, type: 'solid', color: '#4ecdc4'}
+        ];
+        
+        this.blocks = blocks;
+        
+        this.stars = [
+            {x: 160, y: 480, collected: false},
+            {x: 550, y: 440, collected: false},
+            {x: 650, y: 340, collected: false},
+            {x: 330, y: 260, collected: false},
+            {x: 120, y: 160, collected: false},
+            {x: 440, y: 80, collected: false}
+        ];
+        
+        this.exit = {x: 380, y: 0, width: 60, height: 40};
+    }
+    
+    loadLevel10() {
+        // The gauntlet
+        const blocks = [
+            // Boundaries
+            {x: 0, y: 560, width: 800, height: 40, type: 'solid', color: '#4ecdc4'},
+            {x: 0, y: 0, width: 20, height: 600, type: 'solid', color: '#4ecdc4'},
+            {x: 780, y: 0, width: 20, height: 600, type: 'solid', color: '#4ecdc4'},
+            {x: 0, y: 0, width: 800, height: 20, type: 'solid', color: '#4ecdc4'},
+            
+            // Obstacle course
+            {x: 80, y: 520, width: 40, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 140, y: 480, width: 40, height: 20, type: 'launch', color: '#96ceb4'},
+            {x: 220, y: 440, width: 40, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 300, y: 400, width: 40, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 380, y: 360, width: 40, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 460, y: 320, width: 40, height: 20, type: 'launch', color: '#96ceb4'},
+            {x: 540, y: 280, width: 40, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 620, y: 240, width: 40, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 680, y: 200, width: 60, height: 20, type: 'solid', color: '#4ecdc4'},
+            
+            // Return path
+            {x: 620, y: 160, width: 40, height: 20, type: 'launch', color: '#96ceb4'},
+            {x: 540, y: 120, width: 40, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 460, y: 80, width: 40, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 380, y: 40, width: 40, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 280, y: 60, width: 80, height: 20, type: 'solid', color: '#4ecdc4'}
+        ];
+        
+        this.blocks = blocks;
+        
+        this.stars = [
+            {x: 100, y: 480, collected: false},
+            {x: 240, y: 400, collected: false},
+            {x: 400, y: 320, collected: false},
+            {x: 560, y: 240, collected: false},
+            {x: 700, y: 160, collected: false},
+            {x: 480, y: 40, collected: false}
+        ];
+        
+        this.exit = {x: 300, y: 20, width: 60, height: 40};
+    }
+    
+    loadLevel11() {
+        // Gravity maze
+        const blocks = [
+            // Boundaries
+            {x: 0, y: 560, width: 800, height: 40, type: 'solid', color: '#4ecdc4'},
+            {x: 0, y: 0, width: 20, height: 600, type: 'solid', color: '#4ecdc4'},
+            {x: 780, y: 0, width: 20, height: 600, type: 'solid', color: '#4ecdc4'},
+            {x: 0, y: 0, width: 800, height: 20, type: 'solid', color: '#4ecdc4'},
+            
+            // Complex gravity puzzle
+            {x: 100, y: 500, width: 80, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 250, y: 450, width: 80, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 400, y: 500, width: 80, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 550, y: 450, width: 80, height: 20, type: 'solid', color: '#4ecdc4'},
+            
+            // Middle section with alternating gravity
+            {x: 150, y: 350, width: 60, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 300, y: 320, width: 60, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 450, y: 350, width: 60, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 600, y: 320, width: 60, height: 20, type: 'solid', color: '#4ecdc4'},
+            
+            // Upper maze
+            {x: 80, y: 220, width: 100, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 220, y: 180, width: 60, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 320, y: 140, width: 80, height: 20, type: 'launch', color: '#96ceb4'},
+            {x: 450, y: 100, width: 60, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 550, y: 60, width: 100, height: 20, type: 'solid', color: '#4ecdc4'}
+        ];
+        
+        this.blocks = blocks;
+        
+        this.stars = [
+            {x: 140, y: 460, collected: false},
+            {x: 330, y: 280, collected: false},
+            {x: 490, y: 310, collected: false},
+            {x: 130, y: 180, collected: false},
+            {x: 360, y: 100, collected: false},
+            {x: 590, y: 20, collected: false}
+        ];
+        
+        this.exit = {x: 580, y: 20, width: 60, height: 40};
+    }
+    
+    loadLevel12() {
+        // Final boss level - ultimate challenge
+        const blocks = [
+            // Boundaries
+            {x: 0, y: 560, width: 800, height: 40, type: 'solid', color: '#4ecdc4'},
+            {x: 0, y: 0, width: 20, height: 600, type: 'solid', color: '#4ecdc4'},
+            {x: 780, y: 0, width: 20, height: 600, type: 'solid', color: '#4ecdc4'},
+            {x: 0, y: 0, width: 800, height: 20, type: 'solid', color: '#4ecdc4'},
+            
+            // Epic final level with all mechanics
+            {x: 80, y: 520, width: 40, height: 20, type: 'launch', color: '#96ceb4'},
+            {x: 160, y: 480, width: 40, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 240, y: 440, width: 40, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 320, y: 400, width: 60, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 420, y: 360, width: 40, height: 20, type: 'launch', color: '#96ceb4'},
+            {x: 500, y: 320, width: 40, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 580, y: 280, width: 40, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 660, y: 240, width: 80, height: 20, type: 'solid', color: '#4ecdc4'},
+            
+            // Upper challenge section
+            {x: 600, y: 180, width: 40, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 520, y: 140, width: 40, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 440, y: 100, width: 40, height: 20, type: 'launch', color: '#96ceb4'},
+            {x: 320, y: 80, width: 40, height: 20, type: 'crumble', color: '#ff6b6b'},
+            {x: 200, y: 60, width: 40, height: 20, type: 'gravity', color: '#b968c7'},
+            {x: 80, y: 40, width: 60, height: 20, type: 'solid', color: '#4ecdc4'},
+            
+            // Final platforms
+            {x: 250, y: 160, width: 100, height: 20, type: 'solid', color: '#4ecdc4'},
+            {x: 400, y: 200, width: 80, height: 20, type: 'launch', color: '#96ceb4'},
+            {x: 150, y: 120, width: 80, height: 20, type: 'gravity', color: '#b968c7'}
+        ];
+        
+        this.blocks = blocks;
+        
+        this.stars = [
+            {x: 110, y: 480, collected: false},
+            {x: 270, y: 400, collected: false},
+            {x: 450, y: 320, collected: false},
+            {x: 610, y: 240, collected: false},
+            {x: 470, y: 60, collected: false},
+            {x: 300, y: 120, collected: false},
+            {x: 110, y: 0, collected: false}
+        ];
+        
+        this.exit = {x: 100, y: 0, width: 60, height: 40};
+    }
+    
     gameLoop() {
         this.update();
         this.render();
@@ -251,6 +648,14 @@ class BounceBloxGame {
             this.player.vy = this.gravityReversed ? -this.JUMP_FORCE : this.JUMP_FORCE;
             this.player.onGround = false;
             this.playSound('jumpSound');
+        }
+        
+        // Reset level with R key
+        if (this.keys['r'] || this.keys['keyr']) {
+            this.keys['r'] = false; // Prevent continuous reset
+            this.keys['keyr'] = false;
+            this.restartLevel();
+            return; // Exit early since level is restarting
         }
         
         // Apply gravity
@@ -618,5 +1023,6 @@ class BounceBloxGame {
 
 // Initialize game when page loads
 window.addEventListener('load', () => {
-    new BounceBloxGame();
+    const game = new BounceBloxGame();
+    window.bounceBloxGame = game; // Make game accessible globally for testing
 });
