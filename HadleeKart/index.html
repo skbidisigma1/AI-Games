@@ -29,6 +29,7 @@
                         <p>SHIFT to drift • SPACE to use power-up</p>
                     </div>
                     <button id="startRace" class="racing-button">SELECT TRACK!</button>
+                    <button id="kartCustomization" class="racing-button" style="margin-top: 15px;">CUSTOMIZE KART</button>
                     <button id="storyMode" class="racing-button" style="margin-top: 15px;">STORY MODE</button>
                 </div>
             </div>
@@ -39,52 +40,108 @@
                     <h1 class="racing-title">Story Mode</h1>
                     <h2 class="story-subtitle">Luke's Racing Journey</h2>
                     <div class="story-intro">
-                        <p>Follow Luke through his racing career as he competes to impress Hadlee... 
-                        or is it really someone else? Each race reveals more of the story.</p>
+                        <p>Follow Luke's descent into madness as obsession, manipulation, and dark psychology 
+                        collide on the racing circuit. A twisted tale of manufactured love, cruel experiments, 
+                        and the monsters we create... or reveal. <strong>Warning: Mature themes.</strong></p>
                     </div>
                     <div class="story-races">
                         <div class="story-race" data-race="1">
-                            <h3>Race 1: First Impressions</h3>
-                            <p>Luke's debut race. He's eager to prove himself to Hadlee.</p>
+                            <h3>Race 1: The Obsession Begins</h3>
+                            <p>Luke's first taste of violence and the dark hunger that will consume him.</p>
                             <button class="story-race-button">START RACE</button>
                         </div>
                         <div class="story-race locked" data-race="2">
-                            <h3>Race 2: Rising Stakes</h3>
-                            <p>Luke gains confidence, but competition heats up...</p>
+                            <h3>Race 2: Blood and Secrets</h3>
+                            <p>The mysterious "E" begins their psychological manipulation...</p>
                             <button class="story-race-button">LOCKED</button>
                         </div>
                         <div class="story-race locked" data-race="3">
-                            <h3>Race 3: Mysterious Messages</h3>
-                            <p>Someone called "E" starts giving Luke advice...</p>
+                            <h3>Race 3: The Puppet Master</h3>
+                            <p>Luke realizes he may be the prey, not the predator...</p>
                             <button class="story-race-button">LOCKED</button>
                         </div>
                         <div class="story-race locked" data-race="4">
-                            <h3>Race 4: Growing Doubts</h3>
-                            <p>Luke begins to question his true motivations...</p>
+                            <h3>Race 4: The Doctor's Obsession</h3>
+                            <p>Dr. Eliza reveals herself and her deadly intentions...</p>
                             <button class="story-race-button">LOCKED</button>
                         </div>
                         <div class="story-race locked" data-race="5">
-                            <h3>Race 5: The Connection</h3>
-                            <p>Luke realizes "E" might be closer than he thought...</p>
+                            <h3>Race 5: Partners in Crime</h3>
+                            <p>Luke discovers the horrifying truth about his conditioning...</p>
                             <button class="story-race-button">LOCKED</button>
                         </div>
                         <div class="story-race locked" data-race="6">
-                            <h3>Race 6: Revelation</h3>
-                            <p>The truth about "E" comes to light...</p>
+                            <h3>Race 6: The Experiment Revealed</h3>
+                            <p>The mask comes off and Luke commits his first murder...</p>
                             <button class="story-race-button">LOCKED</button>
                         </div>
                         <div class="story-race locked" data-race="7">
-                            <h3>Race 7: Championship Final</h3>
-                            <p>The ultimate showdown with Hadlee...</p>
+                            <h3>Race 7: The Truth About Hadlee</h3>
+                            <p>The shocking revelation that changes everything...</p>
                             <button class="story-race-button">LOCKED</button>
                         </div>
                         <div class="story-race locked" data-race="8">
-                            <h3>Race 8: True Love Wins</h3>
-                            <p>Luke's shocking finale and happy ending...</p>
+                            <h3>Race 8: Escape from Hell</h3>
+                            <p>Luke's final race for freedom and revenge...</p>
                             <button class="story-race-button">LOCKED</button>
                         </div>
                     </div>
                     <button id="backToTitleFromStory" class="racing-button secondary">← BACK TO MENU</button>
+                </div>
+            </div>
+            
+            <!-- Kart Customization Screen -->
+            <div id="kartCustomizationScreen" class="screen">
+                <div class="customization-content">
+                    <h1 class="racing-title">Kart Customization</h1>
+                    <h2 class="story-subtitle">Choose Your Racing Style</h2>
+                    <div class="customization-intro">
+                        <p>Select a custom kart design that reflects your personality! 
+                        Each design is purely cosmetic but adds unique visual flair to your racing experience.</p>
+                    </div>
+                    <div class="kart-designs">
+                        <div class="kart-design selected" data-design="classic">
+                            <div class="kart-preview">
+                                <canvas class="kart-canvas" width="80" height="50"></canvas>
+                            </div>
+                            <h3>Classic Racer</h3>
+                            <p>The traditional racing kart design</p>
+                            <button class="design-button">SELECTED</button>
+                        </div>
+                        <div class="kart-design" data-design="furry">
+                            <div class="kart-preview">
+                                <canvas class="kart-canvas" width="80" height="50"></canvas>
+                            </div>
+                            <h3>Furry Friend</h3>
+                            <p>Cute kart with ears, tail, and adorable features</p>
+                            <button class="design-button">SELECT</button>
+                        </div>
+                        <div class="kart-design" data-design="anime">
+                            <div class="kart-preview">
+                                <canvas class="kart-canvas" width="80" height="50"></canvas>
+                            </div>
+                            <h3>Kawaii Racer</h3>
+                            <p>Anime-inspired design with big eyes and heart decorations</p>
+                            <button class="design-button">SELECT</button>
+                        </div>
+                        <div class="kart-design" data-design="cyberpunk">
+                            <div class="kart-preview">
+                                <canvas class="kart-canvas" width="80" height="50"></canvas>
+                            </div>
+                            <h3>Cyber Runner</h3>
+                            <p>Futuristic design with neon effects and circuit patterns</p>
+                            <button class="design-button">SELECT</button>
+                        </div>
+                        <div class="kart-design" data-design="magical">
+                            <div class="kart-preview">
+                                <canvas class="kart-canvas" width="80" height="50"></canvas>
+                            </div>
+                            <h3>Magic Kart</h3>
+                            <p>Mystical design with sparkles and magical runes</p>
+                            <button class="design-button">SELECT</button>
+                        </div>
+                    </div>
+                    <button id="backToTitleFromCustomization" class="racing-button secondary">← BACK TO MENU</button>
                 </div>
             </div>
             

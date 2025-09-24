@@ -15,6 +15,7 @@ class HadleeKartGame {
         // Game state
         this.gameState = 'title'; // 'title', 'trackSelection', 'racing', 'paused', 'complete'
         this.selectedTrack = 'classic';
+        this.selectedKartDesign = 'classic'; // Add custom kart design selection
         this.currentLap = 1;
         this.totalLaps = 3;
         this.raceTime = 0;
@@ -66,6 +67,11 @@ class HadleeKartGame {
             this.showStoryMode();
         });
         
+        // Kart customization button
+        document.getElementById('kartCustomization').addEventListener('click', () => {
+            this.showKartCustomization();
+        });
+        
         // Back to title button
         document.getElementById('backToTitle').addEventListener('click', () => {
             this.backToTitle();
@@ -73,6 +79,11 @@ class HadleeKartGame {
         
         // Back to title from story mode
         document.getElementById('backToTitleFromStory').addEventListener('click', () => {
+            this.backToTitle();
+        });
+        
+        // Back to title from customization
+        document.getElementById('backToTitleFromCustomization').addEventListener('click', () => {
             this.backToTitle();
         });
         
@@ -100,6 +111,9 @@ class HadleeKartGame {
         
         // Initialize track previews
         this.initializeTrackPreviews();
+        
+        // Initialize kart customization
+        this.initializeKartCustomization();
     }
     
     /**
@@ -125,6 +139,7 @@ class HadleeKartGame {
         this.gameState = 'title';
         document.getElementById('trackSelection').classList.remove('active');
         document.getElementById('storyModeScreen').classList.remove('active');
+        document.getElementById('kartCustomizationScreen').classList.remove('active');
         document.getElementById('titleScreen').classList.add('active');
     }
     
@@ -136,6 +151,16 @@ class HadleeKartGame {
         document.getElementById('titleScreen').classList.remove('active');
         document.getElementById('storyModeScreen').classList.add('active');
         this.updateStoryProgress();
+    }
+    
+    /**
+     * Show kart customization screen
+     */
+    showKartCustomization() {
+        this.gameState = 'kartCustomization';
+        document.getElementById('titleScreen').classList.remove('active');
+        document.getElementById('kartCustomizationScreen').classList.add('active');
+        this.updateKartPreviews();
     }
     
     /**
@@ -201,153 +226,182 @@ class HadleeKartGame {
     getStoryData(raceNumber) {
         const stories = {
             1: {
-                title: "Race 1: First Impressions",
+                title: "Race 1: The Obsession Begins",
                 track: "classic",
                 preRaceText: `
-                    <p><strong>Luke's First Race</strong></p>
-                    <p>Luke nervously adjusts his helmet as he prepares for his debut race in the Apex Circuit. 
-                    His heart pounds - not just from the anticipation of racing, but because <em>she</em> will be watching.</p>
-                    <p>"Just focus on the track," he tells himself, but his eyes keep drifting to Hadlee's kart. 
-                    The reigning champion looks effortlessly confident, already a legend at just 22.</p>
-                    <p>"This is it," Luke whispers. "Time to show her what I can do."</p>
+                    <p><strong>Luke's Dark Awakening</strong></p>
+                    <p>Luke's hands tremble as he grips the steering wheel, but not from nerves - from an intoxicating rush 
+                    he's never felt before. The roar of engines, the smell of burning rubber, the danger... it's addictive.</p>
+                    <p>His eyes are locked on Hadlee's kart, but there's something unsettling in his gaze. 
+                    "She doesn't know it yet," he whispers, "but she's going to be mine."</p>
+                    <p>The other racers sense something different about Luke - a hunger that goes beyond competition. 
+                    Some call it determination. Others recognize it as something much darker...</p>
                 `,
                 postRaceText: `
-                    <p>Luke crosses the finish line, his first official race complete. Win or lose, 
-                    he's proven he belongs here. As he climbs out of his kart, he notices someone watching 
-                    from the pit crew - a quiet figure with a clipboard, taking notes...</p>
+                    <p>Luke's driving was reckless, aggressive - he sent two other racers spinning into the barriers. 
+                    The crowd cheered, thinking it was skill, but Luke knows the truth: he liked hurting them.</p>
+                    <p>As he climbs out of his kart, blood from a cut on his cheek mixing with his sweat, 
+                    he spots someone in the shadows taking notes. Their eyes meet for a moment - cold, calculating eyes 
+                    that seem to see right through his facade...</p>
                 `
             },
             2: {
-                title: "Race 2: Rising Stakes",
+                title: "Race 2: Blood and Secrets",
                 track: "figure8",
                 preRaceText: `
-                    <p><strong>Growing Confidence</strong></p>
-                    <p>Luke's first race gave him confidence, but the Figure-8 track is known for its chaos. 
-                    Drivers crossing paths, close calls, and split-second decisions.</p>
-                    <p>As he waits for the green flag, Luke catches Hadlee's eye. She nods - was that 
-                    acknowledgment? Respect? His heart skips a beat.</p>
-                    <p>"Focus, Luke," he reminds himself. "Drive like your life depends on it."</p>
+                    <p><strong>The Watcher's Game</strong></p>
+                    <p>Luke can't stop thinking about those cold eyes from yesterday. He's been having vivid dreams - 
+                    racing through endless tracks while someone whispers strategic advice in his ear.</p>
+                    <p>The Figure-8 track is perfect for what Luke has planned. When drivers cross paths, 
+                    accidents happen. And Luke has been studying everyone's patterns obsessively.</p>
+                    <p>Hadlee gives him a concerned look before the race. "You seem... different," she says. 
+                    Luke's smile doesn't reach his eyes. "I'm just focused on winning, babe. For you."</p>
+                    <p>Something in his tone makes her shiver.</p>
                 `,
                 postRaceText: `
-                    <p>The crossing sections were brutal, but Luke held his own. After the race, 
-                    he finds a note tucked into his helmet: "Good driving on turn 3. You've got potential. -E"</p>
-                    <p>E? Luke looks around confused. Who could have left this?</p>
+                    <p>Luke's "accident" in the crossing section looked convincing - three racers eliminated in one move. 
+                    The crowd gasped, Hadlee looked horrified, but Luke felt euphoric.</p>
+                    <p>Later, he finds a note in his locker: "Impressive technique on turn 3. I know what you really are. -E"</p>
+                    <p>Luke's blood runs cold. Someone knows his secret...</p>
                 `
             },
             3: {
-                title: "Race 3: Mysterious Messages",
+                title: "Race 3: The Puppet Master",
                 track: "mountain",
                 preRaceText: `
-                    <p><strong>The Mountain Circuit</strong></p>
-                    <p>Luke's been getting more notes signed "E" - tips about racing lines, 
-                    brake points, even which opponents to watch out for. The advice is incredibly good.</p>
-                    <p>The mountain track is treacherous, full of hairpin turns and elevation changes. 
-                    Luke needs all the help he can get, even mysterious help.</p>
-                    <p>Before the race, another note appears: "Trust your instincts on the hairpins. 
-                    Don't brake too early. You're better than you think. -E"</p>
+                    <p><strong>Messages from the Abyss</strong></p>
+                    <p>Luke is spiraling. The notes from "E" have become more frequent, more personal, more disturbing. 
+                    They know things about him no one should know - his childhood fears, his darkest fantasies.</p>
+                    <p>"I've been watching you longer than you think," today's note reads. 
+                    "Every race, every moment of violence, every twisted thought. We're the same, you and I."</p>
+                    <p>The mountain track's deadly drops seem fitting. Luke wonders if E wants him to push someone off... 
+                    or if E wants to push HIM.</p>
+                    <p>His hands shake as he starts the engine. Is he the hunter or the prey?</p>
                 `,
                 postRaceText: `
-                    <p>Following E's advice paid off - Luke navigated the mountain track like a veteran. 
-                    But who is this mysterious advisor? Luke starts studying the pit crew more carefully, 
-                    trying to spot anyone who might be watching him with particular interest...</p>
+                    <p>Luke drove like a man possessed, taking risks that should have killed him. 
+                    But every turn, every near-death moment felt orchestrated, like someone was guiding him.</p>
+                    <p>After the race, he notices a figure in the medical tent - someone treating another racer's injuries 
+                    with unusual skill. Their movements are precise, calculated... familiar.</p>
+                    <p>For just a moment, their eyes meet through the tent window. Luke's blood freezes.</p>
                 `
             },
             4: {
-                title: "Race 4: Growing Doubts",
+                title: "Race 4: The Doctor's Obsession",
                 track: "city",
                 preRaceText: `
-                    <p><strong>Urban Jungle</strong></p>
-                    <p>The city street circuit is unforgiving - concrete barriers and tight corners. 
-                    Luke's been racing well, but lately he's been wondering... is he really doing this for Hadlee?</p>
-                    <p>The notes from E have become more personal: "You don't have to prove anything to anyone. 
-                    Race for yourself." But Luke still can't figure out who E is.</p>
-                    <p>As the engines rev, Luke finds himself looking less at Hadlee and more at the 
-                    strategic team members analyzing data sheets...</p>
+                    <p><strong>Medical Mysteries</strong></p>
+                    <p>Luke has been researching the medical staff. Dr. Eliza Voss - brilliant, beautiful, 
+                    and with a history of working with "troubled" individuals. Her psychological profiles 
+                    of racers are legendary... and terrifying.</p>
+                    <p>The latest note was different: "I know what you did to those other racers wasn't accidental. 
+                    I know because I've done worse. We should meet properly. -E"</p>
+                    <p>The city streets offer plenty of concrete barriers to "accidentally" slam opponents into. 
+                    Luke wonders if this is a test... or a trap.</p>
+                    <p>He spots Eliza in the crowd, her clipboard held like a weapon, her smile predatory.</p>
                 `,
                 postRaceText: `
-                    <p>Luke's driving was more confident today, less desperate to impress. 
-                    After the race, he notices one of the strategy analysts - a young woman 
-                    with intelligent eyes - quickly look away when he glances over. 
-                    Could she be...?</p>
+                    <p>Luke's driving was surgical - three precise "accidents" that looked completely natural. 
+                    The medical team worked overtime, but no one suspected murder.</p>
+                    <p>As Luke exits his kart, Eliza approaches with medical supplies. 
+                    "That was beautiful work," she whispers, tending to a cut on his arm. 
+                    "I've been waiting so long to find someone who understands."</p>
+                    <p>Her touch burns like ice.</p>
                 `
             },
             5: {
-                title: "Race 5: The Connection",
+                title: "Race 5: Partners in Crime",
                 track: "desert",
                 preRaceText: `
-                    <p><strong>Desert Heat</strong></p>
-                    <p>The desert track is brutal - heat, dust, and long sweeping turns. 
-                    Luke's latest note from E was different: "Sometimes the person you're meant to 
-                    impress is right beside you, not ahead of you."</p>
-                    <p>Luke's starting to put pieces together. The handwriting, the strategic insights, 
-                    the way someone always seems to be watching his progress...</p>
-                    <p>He spots the analyst again - Eliza, he overheard someone call her. 
-                    She's brilliant, always three steps ahead in race strategy. Could E stand for...?</p>
+                    <p><strong>Desert Confessions</strong></p>
+                    <p>Luke and Eliza have been meeting in secret. She's shown him her "research" - 
+                    detailed psychological profiles on every racer, their weaknesses, their fears.</p>
+                    <p>"Hadlee's terrified of losing control," Eliza purrs, running her finger along 
+                    a photo of their target. "One little push at the right moment..."</p>
+                    <p>The desert track is isolated, perfect for what they're planning. 
+                    Luke feels alive in a way he never has before - finally, someone who understands his hunger.</p>
+                    <p>But as they kiss before the race, Luke notices something chilling in Eliza's files: 
+                    a profile with his own photo, marked "SUBJECT A - SUCCESSFULLY CONDITIONED."</p>
                 `,
                 postRaceText: `
-                    <p>After the race, Luke makes a decision. He approaches the strategy table, 
-                    his heart pounding harder than during any race. "Eliza?" he calls out. 
-                    She turns, and for a moment, their eyes meet with perfect understanding.</p>
-                    <p>"The notes..." Luke begins. Eliza smiles softly. "I was wondering when you'd figure it out."</p>
+                    <p>The race was a masterpiece of manipulation. Using Eliza's intelligence, 
+                    Luke psychologically broke three competitors, leaving them crying in their karts.</p>
+                    <p>Hadlee approaches afterward, shaken. "Luke, what's happened to you? 
+                    You used to be so... innocent." Her voice breaks.</p>
+                    <p>Luke barely hears her. He's staring at Eliza, who's watching from the medical tent, 
+                    taking notes on his reaction. Always... taking notes.</p>
                 `
             },
             6: {
-                title: "Race 6: Revelation",
+                title: "Race 6: The Experiment Revealed",
                 track: "forest",
                 preRaceText: `
-                    <p><strong>Forest Path</strong></p>
-                    <p>Everything makes sense now. Eliza - "E" - has been helping him all along. 
-                    Not because she needed him to win, but because she saw potential in him 
-                    that he didn't see in himself.</p>
-                    <p>"I never cared about Hadlee," Luke realizes. "I was just intimidated by success. 
-                    But with Eliza... she makes me want to be better."</p>
-                    <p>The forest track winds through tall trees, much like the winding path 
-                    that led Luke to discover what really mattered to him.</p>
+                    <p><strong>Into the Woods of Truth</strong></p>
+                    <p>Luke confronts Eliza about the files. Her mask slips for the first time, 
+                    revealing something coldly scientific beneath her passion.</p>
+                    <p>"You were never special, Luke," she says with clinical detachment. 
+                    "Just a perfect test subject. Malleable, violent tendencies, desperate for approval. 
+                    I've been conditioning you from day one."</p>
+                    <p>The forest track's twisted paths mirror Luke's shattered mind. 
+                    Every note, every touch, every moment of intimacy was calculated manipulation.</p>
+                    <p>"But don't worry," Eliza smiles, "the real experiment starts today. 
+                    I need to see if you'll kill for me when you know it's all been a lie."</p>
                 `,
                 postRaceText: `
-                    <p>Luke races with a new confidence - not to impress anyone, but because 
-                    Eliza believed in him when he couldn't believe in himself. They've been 
-                    talking more, working together on strategy. It's not just racing anymore... 
-                    it's partnership.</p>
+                    <p>Luke races in a rage-fueled trance. When he sees Hadlee's kart ahead, 
+                    something snaps. This is her fault - she never saw his worth, drove him to this madness!</p>
+                    <p>He rams her off the track, watching her kart flip and burn. 
+                    The crowd screams, but Luke feels... empty. Eliza approaches with her clipboard.</p>
+                    <p>"Excellent data," she says coldly. "Phase one complete."</p>
                 `
             },
             7: {
-                title: "Race 7: Championship Final",
+                title: "Race 7: The Truth About Hadlee",
                 track: "speedway",
                 preRaceText: `
-                    <p><strong>The High-Speed Showdown</strong></p>
-                    <p>The championship comes down to this - Luke versus Hadlee on the speedway. 
-                    The fastest track, the highest stakes. But Luke's perspective has completely changed.</p>
-                    <p>Eliza squeezes his hand before he gets in the kart. "Just drive your race," she says. 
-                    "Win or lose, I'm proud of who you've become."</p>
-                    <p>Luke realizes he's already won something more valuable than any championship...</p>
+                    <p><strong>The Final Revelation</strong></p>
+                    <p>As Luke sits in prison awaiting trial for Hadlee's "murder," 
+                    he receives one last visit from Eliza. But she's not alone.</p>
+                    <p>"Hello, Luke," says a familiar voice. Hadlee steps out from behind Eliza, 
+                    very much alive, wearing a lab coat identical to Eliza's.</p>
+                    <p>"Dr. Hadlee Winters," she introduces herself. "Eliza's research partner. 
+                    We've been studying psychopathic conditioning in high-stress environments. 
+                    Racing was just our laboratory."</p>
+                    <p>Luke's world crumbles. Every feeling, every obsession, every crime - 
+                    all orchestrated by two brilliant monsters in white coats.</p>
                 `,
                 postRaceText: `
-                    <p>The race is intense, wheel-to-wheel with Hadlee. But in the final turn, 
-                    Luke makes a decision that shocks everyone...</p>
+                    <p>"The beautiful thing about your case," Hadlee continues, "is that you'll be 
+                    declared criminally insane. Our research will be published, we'll be famous, 
+                    and you'll spend your life in our specially designed facility."</p>
+                    <p>Luke laughs - a broken, hollow sound. "You created a monster."</p>
+                    <p>"No," Eliza smiles, "we revealed one. The monster was always there."</p>
                 `
             },
             8: {
-                title: "Race 8: True Love Wins",
+                title: "Race 8: Escape from Hell",
                 track: "twisted",
                 preRaceText: `
-                    <p><strong>The Twisted Finale</strong></p>
-                    <p>Luke's shocking move in the championship - slowing down to let Hadlee pass, 
-                    then hitting her kart and launching her into orbit - made headlines worldwide.</p>
-                    <p>"I don't need to beat her to prove my worth," Luke declared to the media. 
-                    "I've already found everything I was looking for."</p>
-                    <p>This final exhibition race on the twisted circuit is just for fun. 
-                    Luke and Eliza, now officially together, racing side by side...</p>
+                    <p><strong>The Final Gambit</strong></p>
+                    <p>Three years later, in the maximum security racing facility where Luke is kept, 
+                    a new "patient" arrives. Someone who's been planning this for a long time.</p>
+                    <p>"I've been studying their research," the newcomer whispers. "I know how to beat them. 
+                    But I need someone who knows their methods inside and out."</p>
+                    <p>Luke looks up to see a scarred face he recognizes - one of the racers 
+                    from his early competitions who "died" in an accident. Apparently, some experiments survive.</p>
+                    <p>"One last race, Luke. Winner takes all - including our freedom and their lives."</p>
                 `,
                 postRaceText: `
-                    <p><strong>EPILOGUE: Six Months Later</strong></p>
-                    <p>Luke and Eliza work as a perfect team - she handles strategy, he handles driving. 
-                    They've won three races together and are planning their future.</p>
-                    <p>There's just one small problem... Luke has developed a slight gambling addiction 
-                    after discovering how thrilling it is to bet on race outcomes. 
-                    Eliza is working on helping him with that too.</p>
-                    <p><em>"Every love story has its quirks,"</em> she says with a laugh.</p>
-                    <p><strong>THE END</strong></p>
+                    <p><strong>EPILOGUE: The Tables Turn</strong></p>
+                    <p>The escape was brutal, bloody, and perfect. Luke and his ally didn't just flee - 
+                    they turned the facility's own psychological torture methods against their captors.</p>
+                    <p>Dr. Eliza Voss and Dr. Hadlee Winters were found days later, catatonic and broken, 
+                    clutching clipboards covered in their own twisted experimental data.</p>
+                    <p>Luke walks free under a new identity, having learned the most important lesson of all: 
+                    sometimes the best way to win the game is to become a better monster than your enemies.</p>
+                    <p>The racing circuit has never been the same. Mysterious accidents plague researchers. 
+                    And somewhere, Luke is still racing - with a very different kind of hunger now.</p>
+                    <p><strong>THE END?</strong></p>
                 `
             }
         };
@@ -449,12 +503,95 @@ class HadleeKartGame {
     }
     
     /**
+     * Initialize kart customization system
+     */
+    initializeKartCustomization() {
+        // Set up design selection buttons
+        document.querySelectorAll('.design-button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const kartDesign = e.target.closest('.kart-design');
+                const design = kartDesign.dataset.design;
+                this.selectKartDesign(design);
+            });
+        });
+        
+        // Load saved design preference
+        const savedDesign = localStorage.getItem('hadleeKartDesign') || 'classic';
+        this.selectKartDesign(savedDesign);
+    }
+    
+    /**
+     * Select a kart design
+     */
+    selectKartDesign(design) {
+        this.selectedKartDesign = design;
+        localStorage.setItem('hadleeKartDesign', design);
+        
+        // Update UI
+        document.querySelectorAll('.kart-design').forEach(el => {
+            el.classList.remove('selected');
+            const button = el.querySelector('.design-button');
+            button.textContent = 'SELECT';
+        });
+        
+        const selectedDesign = document.querySelector(`[data-design="${design}"]`);
+        if (selectedDesign) {
+            selectedDesign.classList.add('selected');
+            const button = selectedDesign.querySelector('.design-button');
+            button.textContent = 'SELECTED';
+        }
+    }
+    
+    /**
+     * Update kart design previews
+     */
+    updateKartPreviews() {
+        const designs = ['classic', 'furry', 'anime', 'cyberpunk', 'magical'];
+        
+        designs.forEach(design => {
+            const canvas = document.querySelector(`[data-design="${design}"] .kart-canvas`);
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                this.renderKartPreview(ctx, design, canvas.width, canvas.height);
+            }
+        });
+    }
+    
+    /**
+     * Render a small preview of the kart design
+     */
+    renderKartPreview(ctx, design, width, height) {
+        ctx.clearRect(0, 0, width, height);
+        
+        // Create a mini kart for preview
+        const previewKart = {
+            radius: 12,
+            color: '#e74c3c',
+            design: design,
+            isPlayer: true
+        };
+        
+        ctx.save();
+        ctx.translate(width / 2, height / 2);
+        
+        // Draw preview based on design using renderer
+        if (design === 'classic') {
+            this.renderer.renderStandardKart(ctx, previewKart);
+        } else {
+            this.renderer.renderCustomKart(ctx, previewKart);
+        }
+        
+        ctx.restore();
+    }
+    
+    /**
      * Create player kart and 7 AI karts
      */
     createKarts() {
         // Create player kart
         const startPos = this.track.getStartPosition(0);
         this.playerKart = new Kart(startPos.x, startPos.y, '#e74c3c', true);
+        this.playerKart.design = this.selectedKartDesign; // Assign custom design
         
         // Create AI karts
         this.aiKarts = [];
@@ -2169,54 +2306,11 @@ class RenderingEngine {
             ctx.fillRect(-kart.radius + 2, -kart.radius/2 + 2, kart.radius * 2, kart.radius);
             ctx.restore();
             
-            // Draw kart body with gradient
-            const gradient = ctx.createLinearGradient(-kart.radius, -kart.radius/2, kart.radius, kart.radius/2);
-            gradient.addColorStop(0, kart.color);
-            gradient.addColorStop(0.5, this.lightenColor(kart.color, 20));
-            gradient.addColorStop(1, this.darkenColor(kart.color, 20));
-            ctx.fillStyle = gradient;
-            ctx.fillRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
-            
-            // Draw kart outline
-            ctx.strokeStyle = this.darkenColor(kart.color, 40);
-            ctx.lineWidth = 2;
-            ctx.strokeRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
-            
-            // Draw kart details (spoiler)
-            ctx.fillStyle = '#2c3e50';
-            ctx.fillRect(kart.radius - 4, -kart.radius/3, 6, kart.radius/1.5);
-            
-            // Draw windshield
-            ctx.fillStyle = 'rgba(135, 206, 235, 0.7)';
-            ctx.fillRect(-kart.radius/3, -kart.radius/3, kart.radius/1.5, kart.radius/1.5);
-            
-            // Draw wheels
-            ctx.fillStyle = '#34495e';
-            ctx.fillRect(-kart.radius + 2, -kart.radius/2 - 3, 4, 6);
-            ctx.fillRect(-kart.radius + 2, kart.radius/2 - 3, 4, 6);
-            ctx.fillRect(kart.radius - 6, -kart.radius/2 - 3, 4, 6);
-            ctx.fillRect(kart.radius - 6, kart.radius/2 - 3, 4, 6);
-            
-            // Draw enhanced drift smoke
-            if (kart.isDrifting && kart.speed > 2) {
-                for (let i = 0; i < 5; i++) {
-                    ctx.fillStyle = `rgba(200, 200, 200, ${0.4 - i * 0.08})`;
-                    ctx.beginPath();
-                    ctx.arc(-kart.radius - i * 6, (Math.random() - 0.5) * 10, 3 + i * 1.5, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-            
-            // Speed lines effect when going fast
-            if (kart.speed > 8) {
-                ctx.strokeStyle = `rgba(255, 255, 255, ${(kart.speed - 8) * 0.1})`;
-                ctx.lineWidth = 1;
-                for (let i = 0; i < 3; i++) {
-                    ctx.beginPath();
-                    ctx.moveTo(-kart.radius - 20 - i * 5, (i - 1) * 3);
-                    ctx.lineTo(-kart.radius - 30 - i * 5, (i - 1) * 3);
-                    ctx.stroke();
-                }
+            // Render custom kart design based on type
+            if (kart.isPlayer && kart.design) {
+                this.renderCustomKart(ctx, kart);
+            } else {
+                this.renderStandardKart(ctx, kart);
             }
             
             ctx.restore();
@@ -2257,6 +2351,287 @@ class RenderingEngine {
                 ctx.restore();
             }
         });
+    }
+    
+    renderStandardKart(ctx, kart) {
+        // Draw kart body with gradient
+        const gradient = ctx.createLinearGradient(-kart.radius, -kart.radius/2, kart.radius, kart.radius/2);
+        gradient.addColorStop(0, kart.color);
+        gradient.addColorStop(0.5, this.lightenColor(kart.color, 20));
+        gradient.addColorStop(1, this.darkenColor(kart.color, 20));
+        ctx.fillStyle = gradient;
+        ctx.fillRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+        
+        // Draw kart outline
+        ctx.strokeStyle = this.darkenColor(kart.color, 40);
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+        
+        // Draw kart details (spoiler)
+        ctx.fillStyle = '#2c3e50';
+        ctx.fillRect(kart.radius - 4, -kart.radius/3, 6, kart.radius/1.5);
+        
+        // Draw windshield
+        ctx.fillStyle = 'rgba(135, 206, 235, 0.7)';
+        ctx.fillRect(-kart.radius/3, -kart.radius/3, kart.radius/1.5, kart.radius/1.5);
+        
+        // Draw wheels
+        ctx.fillStyle = '#34495e';
+        ctx.fillRect(-kart.radius + 2, -kart.radius/2 - 3, 4, 6);
+        ctx.fillRect(-kart.radius + 2, kart.radius/2 - 3, 4, 6);
+        ctx.fillRect(kart.radius - 6, -kart.radius/2 - 3, 4, 6);
+        ctx.fillRect(kart.radius - 6, kart.radius/2 - 3, 4, 6);
+        
+        this.renderKartEffects(ctx, kart);
+    }
+    
+    renderCustomKart(ctx, kart) {
+        switch(kart.design) {
+            case 'furry':
+                this.renderFurryKart(ctx, kart);
+                break;
+            case 'anime':
+                this.renderAnimeKart(ctx, kart);
+                break;
+            case 'cyberpunk':
+                this.renderCyberpunkKart(ctx, kart);
+                break;
+            case 'magical':
+                this.renderMagicalKart(ctx, kart);
+                break;
+            default:
+                this.renderStandardKart(ctx, kart);
+        }
+    }
+    
+    renderFurryKart(ctx, kart) {
+        // Furry-themed kart with ears and tail
+        const gradient = ctx.createLinearGradient(-kart.radius, -kart.radius/2, kart.radius, kart.radius/2);
+        gradient.addColorStop(0, '#d4a574'); // Sandy fur color
+        gradient.addColorStop(0.5, '#f4d5a7');
+        gradient.addColorStop(1, '#b8956a');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+        
+        // Draw fur texture
+        ctx.fillStyle = 'rgba(180, 149, 106, 0.3)';
+        for (let i = 0; i < 8; i++) {
+            const x = -kart.radius + (Math.random() * kart.radius * 2);
+            const y = -kart.radius/2 + (Math.random() * kart.radius);
+            ctx.fillRect(x, y, 2, 1);
+        }
+        
+        // Draw ears
+        ctx.fillStyle = '#d4a574';
+        ctx.beginPath();
+        ctx.ellipse(-kart.radius/2, -kart.radius/2 - 5, 4, 8, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(kart.radius/2, -kart.radius/2 - 5, 4, 8, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw tail
+        ctx.fillStyle = '#d4a574';
+        ctx.beginPath();
+        ctx.ellipse(kart.radius + 5, 0, 8, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw cute eyes
+        ctx.fillStyle = '#000';
+        ctx.fillRect(-kart.radius/3, -kart.radius/4, 3, 3);
+        ctx.fillRect(kart.radius/3 - 3, -kart.radius/4, 3, 3);
+        
+        // Draw nose
+        ctx.fillStyle = '#ff69b4';
+        ctx.beginPath();
+        ctx.arc(0, -kart.radius/6, 2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        this.renderKartEffects(ctx, kart);
+    }
+    
+    renderAnimeKart(ctx, kart) {
+        // Anime-themed kart with kawaii elements
+        const gradient = ctx.createLinearGradient(-kart.radius, -kart.radius/2, kart.radius, kart.radius/2);
+        gradient.addColorStop(0, '#ffb3d9'); // Pink anime color
+        gradient.addColorStop(0.5, '#ffccf0');
+        gradient.addColorStop(1, '#ff99cc');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+        
+        // Draw anime-style decoration
+        ctx.strokeStyle = '#ff1493';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+        
+        // Draw large anime eyes
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.ellipse(-kart.radius/3, -kart.radius/4, 5, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(kart.radius/3, -kart.radius/4, 5, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw pupils
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(-kart.radius/3, -kart.radius/4, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(kart.radius/3, -kart.radius/4, 3, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw shine in eyes
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-kart.radius/3 - 1, -kart.radius/4 - 2, 2, 2);
+        ctx.fillRect(kart.radius/3 - 1, -kart.radius/4 - 2, 2, 2);
+        
+        // Draw cat-like mouth
+        ctx.strokeStyle = '#ff1493';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, kart.radius/6, 3, 0, Math.PI);
+        ctx.stroke();
+        
+        // Draw heart decorations
+        ctx.fillStyle = '#ff69b4';
+        this.drawHeart(ctx, -kart.radius + 5, kart.radius/3, 3);
+        this.drawHeart(ctx, kart.radius - 5, kart.radius/3, 3);
+        
+        this.renderKartEffects(ctx, kart);
+    }
+    
+    renderCyberpunkKart(ctx, kart) {
+        // Cyberpunk-themed kart with neon effects
+        const gradient = ctx.createLinearGradient(-kart.radius, -kart.radius/2, kart.radius, kart.radius/2);
+        gradient.addColorStop(0, '#2c3e50');
+        gradient.addColorStop(0.5, '#34495e');
+        gradient.addColorStop(1, '#1a252f');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+        
+        // Draw neon trim
+        const time = Date.now() * 0.005;
+        ctx.strokeStyle = `rgba(0, 255, 255, ${0.8 + Math.sin(time) * 0.2})`;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+        
+        // Draw circuit patterns
+        ctx.strokeStyle = `rgba(57, 255, 20, ${0.6 + Math.sin(time * 1.5) * 0.2})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-kart.radius + 5, -kart.radius/4);
+        ctx.lineTo(kart.radius - 5, -kart.radius/4);
+        ctx.moveTo(-kart.radius + 5, kart.radius/4);
+        ctx.lineTo(kart.radius - 5, kart.radius/4);
+        ctx.stroke();
+        
+        // Draw glowing core
+        const coreGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 8);
+        coreGradient.addColorStop(0, `rgba(255, 0, 255, ${0.8 + Math.sin(time * 2) * 0.2})`);
+        coreGradient.addColorStop(1, 'rgba(255, 0, 255, 0)');
+        ctx.fillStyle = coreGradient;
+        ctx.beginPath();
+        ctx.arc(0, 0, 8, 0, Math.PI * 2);
+        ctx.fill();
+        
+        this.renderKartEffects(ctx, kart);
+    }
+    
+    renderMagicalKart(ctx, kart) {
+        // Magical-themed kart with sparkles
+        const gradient = ctx.createLinearGradient(-kart.radius, -kart.radius/2, kart.radius, kart.radius/2);
+        gradient.addColorStop(0, '#9b59b6');
+        gradient.addColorStop(0.5, '#e74c3c');
+        gradient.addColorStop(1, '#f39c12');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+        
+        // Draw magical outline
+        ctx.strokeStyle = '#f1c40f';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+        
+        // Draw sparkles
+        const time = Date.now() * 0.003;
+        for (let i = 0; i < 6; i++) {
+            const angle = (i / 6) * Math.PI * 2 + time;
+            const distance = kart.radius * 0.7;
+            const x = Math.cos(angle) * distance;
+            const y = Math.sin(angle) * distance * 0.5;
+            const alpha = 0.5 + Math.sin(time * 3 + i) * 0.3;
+            
+            ctx.fillStyle = `rgba(241, 196, 15, ${alpha})`;
+            this.drawStar(ctx, x, y, 4, 3, 1.5);
+        }
+        
+        // Draw magical runes
+        ctx.strokeStyle = '#f1c40f';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(0, 0, kart.radius * 0.3, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        this.renderKartEffects(ctx, kart);
+    }
+    
+    renderKartEffects(ctx, kart) {
+        // Draw enhanced drift smoke
+        if (kart.isDrifting && kart.speed > 2) {
+            for (let i = 0; i < 5; i++) {
+                ctx.fillStyle = `rgba(200, 200, 200, ${0.4 - i * 0.08})`;
+                ctx.beginPath();
+                ctx.arc(-kart.radius - i * 6, (Math.random() - 0.5) * 10, 3 + i * 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        // Speed lines effect when going fast
+        if (kart.speed > 8) {
+            ctx.strokeStyle = `rgba(255, 255, 255, ${(kart.speed - 8) * 0.1})`;
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(-kart.radius - 20 - i * 5, (i - 1) * 3);
+                ctx.lineTo(-kart.radius - 30 - i * 5, (i - 1) * 3);
+                ctx.stroke();
+            }
+        }
+    }
+    
+    drawHeart(ctx, x, y, size) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(size / 10, size / 10);
+        ctx.beginPath();
+        ctx.moveTo(0, 3);
+        ctx.bezierCurveTo(-5, -2, -10, 1, -10, 5);
+        ctx.bezierCurveTo(-10, 9, -5, 13, 0, 15);
+        ctx.bezierCurveTo(5, 13, 10, 9, 10, 5);
+        ctx.bezierCurveTo(10, 1, 5, -2, 0, 3);
+        ctx.fill();
+        ctx.restore();
+    }
+    
+    drawStar(ctx, x, y, spikes, outerRadius, innerRadius) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.beginPath();
+        let rot = Math.PI / 2 * 3;
+        let step = Math.PI / spikes;
+        
+        ctx.moveTo(0, -outerRadius);
+        for (let i = 0; i < spikes; i++) {
+            ctx.lineTo(Math.cos(rot) * outerRadius, Math.sin(rot) * outerRadius);
+            rot += step;
+            ctx.lineTo(Math.cos(rot) * innerRadius, Math.sin(rot) * innerRadius);
+            rot += step;
+        }
+        ctx.lineTo(0, -outerRadius);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
     }
     
     renderPowerUps(powerUps) {
