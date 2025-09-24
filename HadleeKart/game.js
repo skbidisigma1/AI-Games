@@ -139,6 +139,7 @@ class HadleeKartGame {
         this.gameState = 'title';
         document.getElementById('trackSelection').classList.remove('active');
         document.getElementById('storyModeScreen').classList.remove('active');
+        document.getElementById('kartCustomizationScreen').classList.remove('active');
         document.getElementById('titleScreen').classList.add('active');
     }
     
@@ -573,11 +574,11 @@ class HadleeKartGame {
         ctx.save();
         ctx.translate(width / 2, height / 2);
         
-        // Draw preview based on design
+        // Draw preview based on design using renderer
         if (design === 'classic') {
-            this.renderStandardKart(ctx, previewKart);
+            this.renderer.renderStandardKart(ctx, previewKart);
         } else {
-            this.renderCustomKart(ctx, previewKart);
+            this.renderer.renderCustomKart(ctx, previewKart);
         }
         
         ctx.restore();
