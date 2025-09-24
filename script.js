@@ -78,6 +78,16 @@ class GameBrowser {
                 fullDescription: 'Control a happy cube through platforming challenges. Collect all stars and reach the exit using different block types.'
             },
             {
+                name: 'FreakOut',
+                displayName: 'Freak Out',
+                icon: '🎭',
+                genre: 'adventure',
+                description: 'A surreal interactive story where reality breaks down and nothing makes sense',
+                features: ['fourth wall breaking', 'reality distortion', 'choice consequences', 'multiple endings', 'meta-narrative'],
+                path: 'FreakOut',
+                fullDescription: 'Navigate through increasingly bizarre scenarios where logic is optional and causality is more of a guideline. Your sanity and reality level determine your path through the madness.'
+            },
+            {
                 name: 'PixelVault',
                 displayName: 'PixelVault',
                 icon: '💎',
