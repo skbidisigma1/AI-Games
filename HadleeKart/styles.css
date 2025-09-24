@@ -522,6 +522,117 @@ body {
     text-align: left;
 }
 
+/* Kart Customization Screen */
+.customization-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.customization-intro {
+    background: rgba(155, 89, 182, 0.1);
+    border: 2px solid #9b59b6;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+    text-align: center;
+}
+
+.customization-intro p {
+    font-size: 1.2rem;
+    color: #2c3e50;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.kart-designs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin: 3rem 0;
+}
+
+.kart-design {
+    background: rgba(255, 255, 255, 0.9);
+    border: 3px solid #ecf0f1;
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.kart-design:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(155, 89, 182, 0.3);
+    border-color: #9b59b6;
+}
+
+.kart-design.selected {
+    border-color: #27ae60;
+    background: rgba(46, 204, 113, 0.1);
+    box-shadow: 0 8px 20px rgba(46, 204, 113, 0.3);
+}
+
+.kart-preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 60px;
+    margin-bottom: 1rem;
+    background: rgba(52, 73, 94, 0.1);
+    border-radius: 10px;
+}
+
+.kart-canvas {
+    border-radius: 5px;
+}
+
+.kart-design h3 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.3rem;
+    color: #2c3e50;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.kart-design p {
+    color: #7f8c8d;
+    margin-bottom: 1.5rem;
+    line-height: 1.4;
+    font-size: 0.9rem;
+}
+
+.design-button {
+    background: linear-gradient(45deg, #9b59b6, #8e44ad);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 25px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.design-button:hover {
+    background: linear-gradient(45deg, #8e44ad, #9b59b6);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(155, 89, 182, 0.4);
+}
+
+.kart-design.selected .design-button {
+    background: linear-gradient(45deg, #27ae60, #2ecc71);
+}
+
 .story-dialog-content h2 {
     color: #e74c3c;
     margin-bottom: 1rem;
