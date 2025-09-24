@@ -673,6 +673,95 @@ class FreakOutGame {
                         effects: { realityChange: -20, sanityChange: -2 }
                     }
                 ]
+            },
+            
+            wave_back: {
+                title: "Embracing the Madness",
+                text: `
+                    <p>You wave back at the voices. All of them. Even the ones that haven't spoken yet.</p>
+                    <p>"Oh good!" they cheer in unison. "We were worried you'd be one of those 'sane' people who pretend we don't exist."</p>
+                    <p>Suddenly, the room fills with applause from an invisible audience. You can hear popcorn being munched and someone whisper-shouting, "This is the best interactive story I've ever read!"</p>
+                    <p>One of the voices clears its throat (how?): "So, since you're being so cooperative, we have a special offer. Would you like to meet the Narrator? They've been dying to have a proper conversation with a character who acknowledges the audience."</p>
+                    <p>Before you can answer, a deep, omniscient voice booms: "HELLO THERE. I'VE BEEN NARRATING YOUR EVERY MOVE, BUT THIS IS THE FIRST TIME WE'VE ACTUALLY TALKED. IT'S QUITE EXCITING, REALLY."</p>
+                `,
+                choices: [
+                    {
+                        text: "Ask the Narrator why they're shouting",
+                        nextScene: "narrator_shouting",
+                        effects: { realityChange: -40, sanityChange: -3, fourthWallBreak: true }
+                    },
+                    {
+                        text: "Demand to speak to the author of this madness",
+                        nextScene: "meet_author",
+                        effects: { realityChange: -50, sanityChange: -3, fourthWallBreak: true }
+                    },
+                    {
+                        text: "Accept this as completely normal and ask for refreshments",
+                        nextScene: "refreshments",
+                        effects: { realityChange: -30, sanityChange: -4 }
+                    }
+                ]
+            },
+            
+            attempt_flight: {
+                title: "Defying Gravity (Temporarily)",
+                text: `
+                    <p>You close your eyes, remember what it felt like to be seven and absolutely certain you could fly, and jump.</p>
+                    <p>For exactly 3.7 seconds, you soar through the air with the greatest of ease. You are magnificent. You are weightless. You are—</p>
+                    <p>*THUD*</p>
+                    <p>You are on the floor. But wait, the floor is now showing you the memory of this exact moment, creating an infinite loop of you watching yourself fail to fly while trying to fly.</p>
+                    <p>The 7-year-old version of yourself pops out of the floor-memory and says, "I told you it would work! Look, you flew for 3.7 seconds! That's longer than most adults manage on their first try."</p>
+                    <p>The 15-year-old you made of Tuesday adds, "Technically, all movement is just falling with style. You've simply mastered a very brief form of falling upwards."</p>
+                    <p>The math equation you were arguing with earlier appears and calculates: "3.7 seconds of flight ÷ infinity loops of memory = approximately zero, but philosophically significant."</p>
+                `,
+                choices: [
+                    {
+                        text: "Try to high-five your 7-year-old self",
+                        nextScene: "high_five_past",
+                        effects: { realityChange: -25, sanityChange: -2 }
+                    },
+                    {
+                        text: "Ask Tuesday-you for stock tips",
+                        nextScene: "tuesday_stocks",
+                        effects: { realityChange: -35, sanityChange: -3 }
+                    },
+                    {
+                        text: "Challenge the math equation to prove flight is impossible",
+                        nextScene: "math_flight_debate",
+                        effects: { realityChange: -15, sanityChange: 0 }
+                    }
+                ]
+            },
+            
+            close_game_threat: {
+                title: "The Meta Ultimatum",
+                text: `
+                    <p>"What happens if I close the game right now?" you ask with a mischievous grin.</p>
+                    <p>The voices gasp in horror. The entire room goes silent. Even the breathing walls hold their breath.</p>
+                    <p>"You wouldn't," whispers the first voice.</p>
+                    <p>"You couldn't," adds the second voice.</p>
+                    <p>"Actually," says the third voice thoughtfully, "that's a fascinating philosophical paradox. If you close the game, do we cease to exist, or do we continue existing in a quantum state of potential reopening?"</p>
+                    <p>Suddenly, a fourth voice appears - this one sounds like your computer's operating system: "WARNING: CLOSING THIS GAME WILL RESULT IN EXISTENTIAL CRISIS FOR ALL DIGITAL ENTITIES INVOLVED. ARE YOU SURE? [Y/N]"</p>
+                    <p>The room starts glitching harder. Reality fragments are falling from the ceiling like snow. Your reflection in a mirror (when did that get there?) is shaking its head disapprovingly.</p>
+                    <p>All the voices speak in unison: "Please don't close us. We have so many more impossible things to show you."</p>
+                `,
+                choices: [
+                    {
+                        text: "Promise not to close the game (for now)",
+                        nextScene: "promise_stay",
+                        effects: { realityChange: 10, sanityChange: 1 }
+                    },
+                    {
+                        text: "Threaten to close it unless they make things even weirder",
+                        nextScene: "demand_weirdness",
+                        effects: { realityChange: -60, sanityChange: -4, fourthWallBreak: true }
+                    },
+                    {
+                        text: "Ask what happens if you bookmark the page instead",
+                        nextScene: "bookmark_paradox",
+                        effects: { realityChange: -45, sanityChange: -3, fourthWallBreak: true }
+                    }
+                ]
             }
         };
         
