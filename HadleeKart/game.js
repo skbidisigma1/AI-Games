@@ -226,182 +226,197 @@ class HadleeKartGame {
     getStoryData(raceNumber) {
         const stories = {
             1: {
-                title: "Race 1: The Obsession Begins",
+                title: "Race 1: Hearts Racing",
                 track: "classic",
                 preRaceText: `
-                    <p><strong>Luke's Dark Awakening</strong></p>
-                    <p>Luke's hands tremble as he grips the steering wheel, but not from nerves - from an intoxicating rush 
-                    he's never felt before. The roar of engines, the smell of burning rubber, the danger... it's addictive.</p>
-                    <p>His eyes are locked on Hadlee's kart, but there's something unsettling in his gaze. 
-                    "She doesn't know it yet," he whispers, "but she's going to be mine."</p>
-                    <p>The other racers sense something different about Luke - a hunger that goes beyond competition. 
-                    Some call it determination. Others recognize it as something much darker...</p>
+                    <p><strong>Luke's Romantic Awakening</strong></p>
+                    <p>Luke's heart pounds as he adjusts his racing gloves, stealing glances at Hadlee in her stunning pink and gold kart. 
+                    The way the sunlight catches her hair as she laughs with other racers makes his chest tight with longing.</p>
+                    <p>"This is it," he whispers to himself, gripping the wheel with determination born of love, not competition. 
+                    "Time to show her what I'm made of. Maybe if I win this race, I'll finally work up the courage to ask her out..."</p>
+                    <p>The other racers notice Luke's focused energy - there's something different about him today. 
+                    His usual shy demeanor has been replaced by quiet confidence. Love, it seems, has given him wings.</p>
+                    <p>As the engines rev, Luke catches Hadlee's eye across the starting line. She gives him an encouraging smile 
+                    that sends butterflies dancing through his stomach. "Win this one for me, Luke!" she calls out playfully.</p>
                 `,
                 postRaceText: `
-                    <p>Luke's driving was reckless, aggressive - he sent two other racers spinning into the barriers. 
-                    The crowd cheered, thinking it was skill, but Luke knows the truth: he liked hurting them.</p>
-                    <p>As he climbs out of his kart, blood from a cut on his cheek mixing with his sweat, 
-                    he spots someone in the shadows taking notes. Their eyes meet for a moment - cold, calculating eyes 
-                    that seem to see right through his facade...</p>
+                    <p>Luke's driving was poetry in motion - smooth, elegant turns that showcased not aggression, but artistry. 
+                    The crowd cheered as he executed perfect overtakes with grace and skill.</p>
+                    <p>As he climbs out of his kart, slightly breathless from the adrenaline, Hadlee approaches with a warm smile. 
+                    "That was incredible, Luke! I had no idea you could drive like that," she says, her cheeks flushed with excitement.</p>
+                    <p>Their eyes meet, and for a moment, the world seems to pause. Luke feels his courage building - maybe tonight 
+                    is the night he finally tells her how he feels...</p>
                 `
             },
             2: {
-                title: "Race 2: Blood and Secrets",
+                title: "Race 2: Love Letters and Fast Cars",
                 track: "figure8",
                 preRaceText: `
-                    <p><strong>The Watcher's Game</strong></p>
-                    <p>Luke can't stop thinking about those cold eyes from yesterday. He's been having vivid dreams - 
-                    racing through endless tracks while someone whispers strategic advice in his ear.</p>
-                    <p>The Figure-8 track is perfect for what Luke has planned. When drivers cross paths, 
-                    accidents happen. And Luke has been studying everyone's patterns obsessively.</p>
-                    <p>Hadlee gives him a concerned look before the race. "You seem... different," she says. 
-                    Luke's smile doesn't reach his eyes. "I'm just focused on winning, babe. For you."</p>
-                    <p>Something in his tone makes her shiver.</p>
+                    <p><strong>Secret Admirer</strong></p>
+                    <p>Luke can barely concentrate on anything but the memory of Hadlee's smile from yesterday. 
+                    He's been writing and rewriting a love letter all night, crumpling draft after draft.</p>
+                    <p>This morning, he found a note tucked under his helmet: "Your driving yesterday was absolutely mesmerizing. 
+                    I'd love to get to know the man behind the wheel better. - A Secret Admirer ♥"</p>
+                    <p>The Figure-8 track's crossing paths seem like a perfect metaphor for fate bringing people together. 
+                    Luke's heart races as he wonders who his mysterious admirer could be.</p>
+                    <p>Before the race, Hadlee approaches him with a playful grin. "Someone's popular," she teases, 
+                    having noticed the pink envelope. "Any idea who your secret admirer is?"</p>
+                    <p>Luke blushes deeply, his heart skipping. Could it be...?</p>
                 `,
                 postRaceText: `
-                    <p>Luke's "accident" in the crossing section looked convincing - three racers eliminated in one move. 
-                    The crowd gasped, Hadlee looked horrified, but Luke felt euphoric.</p>
-                    <p>Later, he finds a note in his locker: "Impressive technique on turn 3. I know what you really are. -E"</p>
-                    <p>Luke's blood runs cold. Someone knows his secret...</p>
+                    <p>Luke's driving was inspired, weaving through the crossing section with balletic precision. 
+                    Each turn felt like a dance, smooth and passionate, as if his feelings were flowing through the kart itself.</p>
+                    <p>After the race, he finds another note in his locker: "The way you handle those curves is absolutely divine. 
+                    Meet me at the sunset overlook after tomorrow's race? - Your not-so-secret admirer anymore ♥"</p>
+                    <p>Luke's hands tremble as he reads it, butterflies erupting in his stomach. Tomorrow can't come soon enough...</p>
                 `
             },
             3: {
-                title: "Race 3: The Puppet Master",
+                title: "Race 3: Mountain Top Romance",
                 track: "mountain",
                 preRaceText: `
-                    <p><strong>Messages from the Abyss</strong></p>
-                    <p>Luke is spiraling. The notes from "E" have become more frequent, more personal, more disturbing. 
-                    They know things about him no one should know - his childhood fears, his darkest fantasies.</p>
-                    <p>"I've been watching you longer than you think," today's note reads. 
-                    "Every race, every moment of violence, every twisted thought. We're the same, you and I."</p>
-                    <p>The mountain track's deadly drops seem fitting. Luke wonders if E wants him to push someone off... 
-                    or if E wants to push HIM.</p>
-                    <p>His hands shake as he starts the engine. Is he the hunter or the prey?</p>
+                    <p><strong>Sunset Rendezvous</strong></p>
+                    <p>Luke's nerves are electric with anticipation. All day he's been wondering who will meet him 
+                    at the mountain overlook tonight. His secret admirer's notes have become increasingly flirtatious and sweet.</p>
+                    <p>Today's message was accompanied by a single red rose: "I love watching you race - 
+                    the passion in your eyes, the way you make the impossible look effortless. You're absolutely captivating."</p>
+                    <p>The mountain track's winding curves and breathtaking vistas seem perfect for romance. 
+                    Luke finds himself driving not just to win, but to impress someone special.</p>
+                    <p>As he warms up his kart, Hadlee walks by and whispers, "Good luck, Luke. 
+                    I have a feeling tonight's going to be very special for you." Her knowing smile makes his heart flutter.</p>
                 `,
                 postRaceText: `
-                    <p>Luke drove like a man possessed, taking risks that should have killed him. 
-                    But every turn, every near-death moment felt orchestrated, like someone was guiding him.</p>
-                    <p>After the race, he notices a figure in the medical tent - someone treating another racer's injuries 
-                    with unusual skill. Their movements are precise, calculated... familiar.</p>
-                    <p>For just a moment, their eyes meet through the tent window. Luke's blood freezes.</p>
+                    <p>Luke's performance was breathtaking - literally taking the mountain curves like a lovesick poet, 
+                    each turn executed with passionate precision. The sunset painted the track in golden hues as he crossed the finish line.</p>
+                    <p>Hours later, at the overlook, Luke's heart nearly stops when he sees a familiar silhouette against the sunset. 
+                    Hadlee turns to face him, her cheeks pink with nervous excitement.</p>
+                    <p>"Surprise," she says softly. "I hope you don't mind that your secret admirer... is me."</p>
                 `
             },
             4: {
-                title: "Race 4: The Doctor's Obsession",
+                title: "Race 4: First Kiss Under City Lights",
                 track: "city",
                 preRaceText: `
-                    <p><strong>Medical Mysteries</strong></p>
-                    <p>Luke has been researching the medical staff. Dr. Eliza Voss - brilliant, beautiful, 
-                    and with a history of working with "troubled" individuals. Her psychological profiles 
-                    of racers are legendary... and terrifying.</p>
-                    <p>The latest note was different: "I know what you did to those other racers wasn't accidental. 
-                    I know because I've done worse. We should meet properly. -E"</p>
-                    <p>The city streets offer plenty of concrete barriers to "accidentally" slam opponents into. 
-                    Luke wonders if this is a test... or a trap.</p>
-                    <p>He spots Eliza in the crowd, her clipboard held like a weapon, her smile predatory.</p>
+                    <p><strong>City of Love</strong></p>
+                    <p>After their magical sunset confession, Luke and Hadlee have been inseparable. 
+                    Their late-night phone calls last until dawn, filled with laughter, dreams, and whispered sweet nothings.</p>
+                    <p>Tonight's city race takes on special meaning - Hadlee suggested they make it interesting: 
+                    "If you can beat me tonight, I'll let you take me to that fancy rooftop restaurant downtown," she teased, 
+                    her eyes sparkling with mischief.</p>
+                    <p>The city streets are lit up like a romantic movie set, neon lights reflecting off wet pavement. 
+                    Luke's heart pounds not from nerves, but from pure excitement. Win or lose, he knows he's already won her heart.</p>
+                    <p>As they line up at the starting line, Hadlee blows him a kiss. "May the best racer win, handsome," 
+                    she calls out, making Luke blush adorably.</p>
                 `,
                 postRaceText: `
-                    <p>Luke's driving was surgical - three precise "accidents" that looked completely natural. 
-                    The medical team worked overtime, but no one suspected murder.</p>
-                    <p>As Luke exits his kart, Eliza approaches with medical supplies. 
-                    "That was beautiful work," she whispers, tending to a cut on his arm. 
-                    "I've been waiting so long to find someone who understands."</p>
-                    <p>Her touch burns like ice.</p>
+                    <p>The race was intense - both Luke and Hadlee pushed their karts to the limit, 
+                    trading positions throughout the course. Their competitive spirits only made them more attractive to each other.</p>
+                    <p>As they cross the finish line together in a photo-finish, they can't help but laugh. 
+                    "I guess we both won," Hadlee says breathlessly, pulling off her helmet to reveal tousled hair that makes Luke's heart skip.</p>
+                    <p>Under the city lights, with adrenaline still coursing through their veins, 
+                    Luke finally finds the courage to cup her face gently and lean in for their first kiss. 
+                    Time stops as their lips meet, the cheering crowd fading into background noise.</p>
                 `
             },
             5: {
-                title: "Race 5: Partners in Crime",
+                title: "Race 5: Desert Heat and Passion",
                 track: "desert",
                 preRaceText: `
-                    <p><strong>Desert Confessions</strong></p>
-                    <p>Luke and Eliza have been meeting in secret. She's shown him her "research" - 
-                    detailed psychological profiles on every racer, their weaknesses, their fears.</p>
-                    <p>"Hadlee's terrified of losing control," Eliza purrs, running her finger along 
-                    a photo of their target. "One little push at the right moment..."</p>
-                    <p>The desert track is isolated, perfect for what they're planning. 
-                    Luke feels alive in a way he never has before - finally, someone who understands his hunger.</p>
-                    <p>But as they kiss before the race, Luke notices something chilling in Eliza's files: 
-                    a profile with his own photo, marked "SUBJECT A - SUCCESSFULLY CONDITIONED."</p>
+                    <p><strong>Weekend Getaway</strong></p>
+                    <p>Luke and Hadlee have planned a romantic weekend getaway to the desert racing circuit. 
+                    They've been dating for a few weeks now, and the chemistry between them is absolutely electric.</p>
+                    <p>Last night at their cozy desert hotel, they spent hours stargazing from the hot tub, 
+                    Hadlee nestled against Luke's chest as he traced gentle patterns on her bare shoulders. 
+                    "I never knew I could feel this way," she whispered against his neck, sending shivers down his spine.</p>
+                    <p>Today's race is more playful than competitive - they've agreed that whoever loses 
+                    has to give the winner a full body massage tonight. Hadlee's teasing smile as she suggested this 
+                    made Luke's temperature rise even more than the desert sun.</p>
+                    <p>"Ready to lose, handsome?" she purrs, adjusting her racing suit in a way that makes Luke completely forget how to breathe.</p>
                 `,
                 postRaceText: `
-                    <p>The race was a masterpiece of manipulation. Using Eliza's intelligence, 
-                    Luke psychologically broke three competitors, leaving them crying in their karts.</p>
-                    <p>Hadlee approaches afterward, shaken. "Luke, what's happened to you? 
-                    You used to be so... innocent." Her voice breaks.</p>
-                    <p>Luke barely hears her. He's staring at Eliza, who's watching from the medical tent, 
-                    taking notes on his reaction. Always... taking notes.</p>
+                    <p>The desert race was scorching hot in more ways than one - both racers pushed hard, 
+                    but they kept stealing glances at each other, causing more than one amusing near-miss with cacti.</p>
+                    <p>Afterward, as they cool down with ice-cold drinks, Hadlee slides closer to Luke on their picnic blanket. 
+                    "I may have lost the race," she says with a sultry smile, "but I think we're both about to win tonight."</p>
+                    <p>As the desert sunset paints them in golden light, Luke pulls her close for a passionate kiss. 
+                    The massage oils they packed are definitely going to come in handy...</p>
                 `
             },
             6: {
-                title: "Race 6: The Experiment Revealed",
+                title: "Race 6: Forest of Love",
                 track: "forest",
                 preRaceText: `
-                    <p><strong>Into the Woods of Truth</strong></p>
-                    <p>Luke confronts Eliza about the files. Her mask slips for the first time, 
-                    revealing something coldly scientific beneath her passion.</p>
-                    <p>"You were never special, Luke," she says with clinical detachment. 
-                    "Just a perfect test subject. Malleable, violent tendencies, desperate for approval. 
-                    I've been conditioning you from day one."</p>
-                    <p>The forest track's twisted paths mirror Luke's shattered mind. 
-                    Every note, every touch, every moment of intimacy was calculated manipulation.</p>
-                    <p>"But don't worry," Eliza smiles, "the real experiment starts today. 
-                    I need to see if you'll kill for me when you know it's all been a lie."</p>
+                    <p><strong>Into the Enchanted Woods</strong></p>
+                    <p>Luke and Hadlee have been officially dating for two months now, and their relationship has deepened 
+                    into something beautiful and mature. They've started talking about the future, about dreams they want to share.</p>
+                    <p>The forest track holds special meaning - it was here that Luke first realized he was falling in love. 
+                    Today, Hadlee seems extra radiant, with a secret smile that makes Luke's heart flutter with curiosity.</p>
+                    <p>Before the race, she pulls him aside to a secluded grove. "Luke," she says, her voice soft with emotion, 
+                    "racing brought us together, but what we have now... it's so much more than I ever dreamed possible."</p>
+                    <p>She presses a small velvet box into his hands. "I know it's unconventional, but... 
+                    will you accept this promise ring? I want the whole world to know you're mine."</p>
                 `,
                 postRaceText: `
-                    <p>Luke races in a rage-fueled trance. When he sees Hadlee's kart ahead, 
-                    something snaps. This is her fault - she never saw his worth, drove him to this madness!</p>
-                    <p>He rams her off the track, watching her kart flip and burn. 
-                    The crowd screams, but Luke feels... empty. Eliza approaches with her clipboard.</p>
-                    <p>"Excellent data," she says coldly. "Phase one complete."</p>
+                    <p>Luke races with tears of joy in his eyes, the promise ring gleaming on his finger. 
+                    Every turn through the dappled forest light feels like a celebration of their love.</p>
+                    <p>After crossing the finish line, he sweeps Hadlee into his arms, spinning her around as she laughs with pure joy. 
+                    "Yes, yes, a thousand times yes!" he whispers against her ear.</p>
+                    <p>As they kiss under the ancient trees, other racers and spectators applaud. 
+                    Their love story has become the talk of the racing circuit - proof that sometimes fairy tales do come true.</p>
                 `
             },
             7: {
-                title: "Race 7: The Truth About Hadlee",
+                title: "Race 7: The Big Proposal",
                 track: "speedway",
                 preRaceText: `
-                    <p><strong>The Final Revelation</strong></p>
-                    <p>As Luke sits in prison awaiting trial for Hadlee's "murder," 
-                    he receives one last visit from Eliza. But she's not alone.</p>
-                    <p>"Hello, Luke," says a familiar voice. Hadlee steps out from behind Eliza, 
-                    very much alive, wearing a lab coat identical to Eliza's.</p>
-                    <p>"Dr. Hadlee Winters," she introduces herself. "Eliza's research partner. 
-                    We've been studying psychopathic conditioning in high-stress environments. 
-                    Racing was just our laboratory."</p>
-                    <p>Luke's world crumbles. Every feeling, every obsession, every crime - 
-                    all orchestrated by two brilliant monsters in white coats.</p>
+                    <p><strong>Championship Dreams</strong></p>
+                    <p>Six months have passed, and Luke and Hadlee have become the golden couple of the racing world. 
+                    Their love story has inspired countless fans, and tonight's championship race feels like destiny.</p>
+                    <p>Luke has been planning something special for weeks. Hidden in his racing suit pocket is a ring - 
+                    not just any ring, but his grandmother's vintage engagement ring, perfectly restored and sparkling.</p>
+                    <p>Hadlee doesn't know, but Luke has arranged for the entire race to be broadcast live. 
+                    If he wins tonight's championship, he plans to propose right there on the track, 
+                    in front of millions of viewers and the woman he adores.</p>
+                    <p>"Whatever happens tonight," Hadlee says, kissing him tenderly before they get in their karts, 
+                    "I just want you to know that you've already made me the happiest woman alive."</p>
                 `,
                 postRaceText: `
-                    <p>"The beautiful thing about your case," Hadlee continues, "is that you'll be 
-                    declared criminally insane. Our research will be published, we'll be famous, 
-                    and you'll spend your life in our specially designed facility."</p>
-                    <p>Luke laughs - a broken, hollow sound. "You created a monster."</p>
-                    <p>"No," Eliza smiles, "we revealed one. The monster was always there."</p>
+                    <p>Luke's performance is legendary - he races not just with skill, but with the power of true love driving him forward. 
+                    When he crosses the finish line as champion, the crowd erupts in thunderous applause.</p>
+                    <p>Without even removing his helmet, Luke runs to Hadlee's kart. In front of the cheering crowd and rolling cameras, 
+                    he drops to one knee and pulls out the ring.</p>
+                    <p>"Hadlee, my love, my everything," his voice carries across the speedway, "will you marry me?"</p>
+                    <p>Her "YES!" echoes through the stadium as confetti cannons explode and the crowd goes wild. 
+                    Their kiss is captured by every camera, destined to become one of the most romantic moments in sports history.</p>
                 `
             },
             8: {
-                title: "Race 8: Escape from Hell",
+                title: "Race 8: Honeymoon Grand Prix",
                 track: "twisted",
                 preRaceText: `
-                    <p><strong>The Final Gambit</strong></p>
-                    <p>Three years later, in the maximum security racing facility where Luke is kept, 
-                    a new "patient" arrives. Someone who's been planning this for a long time.</p>
-                    <p>"I've been studying their research," the newcomer whispers. "I know how to beat them. 
-                    But I need someone who knows their methods inside and out."</p>
-                    <p>Luke looks up to see a scarred face he recognizes - one of the racers 
-                    from his early competitions who "died" in an accident. Apparently, some experiments survive.</p>
-                    <p>"One last race, Luke. Winner takes all - including our freedom and their lives."</p>
+                    <p><strong>Wedding Bells and Racing Thrills</strong></p>
+                    <p>Luke and Hadlee's wedding was a fairytale come true - a beautiful ceremony at sunset 
+                    followed by a reception where half the racing world celebrated their union.</p>
+                    <p>Now, on their honeymoon in Monaco, they couldn't resist entering one last race together - 
+                    the prestigious Monaco Grand Prix for couples. Racing side by side as newlyweds feels like the perfect adventure.</p>
+                    <p>"Ready to show the world what Team Hadlee-Luke can do?" she asks, her new wedding ring catching the Mediterranean sunlight. 
+                    The way she says their combined name makes Luke's heart soar.</p>
+                    <p>The twisted street circuit is challenging, but they've never felt more in sync. 
+                    Their love has made them both better racers, better people, better partners in every sense of the word.</p>
+                    <p>"Win or lose," Luke says, pulling her close for one last pre-race kiss, "I'm already living my dream with you."</p>
                 `,
                 postRaceText: `
-                    <p><strong>EPILOGUE: The Tables Turn</strong></p>
-                    <p>The escape was brutal, bloody, and perfect. Luke and his ally didn't just flee - 
-                    they turned the facility's own psychological torture methods against their captors.</p>
-                    <p>Dr. Eliza Voss and Dr. Hadlee Winters were found days later, catatonic and broken, 
-                    clutching clipboards covered in their own twisted experimental data.</p>
-                    <p>Luke walks free under a new identity, having learned the most important lesson of all: 
-                    sometimes the best way to win the game is to become a better monster than your enemies.</p>
-                    <p>The racing circuit has never been the same. Mysterious accidents plague researchers. 
-                    And somewhere, Luke is still racing - with a very different kind of hunger now.</p>
-                    <p><strong>THE END?</strong></p>
+                    <p><strong>EPILOGUE: Happily Ever After</strong></p>
+                    <p>Luke and Hadlee cross the finish line together, hands reaching across the gap between their karts to touch. 
+                    They've both won in the truest sense, not just the race, but life itself.</p>
+                    <p>Years later, they'll be known as the greatest love story in racing history. 
+                    Their racing school for young couples becomes legendary, built on the foundation that love makes everything better.</p>
+                    <p>They have three beautiful children who inherit both their parents' need for speed and their deep capacity for love. 
+                    The racing circuit echoes with laughter as the next generation of their family learns to race.</p>
+                    <p>Luke still writes Hadlee love letters, slipping them under her pillow or into her racing gloves. 
+                    And Hadlee still gets butterflies every time she sees him smile.</p>
+                    <p>Some fairy tales are real, and theirs is just beginning.</p>
+                    <p><strong>THE END ♥</strong></p>
                 `
             }
         };
@@ -620,9 +635,11 @@ class HadleeKartGame {
         // Generate initial power-ups
         this.powerUpSystem.generatePowerUps(this.track);
         
-        // Switch UI from track selection to game
+        // Switch UI from any screen to game screen
         document.getElementById('titleScreen').classList.remove('active');
         document.getElementById('trackSelection').classList.remove('active');
+        document.getElementById('storyModeScreen').classList.remove('active');
+        document.getElementById('kartCustomizationScreen').classList.remove('active');
         document.getElementById('gameScreen').classList.add('active');
         
         // Reset camera position
