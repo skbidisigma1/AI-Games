@@ -44,7 +44,7 @@ class GameBrowser {
                 genre: 'racing',
                 description: 'A complete top-down 2D racing game with competitive AI and strategic power-ups',
                 features: ['8-kart racing', '7 unique AI personalities', 'realistic physics', 'power-up system', 'professional HUD'],
-                path: 'AI-Games/HadleeKart',
+                path: 'HadleeKart',
                 fullDescription: 'Race against intelligent AI opponents through 3 laps of intense competition. Collect and use power-ups strategically while mastering drift mechanics and racing lines.'
             },
             {
@@ -54,7 +54,7 @@ class GameBrowser {
                 genre: 'puzzle',
                 description: 'A sci-fi puzzle adventure where you play as a sentient fragment of a lost neural network',
                 features: ['memory reconstruction', 'logic-based hacking', 'moral choices', 'dynamic code interpretation', 'glitchcore aesthetic'],
-                path: 'AI-Games/Echoes',
+                path: 'Echoes',
                 fullDescription: 'Navigate decaying data landscapes to recover corrupted memories and uncover the mystery behind a vanished AI civilization.'
             },
             {
@@ -64,7 +64,7 @@ class GameBrowser {
                 genre: 'action',
                 description: 'A fast-paced pattern matching game where you train your artificial consciousness',
                 features: ['progressive difficulty', 'neural integrity system', 'score progression', 'cyberpunk interface', 'mobile-friendly'],
-                path: 'AI-Games/DataStream',
+                path: 'DataStream',
                 fullDescription: 'Train your AI consciousness by recognizing patterns in endless data streams. Each successful match strengthens your neural pathways.'
             },
             {
@@ -74,7 +74,7 @@ class GameBrowser {
                 genre: 'platformer',
                 description: 'A cheerful platforming adventure with a bouncy cube and color-coded block mechanics',
                 features: ['snappy physics', 'color-coded blocks', 'star collection', 'single-screen levels', 'particle effects'],
-                path: 'AI-Games/BounceBlox',
+                path: 'BounceBlox',
                 fullDescription: 'Control a happy cube through platforming challenges. Collect all stars and reach the exit using different block types.'
             },
             {
@@ -94,7 +94,7 @@ class GameBrowser {
                 genre: 'action',
                 description: 'A simple, addictive hill-riding game where players master momentum control over procedurally generated terrain',
                 features: ['procedural terrain', 'momentum physics', 'coin collection', 'power-ups', 'high score tracking'],
-                path: 'AI-Games/HillRider',
+                path: 'HillRider',
                 fullDescription: 'Master the core mechanic of holding to accelerate downhill and releasing to coast uphill. Perfect timing builds momentum for higher speeds.'
             },
             {
@@ -104,7 +104,7 @@ class GameBrowser {
                 genre: 'shooter',
                 description: 'A top-down arena shooter where you face off against hilariously incompetent AI bots',
                 features: ['arena shooter', 'terrible AI bots', 'wave-based progression', 'health system', 'desert theme'],
-                path: 'AI-Games//Dune',
+                path: 'Dune',
                 fullDescription: 'Survive waves of horrible AI bots in a desert arena. The enemies are deliberately designed to be terrible at combat.'
             },
             {
@@ -114,7 +114,7 @@ class GameBrowser {
                 genre: 'idle',
                 description: 'A comprehensive idle brick-breaking game with autonomous balls, strategic upgrades, and prestige mechanics',
                 features: ['autonomous balls', '4 ball types', 'strategic upgrades', 'offline earnings', 'prestige system'],
-                path: 'AI-Games//IdleBreakout',
+                path: 'IdleBreakout',
                 fullDescription: 'Watch autonomous balls destroy bricks automatically while you strategically upgrade your arsenal. Master the art of idle optimization!'
             },
             {
@@ -124,8 +124,18 @@ class GameBrowser {
                 genre: 'puzzle',
                 description: 'A strategic puzzle game exploring rule-based systems and emergent gameplay',
                 features: ['rule-based mechanics', 'strategic thinking', 'emergent gameplay', 'complex systems'],
-                path: 'AI-Games//Ruleweaver',
+                path: 'Ruleweaver',
                 fullDescription: 'Explore strategic rule-based systems in this innovative puzzle game that challenges your understanding of cause and effect.'
+            },
+            {
+                name: 'SpaceGuardian',
+                displayName: 'Space Guardian',
+                icon: '🛡️',
+                genre: 'arcade',
+                description: 'Defend an ancient space station using your energy shield to deflect cosmic threats',
+                features: ['shield mechanics', 'wave-based survival', 'energy management', 'particle effects', 'space theme'],
+                path: 'SpaceGuardian',
+                fullDescription: 'As the last guardian of an ancient space station, use your energy shield to deflect waves of asteroids and hostile entities. Master energy management and precise positioning to survive!'
             }
         ];
         
@@ -267,7 +277,7 @@ class GameDetector {
     
     initKnownGames() {
         // Initialize with current known games
-        const currentGames = ['BounceBlox', 'DataStream', 'Dune', 'Echoes', 'HadleeKart', 'HillRider', 'IdleBreakout', 'Ruleweaver'];
+        const currentGames = ['BounceBlox', 'DataStream', 'Dune', 'Echoes', 'HadleeKart', 'HillRider', 'IdleBreakout', 'Ruleweaver', 'SpaceGuardian'];
         currentGames.forEach(game => this.knownGames.add(game));
     }
     
@@ -289,11 +299,22 @@ class GameDetector {
         }
     }
     
-    async scanDirectories() {
-        // Placeholder for directory scanning
-        // In a real implementation, this would use File System Access API or server-side scanning
-        return ['BounceBlox', 'DataStream', 'Dune', 'Echoes', 'HadleeKart', 'HillRider', 'IdleBreakout', 'PixelVault', 'Ruleweaver'];
-    }
+async scanDirectories() {
+    // Placeholder for directory scanning
+    // In a real implementation, this would use File System Access API or server-side scanning
+    return [
+        'BounceBlox',
+        'DataStream',
+        'Dune',
+        'Echoes',
+        'HadleeKart',
+        'HillRider',
+        'IdleBreakout',
+        'PixelVault',
+        'Ruleweaver',
+        'SpaceGuardian'
+    ];
+}
     
     notifyNewGames(newGames) {
         // Create a notification for new games
