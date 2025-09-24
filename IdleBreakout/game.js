@@ -14,8 +14,8 @@ const CONFIG = {
     
     physics: {
         gravity: 0,
-        friction: 0.995, // Reduced friction for more consistent movement
-        bounceReduction: 0.9, // Less speed loss on bounces
+        friction: 1, // Reduced friction for more consistent movement
+        bounceReduction: 0.95, // Less speed loss on bounces
         maxBallSpeed: 15 // Higher max speed
     },
     
