@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixelVault - Digital Platformer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <!-- UI Overlays -->
+        <div id="ui">
+            <!-- Title Screen -->
+            <div id="titleScreen" class="screen active">
+                <div class="title-content">
+                    <h1 class="pixel-title">PixelVault</h1>
+                    <h2 class="subtitle">Digital Platformer</h2>
+                    <p class="game-description">
+                        Navigate corrupted data vaults as a digital entity!<br>
+                        🟦 Stable data blocks • 🟪 Corrupted platforms<br>
+                        🟨 Energy nodes boost you • 🟥 Firewalls block movement<br>
+                        Master wall-jumping, double-jumping, and dash abilities!<br>
+                        Collect all 💎 data fragments and reach the 🚪 vault exit!
+                    </p>
+                    <div class="controls-info">
+                        <p><strong>Controls:</strong></p>
+                        <p>A/D or ←/→ - Move • SPACE/W/↑ - Jump/Double Jump</p>
+                        <p>Hold against wall while falling - Wall Slide</p>
+                        <p>SHIFT + Direction - Dash (limited uses per level)</p>
+                    </div>
+                    <button id="startGame" class="pixel-button">ENTER THE VAULT</button>
+                </div>
+            </div>
+            
+            <!-- Game Screen -->
+            <div id="gameScreen" class="screen">
+                <div id="hud">
+                    <div id="levelInfo">
+                        <span class="hud-label">VAULT:</span>
+                        <span id="currentLevel">1</span>
+                        <span class="hud-separator">/</span>
+                        <span id="maxLevel">12</span>
+                    </div>
+                    <div id="fragmentsInfo">
+                        <span class="hud-label">FRAGMENTS:</span>
+                        <span id="fragmentsCollected">0</span> / <span id="totalFragments">0</span>
+                    </div>
+                    <div id="abilitiesInfo">
+                        <span class="hud-label">DASH:</span>
+                        <span id="dashesRemaining">3</span>
+                    </div>
+                    <div id="instructions">
+                        <span class="hud-label">OBJECTIVE:</span>
+                        <span>Collect all data fragments and reach the vault exit!</span>
+                    </div>
+                </div>
+                
+                <!-- Level Complete Dialog -->
+                <div id="levelComplete" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2>Vault Breached!</h2>
+                        <p id="levelCompleteText">Data fragments secured! Accessing next vault...</p>
+                        <button id="nextLevel" class="pixel-button">Next Vault</button>
+                        <button id="restartLevel" class="pixel-button">Retry Vault</button>
+                    </div>
+                </div>
+                
+                <!-- Game Complete Dialog -->
+                <div id="gameComplete" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2>System Infiltrated!</h2>
+                        <p>Congratulations! You've breached all 12 data vaults and collected every fragment!</p>
+                        <p>The digital realm is now under your control.</p>
+                        <button id="restartGame" class="pixel-button">Restart Mission</button>
+                        <button id="backToMenu" class="pixel-button">Back to Menu</button>
+                    </div>
+                </div>
+                
+                <!-- Game Over Dialog -->
+                <div id="gameOver" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2>System Error!</h2>
+                        <p>Your digital form has been corrupted. Attempting reconstruction...</p>
+                        <button id="restartLevel2" class="pixel-button">Reconstruct</button>
+                        <button id="backToMenu2" class="pixel-button">Back to Menu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Audio placeholders -->
+    <audio id="jumpSound" preload="auto">
+        <source src="audio/jump.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="collectSound" preload="auto">
+        <source src="audio/collect.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="dashSound" preload="auto">
+        <source src="audio/dash.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="completeSound" preload="auto">
+        <source src="audio/complete.mp3" type="audio/mpeg">
+    </audio>
+    
+    <script src="game.js"></script>
+</body>
+</html>
