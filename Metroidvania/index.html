@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metroidvania - Explore the Lost Citadel</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="1280" height="720"></canvas>
+        
+        <!-- UI Overlays -->
+        <div id="ui">
+            <!-- Title Screen -->
+            <div id="titleScreen" class="screen active">
+                <div class="title-content">
+                    <h1 class="main-title">LOST CITADEL</h1>
+                    <h2 class="subtitle">A Metroidvania Adventure</h2>
+                    <p class="game-description">
+                        Explore an ancient citadel filled with secrets and dangers.<br>
+                        Unlock new abilities to reach previously inaccessible areas.<br>
+                        Master combat against diverse enemies and powerful bosses.<br>
+                        Uncover the mystery of the Lost Citadel!
+                    </p>
+                    <div class="controls-info">
+                        <p><strong>Controls:</strong></p>
+                        <p>A/D or ←/→ - Move • W/↑/SPACE - Jump</p>
+                        <p>S/↓ - Duck/Down Attack • Z/X - Attack</p>
+                        <p>C - Special Ability • ESC - Menu</p>
+                    </div>
+                    <div class="menu-buttons">
+                        <button id="startGame" class="menu-button">New Game</button>
+                        <button id="loadGame" class="menu-button" disabled>Load Game</button>
+                        <button id="showControls" class="menu-button">Controls</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Game Screen -->
+            <div id="gameScreen" class="screen">
+                <!-- HUD -->
+                <div id="hud">
+                    <div class="hud-section">
+                        <div id="healthBar" class="bar">
+                            <div class="bar-label">HP</div>
+                            <div class="bar-fill" id="healthFill"></div>
+                        </div>
+                        <div id="energyBar" class="bar">
+                            <div class="bar-label">EN</div>
+                            <div class="bar-fill" id="energyFill"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="hud-section">
+                        <div id="abilitiesHUD">
+                            <div class="ability-icon" id="wallJumpIcon" title="Wall Jump">🧗</div>
+                            <div class="ability-icon" id="dashIcon" title="Dash">💨</div>
+                            <div class="ability-icon" id="doubleJumpIcon" title="Double Jump">⬆️</div>
+                        </div>
+                    </div>
+                    
+                    <div class="hud-section">
+                        <div id="mapIndicator">
+                            <span class="map-room" id="currentRoom">Central Hub</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pause Menu -->
+                <div id="pauseMenu" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2>Game Paused</h2>
+                        <div class="pause-buttons">
+                            <button id="resumeGame" class="dialog-button">Resume</button>
+                            <button id="showMap" class="dialog-button">Map</button>
+                            <button id="saveGame" class="dialog-button">Save Game</button>
+                            <button id="mainMenu" class="dialog-button">Main Menu</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Map Screen -->
+                <div id="mapScreen" class="dialog hidden">
+                    <div class="dialog-content map-content">
+                        <h2>Citadel Map</h2>
+                        <div id="mapContainer"></div>
+                        <button id="closeMap" class="dialog-button">Close Map</button>
+                    </div>
+                </div>
+                
+                <!-- Ability Unlock Dialog -->
+                <div id="abilityUnlock" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2>New Ability Unlocked!</h2>
+                        <div id="abilityInfo">
+                            <div id="abilityIcon"></div>
+                            <div id="abilityName"></div>
+                            <div id="abilityDescription"></div>
+                        </div>
+                        <button id="closeAbility" class="dialog-button">Continue</button>
+                    </div>
+                </div>
+                
+                <!-- Boss Health Bar -->
+                <div id="bossHealthBar" class="boss-hud hidden">
+                    <div class="boss-name" id="bossName">Boss Name</div>
+                    <div class="boss-health-container">
+                        <div class="boss-health-fill" id="bossHealthFill"></div>
+                    </div>
+                </div>
+                
+                <!-- Death Screen -->
+                <div id="deathScreen" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2>You Have Fallen</h2>
+                        <p>The citadel has claimed another explorer...</p>
+                        <div class="death-buttons">
+                            <button id="respawn" class="dialog-button">Respawn</button>
+                            <button id="loadLastSave" class="dialog-button">Load Save</button>
+                            <button id="returnToMenu" class="dialog-button">Main Menu</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Victory Screen -->
+                <div id="victoryScreen" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2>Citadel Conquered!</h2>
+                        <p>You have unlocked the secrets of the Lost Citadel!</p>
+                        <div id="victoryStats">
+                            <div>Completion Time: <span id="completionTime">00:00:00</span></div>
+                            <div>Areas Explored: <span id="areasExplored">0/12</span></div>
+                            <div>Secrets Found: <span id="secretsFound">0/25</span></div>
+                        </div>
+                        <button id="newGamePlus" class="dialog-button">New Game+</button>
+                        <button id="backToTitle" class="dialog-button">Main Menu</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controls Screen -->
+            <div id="controlsScreen" class="screen">
+                <div class="controls-content">
+                    <h2>Controls</h2>
+                    <div class="control-groups">
+                        <div class="control-group">
+                            <h3>Movement</h3>
+                            <div class="control-item">
+                                <span class="control-key">A / ←</span>
+                                <span class="control-desc">Move Left</span>
+                            </div>
+                            <div class="control-item">
+                                <span class="control-key">D / →</span>
+                                <span class="control-desc">Move Right</span>
+                            </div>
+                            <div class="control-item">
+                                <span class="control-key">W / ↑ / SPACE</span>
+                                <span class="control-desc">Jump</span>
+                            </div>
+                            <div class="control-item">
+                                <span class="control-key">S / ↓</span>
+                                <span class="control-desc">Duck / Down Attack</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <h3>Combat</h3>
+                            <div class="control-item">
+                                <span class="control-key">Z / X</span>
+                                <span class="control-desc">Attack</span>
+                            </div>
+                            <div class="control-item">
+                                <span class="control-key">C</span>
+                                <span class="control-desc">Special Ability</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <h3>System</h3>
+                            <div class="control-item">
+                                <span class="control-key">ESC</span>
+                                <span class="control-desc">Pause Menu</span>
+                            </div>
+                            <div class="control-item">
+                                <span class="control-key">M</span>
+                                <span class="control-desc">Map</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <h3>Unlockable Abilities</h3>
+                            <div class="control-item">
+                                <span class="control-key">Wall Jump</span>
+                                <span class="control-desc">Jump off walls while sliding</span>
+                            </div>
+                            <div class="control-item">
+                                <span class="control-key">Dash</span>
+                                <span class="control-desc">Quick dash in any direction</span>
+                            </div>
+                            <div class="control-item">
+                                <span class="control-key">Double Jump</span>
+                                <span class="control-desc">Jump again while airborne</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="backFromControls" class="menu-button">Back</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="main.js"></script>
+    <script src="player.js"></script>
+    <script src="world.js"></script>
+    <script src="enemies.js"></script>
+    <script src="bosses.js"></script>
+    <script src="abilities.js"></script>
+    <script src="ui.js"></script>
+</body>
+</html>
