@@ -98,6 +98,16 @@ class GameBrowser {
                 fullDescription: 'Navigate corrupted data vaults as a digital entity. Master wall-jumping, double-jumping, and dash abilities to collect all data fragments and breach the system across 12 increasingly challenging levels.'
             },
             {
+                name: 'Metroidvania',
+                displayName: 'Lost Citadel',
+                icon: '🏛️',
+                genre: 'adventure',
+                description: 'A classic Metroidvania adventure through an ancient citadel filled with secrets and dangers',
+                features: ['exploration', 'ability progression', 'combat system', 'boss battles', 'secret areas', 'save system'],
+                path: 'Metroidvania',
+                fullDescription: 'Explore an ancient citadel filled with secrets and dangers. Unlock new abilities like wall jumping, dash, and double jump to reach previously inaccessible areas. Master combat against diverse enemies and powerful bosses as you uncover the mystery of the Lost Citadel!'
+            },
+            {
                 name: 'HillRider',
                 displayName: 'HillRider',
                 icon: '🌄',
