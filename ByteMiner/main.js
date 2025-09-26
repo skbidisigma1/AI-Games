@@ -17,9 +17,9 @@ class ByteMinerGame {
             // Load game state
             this.gameState = Storage.load();
             
-            // Handle offline progress
-            if (this.gameState.offlineTime) {
-                GameLoop.calculateOfflineProgress(this.gameState.offlineTime);
+        // Handle offline progress
+        if (this.gameState.offlineTime) {
+            GameLoopInstance.calculateOfflineProgress(this.gameState.offlineTime);
                 delete this.gameState.offlineTime;
             }
 
@@ -33,7 +33,7 @@ class ByteMinerGame {
             Storage.startAutoSave(this.gameState);
             
             // Start game loop
-            GameLoop.start(this.gameState);
+            GameLoopInstance.start(this.gameState);
             
             // Initialize quantum system if unlocked
             if (this.gameState.unlocks.quantumLab) {
@@ -68,7 +68,7 @@ class ByteMinerGame {
         const mineButton = document.getElementById('mine-button');
         if (mineButton) {
             mineButton.addEventListener('click', (e) => {
-                const clickPower = GameLoop.performClick();
+                const clickPower = GameLoopInstance.performClick();
                 
                 // Add click animation
                 mineButton.classList.add('clicked');
@@ -486,7 +486,7 @@ class ByteMinerGame {
         // Space bar to click
         if (e.code === 'Space' && !e.target.matches('input, textarea')) {
             e.preventDefault();
-            GameLoop.performClick();
+            GameLoopInstance.performClick();
         }
         
         // Number keys for tab switching
