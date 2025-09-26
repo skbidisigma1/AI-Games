@@ -1,0 +1,331 @@
+/* Byte Miner: Core Collapse - Themes */
+
+/* Default Terminal Theme (already defined in main.css) */
+[data-theme="terminal"] {
+    --primary-color: #00ff41;
+    --secondary-color: #004d16;
+    --background: #000a00;
+    --surface: #001100;
+    --text-primary: #00ff41;
+    --text-secondary: #66ff66;
+    --text-dim: #336633;
+    --border: #00aa22;
+    --button-bg: #002200;
+    --button-hover: #003300;
+    --danger: #ff4444;
+    --warning: #ffaa00;
+    --success: #44ff44;
+}
+
+/* Neon Theme */
+[data-theme="neon"] {
+    --primary-color: #ff00ff;
+    --secondary-color: #4d004d;
+    --background: #0a000a;
+    --surface: #110011;
+    --text-primary: #ff00ff;
+    --text-secondary: #ff66ff;
+    --text-dim: #663366;
+    --border: #aa00aa;
+    --button-bg: #220022;
+    --button-hover: #330033;
+    --danger: #ff4444;
+    --warning: #ffaa00;
+    --success: #ff44ff;
+}
+
+[data-theme="neon"] body {
+    background-image: 
+        radial-gradient(circle at 25% 25%, #330033 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, #110011 0%, transparent 50%);
+}
+
+[data-theme="neon"] #mine-button {
+    box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
+}
+
+[data-theme="neon"] #mine-button:hover {
+    box-shadow: 0 0 30px rgba(255, 0, 255, 0.5);
+}
+
+[data-theme="neon"] #header {
+    box-shadow: 0 0 20px rgba(255, 0, 255, 0.2);
+}
+
+/* Glitch Theme */
+[data-theme="glitch"] {
+    --primary-color: #00ffff;
+    --secondary-color: #004d4d;
+    --background: #000a0a;
+    --surface: #001111;
+    --text-primary: #00ffff;
+    --text-secondary: #66ffff;
+    --text-dim: #336666;
+    --border: #00aaaa;
+    --button-bg: #002222;
+    --button-hover: #003333;
+    --danger: #ff4444;
+    --warning: #ffaa00;
+    --success: #44ffff;
+}
+
+[data-theme="glitch"] body {
+    background-image: 
+        radial-gradient(circle at 25% 25%, #003333 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, #001111 0%, transparent 50%);
+}
+
+[data-theme="glitch"] #mine-button {
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    position: relative;
+}
+
+[data-theme="glitch"] #mine-button:hover {
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+}
+
+[data-theme="glitch"] #mine-button::before {
+    content: '⛏️ MINE BYTES';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ff0000;
+    opacity: 0;
+    animation: glitchText 3s infinite;
+}
+
+@keyframes glitchText {
+    0%, 98% { opacity: 0; }
+    99%, 100% { opacity: 0.8; transform: translateX(2px); }
+}
+
+[data-theme="glitch"] #header {
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+}
+
+/* Dark Mode Theme */
+[data-theme="dark"] {
+    --primary-color: #ffffff;
+    --secondary-color: #cccccc;
+    --background: #0d1117;
+    --surface: #161b22;
+    --text-primary: #ffffff;
+    --text-secondary: #e6edf3;
+    --text-dim: #7d8590;
+    --border: #30363d;
+    --button-bg: #21262d;
+    --button-hover: #30363d;
+    --danger: #f85149;
+    --warning: #d29922;
+    --success: #3fb950;
+}
+
+[data-theme="dark"] body {
+    background-image: 
+        radial-gradient(circle at 25% 25%, #161b22 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, #0d1117 0%, transparent 50%);
+}
+
+[data-theme="dark"] #mine-button {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] #mine-button:hover {
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] #header {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] #byte-counter {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Theme Transition Effects */
+body, #game-container, #header, #main-area, #content-area, .panel, .upgrade-item, .achievement-item {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Theme-specific Animations */
+[data-theme="neon"] .click-effect {
+    color: #ff44ff;
+    text-shadow: 0 0 10px #ff44ff;
+}
+
+[data-theme="glitch"] .click-effect {
+    color: #44ffff;
+    text-shadow: 0 0 10px #44ffff;
+    animation: clickEffect 1s ease-out forwards, glitch 0.1s ease-in-out;
+}
+
+[data-theme="dark"] .click-effect {
+    color: #3fb950;
+    text-shadow: 0 0 10px #3fb950;
+}
+
+/* Theme-specific Upgrade Effects */
+[data-theme="neon"] .upgrade-purchased {
+    animation: purchaseFlash 0.5s ease-in-out, pulse 0.3s ease-in-out;
+}
+
+[data-theme="glitch"] .upgrade-purchased {
+    animation: purchaseFlash 0.5s ease-in-out, glitchEffect 0.3s ease-in-out;
+}
+
+/* Theme-specific Achievement Effects */
+[data-theme="neon"] .achievement-unlock {
+    animation: achievementUnlock 0.8s ease-out, glow 1s ease-in-out;
+}
+
+[data-theme="glitch"] .achievement-unlock {
+    animation: achievementUnlock 0.8s ease-out, glitchEffect 0.5s ease-in-out;
+}
+
+/* Theme-specific Notification Colors */
+[data-theme="neon"] .notification.success {
+    border-color: #ff44ff;
+    box-shadow: 0 0 20px rgba(255, 68, 255, 0.3);
+}
+
+[data-theme="glitch"] .notification.success {
+    border-color: #44ffff;
+    box-shadow: 0 0 20px rgba(68, 255, 255, 0.3);
+}
+
+[data-theme="dark"] .notification.success {
+    border-color: #3fb950;
+    box-shadow: 0 0 20px rgba(63, 185, 80, 0.3);
+}
+
+/* Theme-specific Quantum Effects */
+[data-theme="neon"] .quantum-effect {
+    background: linear-gradient(
+        45deg,
+        #ff00ff,
+        #ff44ff,
+        #ff00ff
+    );
+}
+
+[data-theme="glitch"] .quantum-effect {
+    background: linear-gradient(
+        45deg,
+        #00ffff,
+        #44ffff,
+        #00ffff
+    );
+}
+
+[data-theme="dark"] .quantum-effect {
+    background: linear-gradient(
+        45deg,
+        #ffffff,
+        #e6edf3,
+        #ffffff
+    );
+}
+
+/* Special Unlockable Themes */
+
+/* Quantum Theme (unlocked with Quantum Keys) */
+[data-theme="quantum"] {
+    --primary-color: #9400d3;
+    --secondary-color: #4b0082;
+    --background: #1a0033;
+    --surface: #2d0066;
+    --text-primary: #da70d6;
+    --text-secondary: #dda0dd;
+    --text-dim: #8b3a8b;
+    --border: #9932cc;
+    --button-bg: #2d0066;
+    --button-hover: #4b0082;
+    --danger: #ff1493;
+    --warning: #ffd700;
+    --success: #da70d6;
+}
+
+[data-theme="quantum"] body {
+    background: radial-gradient(circle at center, #1a0033 0%, #000011 100%);
+    background-attachment: fixed;
+}
+
+[data-theme="quantum"] #mine-button {
+    background: linear-gradient(45deg, #2d0066, #4b0082, #2d0066);
+    background-size: 200% 200%;
+    animation: quantumShimmer 3s ease-in-out infinite, pulse 2s ease-in-out infinite;
+}
+
+/* AI Theme (unlocked with AI Assistant) */
+[data-theme="ai"] {
+    --primary-color: #00bfff;
+    --secondary-color: #0080c7;
+    --background: #000815;
+    --surface: #001122;
+    --text-primary: #87ceeb;
+    --text-secondary: #b0e0e6;
+    --text-dim: #4682b4;
+    --border: #1e90ff;
+    --button-bg: #001122;
+    --button-hover: #002244;
+    --danger: #ff6347;
+    --warning: #ffa500;
+    --success: #20b2aa;
+}
+
+[data-theme="ai"] body {
+    background: linear-gradient(135deg, #000815 0%, #001122 50%, #000815 100%);
+    background-size: 400% 400%;
+    animation: gradientShift 10s ease infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+[data-theme="ai"] #mine-button::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, transparent, #00bfff, transparent);
+    border-radius: inherit;
+    z-index: -1;
+    animation: borderScan 2s linear infinite;
+}
+
+@keyframes borderScan {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Theme selector visual feedback */
+.theme-preview {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.theme-preview.terminal { background: #00ff41; }
+.theme-preview.neon { background: #ff00ff; }
+.theme-preview.glitch { background: #00ffff; }
+.theme-preview.dark { background: #ffffff; }
+.theme-preview.quantum { background: #9400d3; }
+.theme-preview.ai { background: #00bfff; }
+
+.theme-preview:hover {
+    transform: scale(1.2);
+    border-color: var(--primary-color);
+}

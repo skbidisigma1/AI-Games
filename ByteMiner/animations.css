@@ -1,0 +1,354 @@
+/* Byte Miner: Core Collapse - Animations */
+
+/* Click Button Animations */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+@keyframes clickEffect {
+    0% { 
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+    100% { 
+        transform: scale(1.5) translateY(-50px);
+        opacity: 0;
+    }
+}
+
+@keyframes glow {
+    0%, 100% { 
+        box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+    }
+    50% { 
+        box-shadow: 0 0 30px rgba(0, 255, 65, 0.6);
+    }
+}
+
+@keyframes textGlow {
+    0%, 100% { 
+        text-shadow: 0 0 10px var(--primary-color);
+    }
+    50% { 
+        text-shadow: 0 0 20px var(--primary-color);
+    }
+}
+
+/* Mine Button Pulse */
+#mine-button {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+#mine-button:hover {
+    animation: glow 1s ease-in-out infinite;
+}
+
+/* Byte Counter Glow */
+#byte-counter {
+    animation: textGlow 3s ease-in-out infinite;
+}
+
+/* Click Effect */
+.click-effect {
+    position: absolute;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--success);
+    pointer-events: none;
+    animation: clickEffect 1s ease-out forwards;
+    text-shadow: 0 0 10px var(--success);
+}
+
+/* Upgrade Purchase Flash */
+@keyframes purchaseFlash {
+    0% { background: var(--button-bg); }
+    50% { background: rgba(68, 255, 68, 0.3); }
+    100% { background: var(--button-bg); }
+}
+
+.upgrade-purchased {
+    animation: purchaseFlash 0.5s ease-in-out;
+}
+
+/* Achievement Unlock Animation */
+@keyframes achievementUnlock {
+    0% { 
+        transform: scale(0.8) rotateX(-90deg);
+        opacity: 0;
+    }
+    50% { 
+        transform: scale(1.1) rotateX(0deg);
+        opacity: 1;
+    }
+    100% { 
+        transform: scale(1) rotateX(0deg);
+        opacity: 1;
+    }
+}
+
+.achievement-unlock {
+    animation: achievementUnlock 0.8s ease-out;
+}
+
+/* Notification Slide In */
+@keyframes slideIn {
+    0% { transform: translateX(400px); }
+    100% { transform: translateX(0); }
+}
+
+@keyframes slideOut {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(400px); }
+}
+
+.notification.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+.notification.slide-out {
+    animation: slideOut 0.3s ease-in;
+}
+
+/* Tab Switch Animation */
+.panel {
+    transition: opacity 0.3s ease-in-out;
+}
+
+.panel.active {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Prestige Button Danger Pulse */
+@keyframes dangerPulse {
+    0%, 100% { 
+        box-shadow: 0 0 20px rgba(255, 68, 68, 0.3);
+        transform: scale(1);
+    }
+    50% { 
+        box-shadow: 0 0 30px rgba(255, 68, 68, 0.6);
+        transform: scale(1.02);
+    }
+}
+
+#prestige-button:not(:disabled) {
+    animation: dangerPulse 2s ease-in-out infinite;
+}
+
+/* Quantum Lab Sparkle Effect */
+@keyframes sparkle {
+    0%, 100% { 
+        opacity: 0;
+        transform: scale(0) rotate(0deg);
+    }
+    50% { 
+        opacity: 1;
+        transform: scale(1) rotate(180deg);
+    }
+}
+
+.quantum-sparkle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    animation: sparkle 2s ease-in-out infinite;
+    pointer-events: none;
+}
+
+/* Upgrade Tier Unlock Animation */
+@keyframes tierUnlock {
+    0% { 
+        opacity: 0;
+        transform: translateY(20px) scale(0.9);
+        filter: blur(5px);
+    }
+    100% { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+.tier-unlock {
+    animation: tierUnlock 1s ease-out;
+}
+
+/* Loading Spinner */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--text-dim);
+    border-top: 2px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    margin-left: 10px;
+}
+
+/* Number Count Up Animation */
+@keyframes countUp {
+    0% { transform: translateY(20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+.count-up {
+    animation: countUp 0.3s ease-out;
+}
+
+/* Glitch Effect */
+@keyframes glitch {
+    0% { transform: translate(0); }
+    20% { transform: translate(-2px, 2px); }
+    40% { transform: translate(-2px, -2px); }
+    60% { transform: translate(2px, 2px); }
+    80% { transform: translate(2px, -2px); }
+    100% { transform: translate(0); }
+}
+
+.glitch-effect {
+    animation: glitch 0.3s ease-in-out;
+}
+
+/* Core Collapse Animation */
+@keyframes coreCollapse {
+    0% { 
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+    50% { 
+        transform: scale(0.5) rotate(180deg);
+        opacity: 0.5;
+    }
+    100% { 
+        transform: scale(0) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+.core-collapse {
+    animation: coreCollapse 2s ease-in-out;
+}
+
+/* Quantum Effect */
+@keyframes quantumShimmer {
+    0%, 100% { 
+        background-position: 0% 50%;
+    }
+    50% { 
+        background-position: 100% 50%;
+    }
+}
+
+.quantum-effect {
+    background: linear-gradient(
+        45deg,
+        var(--primary-color),
+        var(--secondary-color),
+        var(--primary-color)
+    );
+    background-size: 200% 200%;
+    animation: quantumShimmer 3s ease-in-out infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* AI Assistant Typing Animation */
+@keyframes typing {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+.ai-typing::after {
+    content: '|';
+    animation: typing 1s ease-in-out infinite;
+}
+
+/* Hover Effects */
+.hover-glow:hover {
+    animation: glow 0.3s ease-in-out;
+}
+
+.hover-bounce:hover {
+    animation: pulse 0.3s ease-in-out;
+}
+
+/* Passive Income Indicator */
+@keyframes passiveIncome {
+    0% { 
+        transform: translateY(0);
+        opacity: 1;
+    }
+    100% { 
+        transform: translateY(-30px);
+        opacity: 0;
+    }
+}
+
+.passive-income-indicator {
+    position: absolute;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    pointer-events: none;
+    animation: passiveIncome 2s ease-out;
+    text-shadow: 0 0 5px var(--text-secondary);
+}
+
+/* Upgrade Level Up Animation */
+@keyframes levelUp {
+    0% { 
+        transform: scale(1);
+        color: var(--text-primary);
+    }
+    50% { 
+        transform: scale(1.1);
+        color: var(--success);
+        text-shadow: 0 0 15px var(--success);
+    }
+    100% { 
+        transform: scale(1);
+        color: var(--text-primary);
+    }
+}
+
+.level-up {
+    animation: levelUp 0.6s ease-in-out;
+}
+
+/* Screen Shake for Big Events */
+@keyframes screenShake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+    20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+.screen-shake {
+    animation: screenShake 0.5s ease-in-out;
+}
+
+/* Responsive Animations */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .click-effect,
+    .passive-income-indicator {
+        display: none;
+    }
+}
