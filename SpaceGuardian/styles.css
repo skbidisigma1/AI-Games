@@ -1,0 +1,345 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Courier New', monospace;
+    background: linear-gradient(135deg, #0a0a2e, #16213e, #0f3460);
+    color: #00ffaa;
+    overflow: hidden;
+    min-height: 100vh;
+}
+
+#gameContainer {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+}
+
+.screen {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* Title Screen */
+.title-content {
+    text-align: center;
+    animation: fadeIn 1s ease-in;
+}
+
+.glitch-text {
+    font-size: 4rem;
+    font-weight: bold;
+    color: #00ffaa;
+    text-shadow: 
+        0 0 10px #00ffaa,
+        0 0 20px #00ffaa,
+        0 0 30px #00ffaa;
+    margin-bottom: 1rem;
+    animation: glitchEffect 3s infinite;
+}
+
+@keyframes glitchEffect {
+    0%, 100% { transform: translate(0); }
+    10% { transform: translate(-2px, -2px); }
+    20% { transform: translate(2px, -2px); }
+    30% { transform: translate(-2px, 2px); }
+    40% { transform: translate(2px, 2px); }
+    50% { transform: translate(-2px, -2px); }
+    60% { transform: translate(2px, -2px); }
+    70% { transform: translate(-2px, 2px); }
+    80% { transform: translate(2px, 2px); }
+    90% { transform: translate(-2px, -2px); }
+}
+
+.subtitle {
+    font-size: 1.5rem;
+    color: #88ccff;
+    margin-bottom: 2rem;
+    letter-spacing: 2px;
+}
+
+.story-intro {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 3rem;
+    color: #aaccee;
+    max-width: 600px;
+}
+
+.title-buttons, .help-buttons, .overlay-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cyber-button {
+    background: linear-gradient(45deg, #00ffaa, #00cc88);
+    color: #000;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.cyber-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px #00ffaa66;
+}
+
+.cyber-button.secondary {
+    background: transparent;
+    color: #00ffaa;
+    border: 2px solid #00ffaa;
+}
+
+.cyber-button.secondary:hover {
+    background: #00ffaa22;
+}
+
+/* Help Screen */
+.help-content {
+    max-width: 800px;
+    text-align: center;
+    animation: slideUp 0.5s ease-out;
+}
+
+.help-content h1 {
+    font-size: 3rem;
+    margin-bottom: 2rem;
+    color: #00ffaa;
+    text-shadow: 0 0 10px #00ffaa66;
+}
+
+.help-sections {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.help-section {
+    background: rgba(0, 255, 170, 0.1);
+    border: 1px solid #00ffaa33;
+    border-radius: 10px;
+    padding: 1.5rem;
+    text-align: left;
+}
+
+.help-section h3 {
+    color: #00ffaa;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.help-section p {
+    margin-bottom: 0.5rem;
+    color: #aaccee;
+    line-height: 1.4;
+}
+
+/* Game Screen */
+#gameScreen {
+    flex-direction: column;
+    padding: 0;
+}
+
+#gameHUD {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: rgba(0, 0, 0, 0.8);
+    border-bottom: 2px solid #00ffaa33;
+    width: 100%;
+    height: 80px;
+}
+
+.hud-left, .hud-right {
+    display: flex;
+    gap: 2rem;
+}
+
+.hud-center {
+    flex: 1;
+    text-align: center;
+}
+
+.hud-item {
+    text-align: center;
+}
+
+.hud-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #88ccff;
+    margin-bottom: 0.25rem;
+}
+
+.hud-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #00ffaa;
+    text-shadow: 0 0 5px #00ffaa66;
+}
+
+.station-health {
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.health-bar, .energy-bar {
+    width: 200px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid #00ffaa;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 0.5rem auto;
+}
+
+.health-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff4444, #ffaa44, #44ff44);
+    width: 100%;
+    transition: width 0.3s ease;
+}
+
+.energy-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #0088ff, #00aaff);
+    width: 100%;
+    transition: width 0.3s ease;
+}
+
+.health-text {
+    color: #00ffaa;
+    font-weight: bold;
+}
+
+#gameCanvas {
+    background: radial-gradient(circle at center, #001122, #000011);
+    border: 2px solid #00ffaa33;
+    margin: 0 auto;
+    cursor: none;
+}
+
+/* Overlays */
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.overlay.hidden {
+    display: none;
+}
+
+.overlay-content {
+    background: linear-gradient(135deg, rgba(0, 255, 170, 0.1), rgba(0, 255, 170, 0.05));
+    border: 2px solid #00ffaa;
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    min-width: 400px;
+    animation: popIn 0.3s ease-out;
+}
+
+.overlay-content h2 {
+    font-size: 2rem;
+    color: #ff4444;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 0 10px #ff444466;
+}
+
+#finalStats p {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: #aaccee;
+}
+
+#finalStats span {
+    color: #00ffaa;
+    font-weight: bold;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(50px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes popIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .glitch-text {
+        font-size: 2.5rem;
+    }
+    
+    .subtitle {
+        font-size: 1.2rem;
+    }
+    
+    .story-intro {
+        font-size: 1rem;
+    }
+    
+    #gameHUD {
+        padding: 0.5rem 1rem;
+        height: 60px;
+        flex-wrap: wrap;
+    }
+    
+    .hud-left, .hud-right {
+        gap: 1rem;
+    }
+    
+    .health-bar, .energy-bar {
+        width: 150px;
+        height: 15px;
+    }
+    
+    #gameCanvas {
+        width: 100%;
+        height: auto;
+        max-width: 400px;
+    }
+    
+    .help-sections {
+        grid-template-columns: 1fr;
+    }
+}

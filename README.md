@@ -21,6 +21,24 @@ A collection of innovative games exploring artificial intelligence, consciousnes
 
 **Gameplay**: Race against intelligent AI opponents through 3 laps of intense competition. Collect and use power-ups strategically while mastering drift mechanics and racing lines. Each AI opponent has unique racing personality, from aggressive to cautious, creating dynamic and unpredictable races.
 
+### 🎭 Freak Out
+*A surreal interactive story where reality breaks down and nothing makes sense*
+
+**Location**: `/FreakOut/`
+
+**Features**:
+- Fourth-wall breaking meta-narrative
+- Reality distortion and sanity tracking
+- Choice-driven consequences that affect story progression
+- Multiple endings based on player decisions
+- Surreal scenarios with impossible physics
+- Save/load system for story progress
+- Auto-play mode for continuous narrative
+
+**Play**: Open `FreakOut/index.html` in a web browser
+
+**Story**: Navigate through increasingly bizarre scenarios where logic is optional and causality is more of a guideline. Your choices affect your reality level and sanity, determining your path through time loops, cosmic horror, existential crises, and direct conversations with the player. Experience the freakiest interactive story ever created.
+
 ### 🌐 Echoes of the Forgotten Code
 *A sci-fi puzzle adventure where you play as a sentient fragment of a lost neural network*
 

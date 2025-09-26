@@ -28,6 +28,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow: hidden;
 }
 
 #gameCanvas {
@@ -35,6 +36,8 @@ body {
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     background: #34495e;
+    max-width: 95vw;
+    max-height: 85vh;
 }
 
 /* UI Styling */
@@ -56,6 +59,9 @@ body {
     display: none;
     align-items: center;
     justify-content: center;
+    overflow-y: auto;
+    padding: 1rem;
+    box-sizing: border-box;
 }
 
 .screen.active {
@@ -70,10 +76,12 @@ body {
 
 .title-content {
     text-align: center;
-    padding: 3rem;
+    padding: 2rem;
     background: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    max-width: 90%;
+    width: 100%;
     max-width: 600px;
     backdrop-filter: blur(10px);
 }
@@ -391,36 +399,98 @@ body {
 /* Responsive design */
 @media (max-width: 768px) {
     .racing-title {
-        font-size: 3rem;
+        font-size: 2.5rem;
     }
     
     .title-content {
-        padding: 2rem;
-        max-width: 90%;
+        padding: 1.5rem;
+        max-width: 95%;
+    }
+    
+    .story-content {
+        padding: 1rem;
+        max-width: 98%;
+        max-height: 95vh;
+    }
+    
+    .story-races {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .story-race {
+        padding: 1rem;
+    }
+    
+    .racing-button {
+        font-size: 0.9rem;
+        padding: 12px 20px;
     }
     
     #racingHUD {
         flex-direction: column;
         align-items: flex-start;
         padding: 10px 15px;
-        font-size: 0.9rem;
+        font-size: 0.8rem;
     }
     
     #racingHUD > div {
         margin: 2px 0;
     }
+    
+    .game-description {
+        font-size: 1rem;
+    }
+    
+    .controls-info {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .racing-title {
+        font-size: 2rem;
+    }
+    
+    .title-content {
+        padding: 1rem;
+    }
+    
+    .story-content {
+        padding: 0.8rem;
+        border-radius: 10px;
+    }
+    
+    .story-race {
+        padding: 0.8rem;
+    }
+    
+    .racing-button {
+        font-size: 0.8rem;
+        padding: 10px 16px;
+    }
+    
+    #gameCanvas {
+        max-width: 98vw;
+        max-height: 80vh;
+        border-width: 2px;
+    }
 }
 
 /* Story Mode Screen */
 .story-content {
+    max-width: 95%;
+    width: 100%;
     max-width: 1000px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 1.5rem;
     text-align: center;
     background: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(10px);
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 .story-subtitle {
@@ -520,6 +590,117 @@ body {
 .story-dialog-content {
     max-width: 600px;
     text-align: left;
+}
+
+/* Kart Customization Screen */
+.customization-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.customization-intro {
+    background: rgba(155, 89, 182, 0.1);
+    border: 2px solid #9b59b6;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+    text-align: center;
+}
+
+.customization-intro p {
+    font-size: 1.2rem;
+    color: #2c3e50;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.kart-designs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin: 3rem 0;
+}
+
+.kart-design {
+    background: rgba(255, 255, 255, 0.9);
+    border: 3px solid #ecf0f1;
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.kart-design:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(155, 89, 182, 0.3);
+    border-color: #9b59b6;
+}
+
+.kart-design.selected {
+    border-color: #27ae60;
+    background: rgba(46, 204, 113, 0.1);
+    box-shadow: 0 8px 20px rgba(46, 204, 113, 0.3);
+}
+
+.kart-preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 60px;
+    margin-bottom: 1rem;
+    background: rgba(52, 73, 94, 0.1);
+    border-radius: 10px;
+}
+
+.kart-canvas {
+    border-radius: 5px;
+}
+
+.kart-design h3 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.3rem;
+    color: #2c3e50;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.kart-design p {
+    color: #7f8c8d;
+    margin-bottom: 1.5rem;
+    line-height: 1.4;
+    font-size: 0.9rem;
+}
+
+.design-button {
+    background: linear-gradient(45deg, #9b59b6, #8e44ad);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 25px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.design-button:hover {
+    background: linear-gradient(45deg, #8e44ad, #9b59b6);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(155, 89, 182, 0.4);
+}
+
+.kart-design.selected .design-button {
+    background: linear-gradient(45deg, #27ae60, #2ecc71);
 }
 
 .story-dialog-content h2 {

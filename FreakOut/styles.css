@@ -1,0 +1,544 @@
+/* Freak Out - Surreal Story Game Styles */
+
+@import url('https://fonts.googleapis.com/css2?family=Creepster&family=Nosifer&family=Orbitron:wght@400;700;900&display=swap');
+
+/* CSS Variables for theming */
+:root {
+    --void-black: #0a0a0a;
+    --deep-purple: #1a0d2e;
+    --blood-red: #8b0000;
+    --neon-green: #39ff14;
+    --electric-blue: #00ffff;
+    --warning-yellow: #ffff00;
+    --glitch-pink: #ff00ff;
+    --nightmare-orange: #ff4500;
+}
+
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Orbitron', monospace;
+    background: var(--void-black);
+    color: #ffffff;
+    overflow: hidden;
+    height: 100vh;
+    cursor: default;
+}
+
+#gameContainer {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle at center, var(--deep-purple) 0%, var(--void-black) 70%);
+}
+
+/* Background Effects */
+#backgroundEffects {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.glitch-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        45deg,
+        transparent 40%,
+        rgba(255, 0, 255, 0.03) 50%,
+        rgba(0, 255, 255, 0.03) 60%,
+        transparent 70%
+    );
+    animation: glitchMove 8s infinite linear;
+}
+
+.static-noise {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.05;
+    background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"/></filter><rect fill="%23fff" width="100%" height="100%" filter="url(%23noiseFilter)"/></svg>') repeat;
+    animation: staticFlicker 0.1s infinite;
+}
+
+@keyframes glitchMove {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+@keyframes staticFlicker {
+    0%, 98% { opacity: 0.05; }
+    99% { opacity: 0.1; }
+    100% { opacity: 0.05; }
+}
+
+/* UI Container */
+#ui {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    height: 100%;
+}
+
+/* Screen Management */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.5s ease-in-out;
+}
+
+.screen.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Title Screen */
+.title-content {
+    text-align: center;
+    padding: 2rem;
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid var(--neon-green);
+    border-radius: 20px;
+    box-shadow: 
+        0 0 30px var(--neon-green),
+        inset 0 0 30px rgba(57, 255, 20, 0.1);
+    max-width: 600px;
+    backdrop-filter: blur(10px);
+}
+
+.freaky-title {
+    font-family: 'Nosifer', cursive;
+    font-size: 4rem;
+    color: var(--blood-red);
+    text-shadow: 
+        0 0 10px var(--blood-red),
+        0 0 20px var(--blood-red),
+        0 0 30px var(--blood-red);
+    margin-bottom: 1rem;
+    letter-spacing: 0.2em;
+}
+
+.glitch-text {
+    animation: glitchText 2s infinite;
+}
+
+@keyframes glitchText {
+    0%, 95% { 
+        transform: translateX(0);
+        color: var(--blood-red);
+    }
+    96% { 
+        transform: translateX(-2px);
+        color: var(--electric-blue);
+    }
+    97% { 
+        transform: translateX(2px);
+        color: var(--glitch-pink);
+    }
+    98% { 
+        transform: translateX(-1px);
+        color: var(--neon-green);
+    }
+    99% { 
+        transform: translateX(1px);
+        color: var(--warning-yellow);
+    }
+}
+
+.subtitle {
+    font-size: 1.5rem;
+    color: var(--electric-blue);
+    margin-bottom: 2rem;
+    font-weight: 300;
+    text-shadow: 0 0 10px var(--electric-blue);
+}
+
+.story-intro {
+    font-size: 1.2rem;
+    line-height: 1.8;
+    margin-bottom: 2rem;
+    color: #cccccc;
+}
+
+.warning {
+    display: block;
+    margin-top: 1rem;
+    color: var(--warning-yellow);
+    font-weight: bold;
+    text-shadow: 0 0 10px var(--warning-yellow);
+    animation: warningPulse 2s infinite;
+}
+
+@keyframes warningPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Buttons */
+.title-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+}
+
+.freaky-button {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding: 1rem 2rem;
+    background: linear-gradient(45deg, var(--blood-red), var(--nightmare-orange));
+    color: white;
+    border: 2px solid var(--neon-green);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    box-shadow: 0 0 20px rgba(57, 255, 20, 0.3);
+    min-width: 250px;
+}
+
+.freaky-button:hover {
+    background: linear-gradient(45deg, var(--nightmare-orange), var(--blood-red));
+    box-shadow: 
+        0 0 30px var(--neon-green),
+        0 0 40px rgba(57, 255, 20, 0.5);
+    transform: translateY(-2px);
+}
+
+.freaky-button:active {
+    transform: translateY(0);
+    box-shadow: 0 0 15px rgba(57, 255, 20, 0.3);
+}
+
+.freaky-button.secondary {
+    background: linear-gradient(45deg, var(--deep-purple), var(--electric-blue));
+    border-color: var(--electric-blue);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+.freaky-button.secondary:hover {
+    box-shadow: 
+        0 0 30px var(--electric-blue),
+        0 0 40px rgba(0, 255, 255, 0.5);
+}
+
+.freaky-button.tertiary {
+    background: linear-gradient(45deg, var(--void-black), var(--deep-purple));
+    border-color: var(--glitch-pink);
+    box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
+}
+
+.freaky-button.tertiary:hover {
+    box-shadow: 
+        0 0 30px var(--glitch-pink),
+        0 0 40px rgba(255, 0, 255, 0.5);
+}
+
+/* Help Screen */
+.help-content {
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid var(--electric-blue);
+    border-radius: 15px;
+    padding: 2rem;
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 0 30px var(--electric-blue);
+}
+
+.help-sections {
+    display: grid;
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.help-section h3 {
+    color: var(--neon-green);
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 10px var(--neon-green);
+}
+
+.help-section p, .help-section li {
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+}
+
+.help-section ul {
+    margin-left: 2rem;
+}
+
+/* Game Screen */
+.game-content {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-rows: 1fr auto auto;
+    grid-template-areas: 
+        "story"
+        "hud"
+        "controls";
+    gap: 1rem;
+    padding: 2rem;
+}
+
+#storyContainer {
+    grid-area: story;
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid var(--deep-purple);
+    border-radius: 15px;
+    padding: 2rem;
+    overflow-y: auto;
+    backdrop-filter: blur(5px);
+}
+
+.scene-title {
+    font-size: 2rem;
+    color: var(--neon-green);
+    text-align: center;
+    margin-bottom: 2rem;
+    text-shadow: 0 0 15px var(--neon-green);
+    font-weight: bold;
+}
+
+.story-text {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    margin-bottom: 2rem;
+    min-height: 200px;
+}
+
+.story-text p {
+    margin-bottom: 1rem;
+}
+
+.choices-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.choice-button {
+    font-family: 'Orbitron', monospace;
+    font-size: 1rem;
+    padding: 1rem;
+    background: rgba(26, 13, 46, 0.8);
+    color: white;
+    border: 2px solid var(--electric-blue);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+}
+
+.choice-button:hover {
+    background: rgba(0, 255, 255, 0.2);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    transform: translateX(10px);
+}
+
+/* Game HUD */
+#gameHUD {
+    grid-area: hud;
+    display: flex;
+    justify-content: space-around;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid var(--neon-green);
+    border-radius: 10px;
+    padding: 1rem;
+}
+
+.hud-item {
+    text-align: center;
+}
+
+.hud-label {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--electric-blue);
+    margin-bottom: 0.5rem;
+}
+
+.hud-value {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--neon-green);
+    text-shadow: 0 0 10px var(--neon-green);
+}
+
+/* Game Controls */
+#gameControls {
+    grid-area: controls;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.control-button {
+    font-family: 'Orbitron', monospace;
+    font-size: 1rem;
+    font-weight: bold;
+    padding: 0.8rem 1.5rem;
+    background: linear-gradient(45deg, var(--deep-purple), var(--electric-blue));
+    color: white;
+    border: 1px solid var(--electric-blue);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+}
+
+.control-button:hover {
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+.control-button.danger {
+    background: linear-gradient(45deg, var(--blood-red), var(--nightmare-orange));
+    border-color: var(--blood-red);
+}
+
+.control-button.danger:hover {
+    box-shadow: 0 0 20px rgba(139, 0, 0, 0.5);
+}
+
+/* Save/Load Screen */
+.save-content {
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid var(--glitch-pink);
+    border-radius: 15px;
+    padding: 2rem;
+    max-width: 600px;
+    box-shadow: 0 0 30px var(--glitch-pink);
+}
+
+.save-slots {
+    display: grid;
+    gap: 1rem;
+    margin: 2rem 0;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.save-slot {
+    background: rgba(26, 13, 46, 0.8);
+    border: 1px solid var(--electric-blue);
+    border-radius: 8px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.save-slot:hover {
+    background: rgba(0, 255, 255, 0.1);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+}
+
+.save-slot.empty {
+    opacity: 0.6;
+    font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .freaky-title {
+        font-size: 2.5rem;
+    }
+    
+    .game-content {
+        padding: 1rem;
+        grid-template-rows: 1fr auto auto;
+    }
+    
+    #gameHUD {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    #gameControls {
+        flex-wrap: wrap;
+    }
+    
+    .title-content {
+        max-width: 90%;
+        margin: 0 auto;
+    }
+}
+
+/* Special Effects */
+.reality-distortion {
+    animation: realityGlitch 0.5s infinite;
+}
+
+@keyframes realityGlitch {
+    0%, 90% { 
+        transform: translateX(0) scaleX(1);
+        filter: hue-rotate(0deg);
+    }
+    91% { 
+        transform: translateX(-5px) scaleX(0.95);
+        filter: hue-rotate(90deg);
+    }
+    92% { 
+        transform: translateX(5px) scaleX(1.05);
+        filter: hue-rotate(180deg);
+    }
+    93% { 
+        transform: translateX(-2px) scaleX(0.98);
+        filter: hue-rotate(270deg);
+    }
+    94% { 
+        transform: translateX(2px) scaleX(1.02);
+        filter: hue-rotate(360deg);
+    }
+}
+
+.text-scramble {
+    animation: textScramble 3s infinite;
+}
+
+@keyframes textScramble {
+    0%, 85% { 
+        text-shadow: 0 0 10px currentColor;
+    }
+    86% { 
+        text-shadow: 
+            -2px 0 0 var(--glitch-pink),
+            2px 0 0 var(--electric-blue);
+    }
+    87% { 
+        text-shadow: 
+            -1px 0 0 var(--electric-blue),
+            1px 0 0 var(--neon-green);
+    }
+    88% { 
+        text-shadow: 
+            -3px 0 0 var(--warning-yellow),
+            3px 0 0 var(--nightmare-orange);
+    }
+}

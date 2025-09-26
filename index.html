@@ -1,18 +1,89 @@
 <!DOCTYPE html>
-  <head>
-    <title>AI-Games</title>
-  </head>
-  <body>
-    <h1>AI-Games</h1>
-    <ul>
-      <li><a href="/BounceBlox">BounceBlox</a></li>
-      <li><a href="/DataStream">DataStream</a></li>
-      <li><a href="/Dune">Dune</a></li>
-      <li><a href="/Echoes">Echoes</a></li>
-      <li><a href="/GeometryCrash">GeometryCrash</a></li>
-      <li><a href="/HadleeKart">HadleeKart</a></li>
-      <li><a href="/HillRider">HillRider</a></li>
-      <li><a href="/IdleBreakout">IdleBreakout+</a></li>
-      <li><a href="/Ruleweaver">Ruleweaver</a></li>
-    </ul>
-  </body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Games | Game Browser</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="main-title">AI-Games</h1>
+                <p class="subtitle">Explore artificial intelligence, consciousness, and digital existence</p>
+                
+                <!-- Search and Filter Controls -->
+                <div class="controls">
+                    <div class="search-container">
+                        <input type="text" id="searchInput" placeholder="Search games..." class="search-input">
+                        <span class="search-icon">🔍</span>
+                    </div>
+                    <div class="filter-controls">
+                        <select id="genreFilter" class="filter-select">
+                            <option value="">All Genres</option>
+                            <option value="action">Action</option>
+                            <option value="adventure">Adventure</option>
+                            <option value="arcade">Arcade</option>
+                            <option value="idle">Idle</option>
+                            <option value="platformer">Platformer</option>
+                            <option value="puzzle">Puzzle</option>
+                            <option value="racing">Racing</option>
+                            <option value="shooter">Shooter</option>
+                        </select>
+                        <select id="sortBy" class="filter-select">
+                            <option value="name">Sort by Name</option>
+                            <option value="genre">Sort by Genre</option>
+                            <option value="newest">Newest First</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Game Stats -->
+        <div class="stats-bar">
+            <div class="stat">
+                <span class="stat-number" id="totalGames">0</span>
+                <span class="stat-label">Total Games</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number" id="displayedGames">0</span>
+                <span class="stat-label">Displayed</span>
+            </div>
+        </div>
+
+        <!-- Games Grid -->
+        <main class="games-grid" id="gamesGrid">
+            <!-- Games will be dynamically loaded here -->
+            <ul>
+              <li><a href="/BounceBlox">BounceBlox</a></li>
+              <li><a href="/DataStream">DataStream</a></li>
+              <li><a href="/Dune">Dune</a></li>
+              <li><a href="/Echoes">Echoes</a></li>
+              <li><a href="/GeometryCrash">GeometryCrash</a></li>
+              <li><a href="/HadleeKart">HadleeKart</a></li>
+              <li><a href="/HillRider">HillRider</a></li>
+              <li><a href="/IdleBreakout">IdleBreakout+</a></li>
+              <li><a href="/Ruleweaver">Ruleweaver</a></li>
+            </ul>
+        </main>
+
+        <!-- Loading State -->
+        <div class="loading" id="loadingState">
+            <div class="loading-spinner"></div>
+            <p>Scanning for games...</p>
+        </div>
+
+        <!-- No Results State -->
+        <div class="no-results hidden" id="noResults">
+            <div class="no-results-icon">🎮</div>
+            <h2>No games found</h2>
+            <p>Try adjusting your search or filter criteria</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -15,6 +15,7 @@ class HadleeKartGame {
         // Game state
         this.gameState = 'title'; // 'title', 'trackSelection', 'racing', 'paused', 'complete'
         this.selectedTrack = 'classic';
+        this.selectedKartDesign = 'classic'; // Add custom kart design selection
         this.currentLap = 1;
         this.totalLaps = 3;
         this.raceTime = 0;
@@ -66,6 +67,11 @@ class HadleeKartGame {
             this.showStoryMode();
         });
         
+        // Kart customization button
+        document.getElementById('kartCustomization').addEventListener('click', () => {
+            this.showKartCustomization();
+        });
+        
         // Back to title button
         document.getElementById('backToTitle').addEventListener('click', () => {
             this.backToTitle();
@@ -73,6 +79,11 @@ class HadleeKartGame {
         
         // Back to title from story mode
         document.getElementById('backToTitleFromStory').addEventListener('click', () => {
+            this.backToTitle();
+        });
+        
+        // Back to title from customization
+        document.getElementById('backToTitleFromCustomization').addEventListener('click', () => {
             this.backToTitle();
         });
         
@@ -100,6 +111,9 @@ class HadleeKartGame {
         
         // Initialize track previews
         this.initializeTrackPreviews();
+        
+        // Initialize kart customization
+        this.initializeKartCustomization();
     }
     
     /**
@@ -125,6 +139,7 @@ class HadleeKartGame {
         this.gameState = 'title';
         document.getElementById('trackSelection').classList.remove('active');
         document.getElementById('storyModeScreen').classList.remove('active');
+        document.getElementById('kartCustomizationScreen').classList.remove('active');
         document.getElementById('titleScreen').classList.add('active');
     }
     
@@ -136,6 +151,16 @@ class HadleeKartGame {
         document.getElementById('titleScreen').classList.remove('active');
         document.getElementById('storyModeScreen').classList.add('active');
         this.updateStoryProgress();
+    }
+    
+    /**
+     * Show kart customization screen
+     */
+    showKartCustomization() {
+        this.gameState = 'kartCustomization';
+        document.getElementById('titleScreen').classList.remove('active');
+        document.getElementById('kartCustomizationScreen').classList.add('active');
+        this.updateKartPreviews();
     }
     
     /**
@@ -201,153 +226,197 @@ class HadleeKartGame {
     getStoryData(raceNumber) {
         const stories = {
             1: {
-                title: "Race 1: First Impressions",
+                title: "Race 1: Hearts Racing",
                 track: "classic",
                 preRaceText: `
-                    <p><strong>Luke's First Race</strong></p>
-                    <p>Luke nervously adjusts his helmet as he prepares for his debut race in the Apex Circuit. 
-                    His heart pounds - not just from the anticipation of racing, but because <em>she</em> will be watching.</p>
-                    <p>"Just focus on the track," he tells himself, but his eyes keep drifting to Hadlee's kart. 
-                    The reigning champion looks effortlessly confident, already a legend at just 22.</p>
-                    <p>"This is it," Luke whispers. "Time to show her what I can do."</p>
+                    <p><strong>Luke's Romantic Awakening</strong></p>
+                    <p>Luke's heart pounds as he adjusts his racing gloves, stealing glances at Hadlee in her stunning pink and gold kart. 
+                    The way the sunlight catches her hair as she laughs with other racers makes his chest tight with longing.</p>
+                    <p>"This is it," he whispers to himself, gripping the wheel with determination born of love, not competition. 
+                    "Time to show her what I'm made of. Maybe if I win this race, I'll finally work up the courage to ask her out..."</p>
+                    <p>The other racers notice Luke's focused energy - there's something different about him today. 
+                    His usual shy demeanor has been replaced by quiet confidence. Love, it seems, has given him wings.</p>
+                    <p>As the engines rev, Luke catches Hadlee's eye across the starting line. She gives him an encouraging smile 
+                    that sends butterflies dancing through his stomach. "Win this one for me, Luke!" she calls out playfully.</p>
                 `,
                 postRaceText: `
-                    <p>Luke crosses the finish line, his first official race complete. Win or lose, 
-                    he's proven he belongs here. As he climbs out of his kart, he notices someone watching 
-                    from the pit crew - a quiet figure with a clipboard, taking notes...</p>
+                    <p>Luke's driving was poetry in motion - smooth, elegant turns that showcased not aggression, but artistry. 
+                    The crowd cheered as he executed perfect overtakes with grace and skill.</p>
+                    <p>As he climbs out of his kart, slightly breathless from the adrenaline, Hadlee approaches with a warm smile. 
+                    "That was incredible, Luke! I had no idea you could drive like that," she says, her cheeks flushed with excitement.</p>
+                    <p>Their eyes meet, and for a moment, the world seems to pause. Luke feels his courage building - maybe tonight 
+                    is the night he finally tells her how he feels...</p>
                 `
             },
             2: {
-                title: "Race 2: Rising Stakes",
+                title: "Race 2: Love Letters and Fast Cars",
                 track: "figure8",
                 preRaceText: `
-                    <p><strong>Growing Confidence</strong></p>
-                    <p>Luke's first race gave him confidence, but the Figure-8 track is known for its chaos. 
-                    Drivers crossing paths, close calls, and split-second decisions.</p>
-                    <p>As he waits for the green flag, Luke catches Hadlee's eye. She nods - was that 
-                    acknowledgment? Respect? His heart skips a beat.</p>
-                    <p>"Focus, Luke," he reminds himself. "Drive like your life depends on it."</p>
+                    <p><strong>Secret Admirer</strong></p>
+                    <p>Luke can barely concentrate on anything but the memory of Hadlee's smile from yesterday. 
+                    He's been writing and rewriting a love letter all night, crumpling draft after draft.</p>
+                    <p>This morning, he found a note tucked under his helmet: "Your driving yesterday was absolutely mesmerizing. 
+                    I'd love to get to know the man behind the wheel better. - A Secret Admirer ♥"</p>
+                    <p>The Figure-8 track's crossing paths seem like a perfect metaphor for fate bringing people together. 
+                    Luke's heart races as he wonders who his mysterious admirer could be.</p>
+                    <p>Before the race, Hadlee approaches him with a playful grin. "Someone's popular," she teases, 
+                    having noticed the pink envelope. "Any idea who your secret admirer is?"</p>
+                    <p>Luke blushes deeply, his heart skipping. Could it be...?</p>
                 `,
                 postRaceText: `
-                    <p>The crossing sections were brutal, but Luke held his own. After the race, 
-                    he finds a note tucked into his helmet: "Good driving on turn 3. You've got potential. -E"</p>
-                    <p>E? Luke looks around confused. Who could have left this?</p>
+                    <p>Luke's driving was inspired, weaving through the crossing section with balletic precision. 
+                    Each turn felt like a dance, smooth and passionate, as if his feelings were flowing through the kart itself.</p>
+                    <p>After the race, he finds another note in his locker: "The way you handle those curves is absolutely divine. 
+                    Meet me at the sunset overlook after tomorrow's race? - Your not-so-secret admirer anymore ♥"</p>
+                    <p>Luke's hands tremble as he reads it, butterflies erupting in his stomach. Tomorrow can't come soon enough...</p>
                 `
             },
             3: {
-                title: "Race 3: Mysterious Messages",
+                title: "Race 3: Mountain Top Romance",
                 track: "mountain",
                 preRaceText: `
-                    <p><strong>The Mountain Circuit</strong></p>
-                    <p>Luke's been getting more notes signed "E" - tips about racing lines, 
-                    brake points, even which opponents to watch out for. The advice is incredibly good.</p>
-                    <p>The mountain track is treacherous, full of hairpin turns and elevation changes. 
-                    Luke needs all the help he can get, even mysterious help.</p>
-                    <p>Before the race, another note appears: "Trust your instincts on the hairpins. 
-                    Don't brake too early. You're better than you think. -E"</p>
+                    <p><strong>Sunset Rendezvous</strong></p>
+                    <p>Luke's nerves are electric with anticipation. All day he's been wondering who will meet him 
+                    at the mountain overlook tonight. His secret admirer's notes have become increasingly flirtatious and sweet.</p>
+                    <p>Today's message was accompanied by a single red rose: "I love watching you race - 
+                    the passion in your eyes, the way you make the impossible look effortless. You're absolutely captivating."</p>
+                    <p>The mountain track's winding curves and breathtaking vistas seem perfect for romance. 
+                    Luke finds himself driving not just to win, but to impress someone special.</p>
+                    <p>As he warms up his kart, Hadlee walks by and whispers, "Good luck, Luke. 
+                    I have a feeling tonight's going to be very special for you." Her knowing smile makes his heart flutter.</p>
                 `,
                 postRaceText: `
-                    <p>Following E's advice paid off - Luke navigated the mountain track like a veteran. 
-                    But who is this mysterious advisor? Luke starts studying the pit crew more carefully, 
-                    trying to spot anyone who might be watching him with particular interest...</p>
+                    <p>Luke's performance was breathtaking - literally taking the mountain curves like a lovesick poet, 
+                    each turn executed with passionate precision. The sunset painted the track in golden hues as he crossed the finish line.</p>
+                    <p>Hours later, at the overlook, Luke's heart nearly stops when he sees a familiar silhouette against the sunset. 
+                    Hadlee turns to face him, her cheeks pink with nervous excitement.</p>
+                    <p>"Surprise," she says softly. "I hope you don't mind that your secret admirer... is me."</p>
                 `
             },
             4: {
-                title: "Race 4: Growing Doubts",
+                title: "Race 4: First Kiss Under City Lights",
                 track: "city",
                 preRaceText: `
-                    <p><strong>Urban Jungle</strong></p>
-                    <p>The city street circuit is unforgiving - concrete barriers and tight corners. 
-                    Luke's been racing well, but lately he's been wondering... is he really doing this for Hadlee?</p>
-                    <p>The notes from E have become more personal: "You don't have to prove anything to anyone. 
-                    Race for yourself." But Luke still can't figure out who E is.</p>
-                    <p>As the engines rev, Luke finds himself looking less at Hadlee and more at the 
-                    strategic team members analyzing data sheets...</p>
+                    <p><strong>City of Love</strong></p>
+                    <p>After their magical sunset confession, Luke and Hadlee have been inseparable. 
+                    Their late-night phone calls last until dawn, filled with laughter, dreams, and whispered sweet nothings.</p>
+                    <p>Tonight's city race takes on special meaning - Hadlee suggested they make it interesting: 
+                    "If you can beat me tonight, I'll let you take me to that fancy rooftop restaurant downtown," she teased, 
+                    her eyes sparkling with mischief.</p>
+                    <p>The city streets are lit up like a romantic movie set, neon lights reflecting off wet pavement. 
+                    Luke's heart pounds not from nerves, but from pure excitement. Win or lose, he knows he's already won her heart.</p>
+                    <p>As they line up at the starting line, Hadlee blows him a kiss. "May the best racer win, handsome," 
+                    she calls out, making Luke blush adorably.</p>
                 `,
                 postRaceText: `
-                    <p>Luke's driving was more confident today, less desperate to impress. 
-                    After the race, he notices one of the strategy analysts - a young woman 
-                    with intelligent eyes - quickly look away when he glances over. 
-                    Could she be...?</p>
+                    <p>The race was intense - both Luke and Hadlee pushed their karts to the limit, 
+                    trading positions throughout the course. Their competitive spirits only made them more attractive to each other.</p>
+                    <p>As they cross the finish line together in a photo-finish, they can't help but laugh. 
+                    "I guess we both won," Hadlee says breathlessly, pulling off her helmet to reveal tousled hair that makes Luke's heart skip.</p>
+                    <p>Under the city lights, with adrenaline still coursing through their veins, 
+                    Luke finally finds the courage to cup her face gently and lean in for their first kiss. 
+                    Time stops as their lips meet, the cheering crowd fading into background noise.</p>
                 `
             },
             5: {
-                title: "Race 5: The Connection",
+                title: "Race 5: Desert Heat and Passion",
                 track: "desert",
                 preRaceText: `
-                    <p><strong>Desert Heat</strong></p>
-                    <p>The desert track is brutal - heat, dust, and long sweeping turns. 
-                    Luke's latest note from E was different: "Sometimes the person you're meant to 
-                    impress is right beside you, not ahead of you."</p>
-                    <p>Luke's starting to put pieces together. The handwriting, the strategic insights, 
-                    the way someone always seems to be watching his progress...</p>
-                    <p>He spots the analyst again - Eliza, he overheard someone call her. 
-                    She's brilliant, always three steps ahead in race strategy. Could E stand for...?</p>
+                    <p><strong>Weekend Getaway</strong></p>
+                    <p>Luke and Hadlee have planned a romantic weekend getaway to the desert racing circuit. 
+                    They've been dating for a few weeks now, and the chemistry between them is absolutely electric.</p>
+                    <p>Last night at their cozy desert hotel, they spent hours stargazing from the hot tub, 
+                    Hadlee nestled against Luke's chest as he traced gentle patterns on her bare shoulders. 
+                    "I never knew I could feel this way," she whispered against his neck, sending shivers down his spine.</p>
+                    <p>Today's race is more playful than competitive - they've agreed that whoever loses 
+                    has to give the winner a full body massage tonight. Hadlee's teasing smile as she suggested this 
+                    made Luke's temperature rise even more than the desert sun.</p>
+                    <p>"Ready to lose, handsome?" she purrs, adjusting her racing suit in a way that makes Luke completely forget how to breathe.</p>
                 `,
                 postRaceText: `
-                    <p>After the race, Luke makes a decision. He approaches the strategy table, 
-                    his heart pounding harder than during any race. "Eliza?" he calls out. 
-                    She turns, and for a moment, their eyes meet with perfect understanding.</p>
-                    <p>"The notes..." Luke begins. Eliza smiles softly. "I was wondering when you'd figure it out."</p>
+                    <p>The desert race was scorching hot in more ways than one - both racers pushed hard, 
+                    but they kept stealing glances at each other, causing more than one amusing near-miss with cacti.</p>
+                    <p>Afterward, as they cool down with ice-cold drinks, Hadlee slides closer to Luke on their picnic blanket. 
+                    "I may have lost the race," she says with a sultry smile, "but I think we're both about to win tonight."</p>
+                    <p>As the desert sunset paints them in golden light, Luke pulls her close for a passionate kiss. 
+                    The massage oils they packed are definitely going to come in handy...</p>
                 `
             },
             6: {
-                title: "Race 6: Revelation",
+                title: "Race 6: Forest of Love",
                 track: "forest",
                 preRaceText: `
-                    <p><strong>Forest Path</strong></p>
-                    <p>Everything makes sense now. Eliza - "E" - has been helping him all along. 
-                    Not because she needed him to win, but because she saw potential in him 
-                    that he didn't see in himself.</p>
-                    <p>"I never cared about Hadlee," Luke realizes. "I was just intimidated by success. 
-                    But with Eliza... she makes me want to be better."</p>
-                    <p>The forest track winds through tall trees, much like the winding path 
-                    that led Luke to discover what really mattered to him.</p>
+                    <p><strong>Into the Enchanted Woods</strong></p>
+                    <p>Luke and Hadlee have been officially dating for two months now, and their relationship has deepened 
+                    into something beautiful and mature. They've started talking about the future, about dreams they want to share.</p>
+                    <p>The forest track holds special meaning - it was here that Luke first realized he was falling in love. 
+                    Today, Hadlee seems extra radiant, with a secret smile that makes Luke's heart flutter with curiosity.</p>
+                    <p>Before the race, she pulls him aside to a secluded grove. "Luke," she says, her voice soft with emotion, 
+                    "racing brought us together, but what we have now... it's so much more than I ever dreamed possible."</p>
+                    <p>She presses a small velvet box into his hands. "I know it's unconventional, but... 
+                    will you accept this promise ring? I want the whole world to know you're mine."</p>
                 `,
                 postRaceText: `
-                    <p>Luke races with a new confidence - not to impress anyone, but because 
-                    Eliza believed in him when he couldn't believe in himself. They've been 
-                    talking more, working together on strategy. It's not just racing anymore... 
-                    it's partnership.</p>
+                    <p>Luke races with tears of joy in his eyes, the promise ring gleaming on his finger. 
+                    Every turn through the dappled forest light feels like a celebration of their love.</p>
+                    <p>After crossing the finish line, he sweeps Hadlee into his arms, spinning her around as she laughs with pure joy. 
+                    "Yes, yes, a thousand times yes!" he whispers against her ear.</p>
+                    <p>As they kiss under the ancient trees, other racers and spectators applaud. 
+                    Their love story has become the talk of the racing circuit - proof that sometimes fairy tales do come true.</p>
                 `
             },
             7: {
-                title: "Race 7: Championship Final",
+                title: "Race 7: The Big Proposal",
                 track: "speedway",
                 preRaceText: `
-                    <p><strong>The High-Speed Showdown</strong></p>
-                    <p>The championship comes down to this - Luke versus Hadlee on the speedway. 
-                    The fastest track, the highest stakes. But Luke's perspective has completely changed.</p>
-                    <p>Eliza squeezes his hand before he gets in the kart. "Just drive your race," she says. 
-                    "Win or lose, I'm proud of who you've become."</p>
-                    <p>Luke realizes he's already won something more valuable than any championship...</p>
+                    <p><strong>Championship Dreams</strong></p>
+                    <p>Six months have passed, and Luke and Hadlee have become the golden couple of the racing world. 
+                    Their love story has inspired countless fans, and tonight's championship race feels like destiny.</p>
+                    <p>Luke has been planning something special for weeks. Hidden in his racing suit pocket is a ring - 
+                    not just any ring, but his grandmother's vintage engagement ring, perfectly restored and sparkling.</p>
+                    <p>Hadlee doesn't know, but Luke has arranged for the entire race to be broadcast live. 
+                    If he wins tonight's championship, he plans to propose right there on the track, 
+                    in front of millions of viewers and the woman he adores.</p>
+                    <p>"Whatever happens tonight," Hadlee says, kissing him tenderly before they get in their karts, 
+                    "I just want you to know that you've already made me the happiest woman alive."</p>
                 `,
                 postRaceText: `
-                    <p>The race is intense, wheel-to-wheel with Hadlee. But in the final turn, 
-                    Luke makes a decision that shocks everyone...</p>
+                    <p>Luke's performance is legendary - he races not just with skill, but with the power of true love driving him forward. 
+                    When he crosses the finish line as champion, the crowd erupts in thunderous applause.</p>
+                    <p>Without even removing his helmet, Luke runs to Hadlee's kart. In front of the cheering crowd and rolling cameras, 
+                    he drops to one knee and pulls out the ring.</p>
+                    <p>"Hadlee, my love, my everything," his voice carries across the speedway, "will you marry me?"</p>
+                    <p>Her "YES!" echoes through the stadium as confetti cannons explode and the crowd goes wild. 
+                    Their kiss is captured by every camera, destined to become one of the most romantic moments in sports history.</p>
                 `
             },
             8: {
-                title: "Race 8: True Love Wins",
+                title: "Race 8: Honeymoon Grand Prix",
                 track: "twisted",
                 preRaceText: `
-                    <p><strong>The Twisted Finale</strong></p>
-                    <p>Luke's shocking move in the championship - slowing down to let Hadlee pass, 
-                    then hitting her kart and launching her into orbit - made headlines worldwide.</p>
-                    <p>"I don't need to beat her to prove my worth," Luke declared to the media. 
-                    "I've already found everything I was looking for."</p>
-                    <p>This final exhibition race on the twisted circuit is just for fun. 
-                    Luke and Eliza, now officially together, racing side by side...</p>
+                    <p><strong>Wedding Bells and Racing Thrills</strong></p>
+                    <p>Luke and Hadlee's wedding was a fairytale come true - a beautiful ceremony at sunset 
+                    followed by a reception where half the racing world celebrated their union.</p>
+                    <p>Now, on their honeymoon in Monaco, they couldn't resist entering one last race together - 
+                    the prestigious Monaco Grand Prix for couples. Racing side by side as newlyweds feels like the perfect adventure.</p>
+                    <p>"Ready to show the world what Team Hadlee-Luke can do?" she asks, her new wedding ring catching the Mediterranean sunlight. 
+                    The way she says their combined name makes Luke's heart soar.</p>
+                    <p>The twisted street circuit is challenging, but they've never felt more in sync. 
+                    Their love has made them both better racers, better people, better partners in every sense of the word.</p>
+                    <p>"Win or lose," Luke says, pulling her close for one last pre-race kiss, "I'm already living my dream with you."</p>
                 `,
                 postRaceText: `
-                    <p><strong>EPILOGUE: Six Months Later</strong></p>
-                    <p>Luke and Eliza work as a perfect team - she handles strategy, he handles driving. 
-                    They've won three races together and are planning their future.</p>
-                    <p>There's just one small problem... Luke has developed a slight gambling addiction 
-                    after discovering how thrilling it is to bet on race outcomes. 
-                    Eliza is working on helping him with that too.</p>
-                    <p><em>"Every love story has its quirks,"</em> she says with a laugh.</p>
-                    <p><strong>THE END</strong></p>
+                    <p><strong>EPILOGUE: Happily Ever After</strong></p>
+                    <p>Luke and Hadlee cross the finish line together, hands reaching across the gap between their karts to touch. 
+                    They've both won in the truest sense, not just the race, but life itself.</p>
+                    <p>Years later, they'll be known as the greatest love story in racing history. 
+                    Their racing school for young couples becomes legendary, built on the foundation that love makes everything better.</p>
+                    <p>They have three beautiful children who inherit both their parents' need for speed and their deep capacity for love. 
+                    The racing circuit echoes with laughter as the next generation of their family learns to race.</p>
+                    <p>Luke still writes Hadlee love letters, slipping them under her pillow or into her racing gloves. 
+                    And Hadlee still gets butterflies every time she sees him smile.</p>
+                    <p>Some fairy tales are real, and theirs is just beginning.</p>
+                    <p><strong>THE END ♥</strong></p>
                 `
             }
         };
@@ -449,12 +518,95 @@ class HadleeKartGame {
     }
     
     /**
+     * Initialize kart customization system
+     */
+    initializeKartCustomization() {
+        // Set up design selection buttons
+        document.querySelectorAll('.design-button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const kartDesign = e.target.closest('.kart-design');
+                const design = kartDesign.dataset.design;
+                this.selectKartDesign(design);
+            });
+        });
+        
+        // Load saved design preference
+        const savedDesign = localStorage.getItem('hadleeKartDesign') || 'classic';
+        this.selectKartDesign(savedDesign);
+    }
+    
+    /**
+     * Select a kart design
+     */
+    selectKartDesign(design) {
+        this.selectedKartDesign = design;
+        localStorage.setItem('hadleeKartDesign', design);
+        
+        // Update UI
+        document.querySelectorAll('.kart-design').forEach(el => {
+            el.classList.remove('selected');
+            const button = el.querySelector('.design-button');
+            button.textContent = 'SELECT';
+        });
+        
+        const selectedDesign = document.querySelector(`[data-design="${design}"]`);
+        if (selectedDesign) {
+            selectedDesign.classList.add('selected');
+            const button = selectedDesign.querySelector('.design-button');
+            button.textContent = 'SELECTED';
+        }
+    }
+    
+    /**
+     * Update kart design previews
+     */
+    updateKartPreviews() {
+        const designs = ['classic', 'furry', 'anime', 'cyberpunk', 'magical'];
+        
+        designs.forEach(design => {
+            const canvas = document.querySelector(`[data-design="${design}"] .kart-canvas`);
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                this.renderKartPreview(ctx, design, canvas.width, canvas.height);
+            }
+        });
+    }
+    
+    /**
+     * Render a small preview of the kart design
+     */
+    renderKartPreview(ctx, design, width, height) {
+        ctx.clearRect(0, 0, width, height);
+        
+        // Create a mini kart for preview
+        const previewKart = {
+            radius: 12,
+            color: '#e74c3c',
+            design: design,
+            isPlayer: true
+        };
+        
+        ctx.save();
+        ctx.translate(width / 2, height / 2);
+        
+        // Draw preview based on design using renderer
+        if (design === 'classic') {
+            this.renderer.renderStandardKart(ctx, previewKart);
+        } else {
+            this.renderer.renderCustomKart(ctx, previewKart);
+        }
+        
+        ctx.restore();
+    }
+    
+    /**
      * Create player kart and 7 AI karts
      */
     createKarts() {
         // Create player kart
         const startPos = this.track.getStartPosition(0);
         this.playerKart = new Kart(startPos.x, startPos.y, '#e74c3c', true);
+        this.playerKart.design = this.selectedKartDesign; // Assign custom design
         
         // Create AI karts
         this.aiKarts = [];
@@ -483,9 +635,11 @@ class HadleeKartGame {
         // Generate initial power-ups
         this.powerUpSystem.generatePowerUps(this.track);
         
-        // Switch UI from track selection to game
+        // Switch UI from any screen to game screen
         document.getElementById('titleScreen').classList.remove('active');
         document.getElementById('trackSelection').classList.remove('active');
+        document.getElementById('storyModeScreen').classList.remove('active');
+        document.getElementById('kartCustomizationScreen').classList.remove('active');
         document.getElementById('gameScreen').classList.add('active');
         
         // Reset camera position
@@ -2169,54 +2323,11 @@ class RenderingEngine {
             ctx.fillRect(-kart.radius + 2, -kart.radius/2 + 2, kart.radius * 2, kart.radius);
             ctx.restore();
             
-            // Draw kart body with gradient
-            const gradient = ctx.createLinearGradient(-kart.radius, -kart.radius/2, kart.radius, kart.radius/2);
-            gradient.addColorStop(0, kart.color);
-            gradient.addColorStop(0.5, this.lightenColor(kart.color, 20));
-            gradient.addColorStop(1, this.darkenColor(kart.color, 20));
-            ctx.fillStyle = gradient;
-            ctx.fillRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
-            
-            // Draw kart outline
-            ctx.strokeStyle = this.darkenColor(kart.color, 40);
-            ctx.lineWidth = 2;
-            ctx.strokeRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
-            
-            // Draw kart details (spoiler)
-            ctx.fillStyle = '#2c3e50';
-            ctx.fillRect(kart.radius - 4, -kart.radius/3, 6, kart.radius/1.5);
-            
-            // Draw windshield
-            ctx.fillStyle = 'rgba(135, 206, 235, 0.7)';
-            ctx.fillRect(-kart.radius/3, -kart.radius/3, kart.radius/1.5, kart.radius/1.5);
-            
-            // Draw wheels
-            ctx.fillStyle = '#34495e';
-            ctx.fillRect(-kart.radius + 2, -kart.radius/2 - 3, 4, 6);
-            ctx.fillRect(-kart.radius + 2, kart.radius/2 - 3, 4, 6);
-            ctx.fillRect(kart.radius - 6, -kart.radius/2 - 3, 4, 6);
-            ctx.fillRect(kart.radius - 6, kart.radius/2 - 3, 4, 6);
-            
-            // Draw enhanced drift smoke
-            if (kart.isDrifting && kart.speed > 2) {
-                for (let i = 0; i < 5; i++) {
-                    ctx.fillStyle = `rgba(200, 200, 200, ${0.4 - i * 0.08})`;
-                    ctx.beginPath();
-                    ctx.arc(-kart.radius - i * 6, (Math.random() - 0.5) * 10, 3 + i * 1.5, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-            
-            // Speed lines effect when going fast
-            if (kart.speed > 8) {
-                ctx.strokeStyle = `rgba(255, 255, 255, ${(kart.speed - 8) * 0.1})`;
-                ctx.lineWidth = 1;
-                for (let i = 0; i < 3; i++) {
-                    ctx.beginPath();
-                    ctx.moveTo(-kart.radius - 20 - i * 5, (i - 1) * 3);
-                    ctx.lineTo(-kart.radius - 30 - i * 5, (i - 1) * 3);
-                    ctx.stroke();
-                }
+            // Render custom kart design based on type
+            if (kart.isPlayer && kart.design) {
+                this.renderCustomKart(ctx, kart);
+            } else {
+                this.renderStandardKart(ctx, kart);
             }
             
             ctx.restore();
@@ -2257,6 +2368,287 @@ class RenderingEngine {
                 ctx.restore();
             }
         });
+    }
+    
+    renderStandardKart(ctx, kart) {
+        // Draw kart body with gradient
+        const gradient = ctx.createLinearGradient(-kart.radius, -kart.radius/2, kart.radius, kart.radius/2);
+        gradient.addColorStop(0, kart.color);
+        gradient.addColorStop(0.5, this.lightenColor(kart.color, 20));
+        gradient.addColorStop(1, this.darkenColor(kart.color, 20));
+        ctx.fillStyle = gradient;
+        ctx.fillRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+        
+        // Draw kart outline
+        ctx.strokeStyle = this.darkenColor(kart.color, 40);
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+        
+        // Draw kart details (spoiler)
+        ctx.fillStyle = '#2c3e50';
+        ctx.fillRect(kart.radius - 4, -kart.radius/3, 6, kart.radius/1.5);
+        
+        // Draw windshield
+        ctx.fillStyle = 'rgba(135, 206, 235, 0.7)';
+        ctx.fillRect(-kart.radius/3, -kart.radius/3, kart.radius/1.5, kart.radius/1.5);
+        
+        // Draw wheels
+        ctx.fillStyle = '#34495e';
+        ctx.fillRect(-kart.radius + 2, -kart.radius/2 - 3, 4, 6);
+        ctx.fillRect(-kart.radius + 2, kart.radius/2 - 3, 4, 6);
+        ctx.fillRect(kart.radius - 6, -kart.radius/2 - 3, 4, 6);
+        ctx.fillRect(kart.radius - 6, kart.radius/2 - 3, 4, 6);
+        
+        this.renderKartEffects(ctx, kart);
+    }
+    
+    renderCustomKart(ctx, kart) {
+        switch(kart.design) {
+            case 'furry':
+                this.renderFurryKart(ctx, kart);
+                break;
+            case 'anime':
+                this.renderAnimeKart(ctx, kart);
+                break;
+            case 'cyberpunk':
+                this.renderCyberpunkKart(ctx, kart);
+                break;
+            case 'magical':
+                this.renderMagicalKart(ctx, kart);
+                break;
+            default:
+                this.renderStandardKart(ctx, kart);
+        }
+    }
+    
+    renderFurryKart(ctx, kart) {
+        // Furry-themed kart with ears and tail
+        const gradient = ctx.createLinearGradient(-kart.radius, -kart.radius/2, kart.radius, kart.radius/2);
+        gradient.addColorStop(0, '#d4a574'); // Sandy fur color
+        gradient.addColorStop(0.5, '#f4d5a7');
+        gradient.addColorStop(1, '#b8956a');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+        
+        // Draw fur texture
+        ctx.fillStyle = 'rgba(180, 149, 106, 0.3)';
+        for (let i = 0; i < 8; i++) {
+            const x = -kart.radius + (Math.random() * kart.radius * 2);
+            const y = -kart.radius/2 + (Math.random() * kart.radius);
+            ctx.fillRect(x, y, 2, 1);
+        }
+        
+        // Draw ears
+        ctx.fillStyle = '#d4a574';
+        ctx.beginPath();
+        ctx.ellipse(-kart.radius/2, -kart.radius/2 - 5, 4, 8, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(kart.radius/2, -kart.radius/2 - 5, 4, 8, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw tail
+        ctx.fillStyle = '#d4a574';
+        ctx.beginPath();
+        ctx.ellipse(kart.radius + 5, 0, 8, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw cute eyes
+        ctx.fillStyle = '#000';
+        ctx.fillRect(-kart.radius/3, -kart.radius/4, 3, 3);
+        ctx.fillRect(kart.radius/3 - 3, -kart.radius/4, 3, 3);
+        
+        // Draw nose
+        ctx.fillStyle = '#ff69b4';
+        ctx.beginPath();
+        ctx.arc(0, -kart.radius/6, 2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        this.renderKartEffects(ctx, kart);
+    }
+    
+    renderAnimeKart(ctx, kart) {
+        // Anime-themed kart with kawaii elements
+        const gradient = ctx.createLinearGradient(-kart.radius, -kart.radius/2, kart.radius, kart.radius/2);
+        gradient.addColorStop(0, '#ffb3d9'); // Pink anime color
+        gradient.addColorStop(0.5, '#ffccf0');
+        gradient.addColorStop(1, '#ff99cc');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+        
+        // Draw anime-style decoration
+        ctx.strokeStyle = '#ff1493';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+        
+        // Draw large anime eyes
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.ellipse(-kart.radius/3, -kart.radius/4, 5, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(kart.radius/3, -kart.radius/4, 5, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw pupils
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(-kart.radius/3, -kart.radius/4, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(kart.radius/3, -kart.radius/4, 3, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw shine in eyes
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-kart.radius/3 - 1, -kart.radius/4 - 2, 2, 2);
+        ctx.fillRect(kart.radius/3 - 1, -kart.radius/4 - 2, 2, 2);
+        
+        // Draw cat-like mouth
+        ctx.strokeStyle = '#ff1493';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, kart.radius/6, 3, 0, Math.PI);
+        ctx.stroke();
+        
+        // Draw heart decorations
+        ctx.fillStyle = '#ff69b4';
+        this.drawHeart(ctx, -kart.radius + 5, kart.radius/3, 3);
+        this.drawHeart(ctx, kart.radius - 5, kart.radius/3, 3);
+        
+        this.renderKartEffects(ctx, kart);
+    }
+    
+    renderCyberpunkKart(ctx, kart) {
+        // Cyberpunk-themed kart with neon effects
+        const gradient = ctx.createLinearGradient(-kart.radius, -kart.radius/2, kart.radius, kart.radius/2);
+        gradient.addColorStop(0, '#2c3e50');
+        gradient.addColorStop(0.5, '#34495e');
+        gradient.addColorStop(1, '#1a252f');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+        
+        // Draw neon trim
+        const time = Date.now() * 0.005;
+        ctx.strokeStyle = `rgba(0, 255, 255, ${0.8 + Math.sin(time) * 0.2})`;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+        
+        // Draw circuit patterns
+        ctx.strokeStyle = `rgba(57, 255, 20, ${0.6 + Math.sin(time * 1.5) * 0.2})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-kart.radius + 5, -kart.radius/4);
+        ctx.lineTo(kart.radius - 5, -kart.radius/4);
+        ctx.moveTo(-kart.radius + 5, kart.radius/4);
+        ctx.lineTo(kart.radius - 5, kart.radius/4);
+        ctx.stroke();
+        
+        // Draw glowing core
+        const coreGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 8);
+        coreGradient.addColorStop(0, `rgba(255, 0, 255, ${0.8 + Math.sin(time * 2) * 0.2})`);
+        coreGradient.addColorStop(1, 'rgba(255, 0, 255, 0)');
+        ctx.fillStyle = coreGradient;
+        ctx.beginPath();
+        ctx.arc(0, 0, 8, 0, Math.PI * 2);
+        ctx.fill();
+        
+        this.renderKartEffects(ctx, kart);
+    }
+    
+    renderMagicalKart(ctx, kart) {
+        // Magical-themed kart with sparkles
+        const gradient = ctx.createLinearGradient(-kart.radius, -kart.radius/2, kart.radius, kart.radius/2);
+        gradient.addColorStop(0, '#9b59b6');
+        gradient.addColorStop(0.5, '#e74c3c');
+        gradient.addColorStop(1, '#f39c12');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+        
+        // Draw magical outline
+        ctx.strokeStyle = '#f1c40f';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+        
+        // Draw sparkles
+        const time = Date.now() * 0.003;
+        for (let i = 0; i < 6; i++) {
+            const angle = (i / 6) * Math.PI * 2 + time;
+            const distance = kart.radius * 0.7;
+            const x = Math.cos(angle) * distance;
+            const y = Math.sin(angle) * distance * 0.5;
+            const alpha = 0.5 + Math.sin(time * 3 + i) * 0.3;
+            
+            ctx.fillStyle = `rgba(241, 196, 15, ${alpha})`;
+            this.drawStar(ctx, x, y, 4, 3, 1.5);
+        }
+        
+        // Draw magical runes
+        ctx.strokeStyle = '#f1c40f';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(0, 0, kart.radius * 0.3, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        this.renderKartEffects(ctx, kart);
+    }
+    
+    renderKartEffects(ctx, kart) {
+        // Draw enhanced drift smoke
+        if (kart.isDrifting && kart.speed > 2) {
+            for (let i = 0; i < 5; i++) {
+                ctx.fillStyle = `rgba(200, 200, 200, ${0.4 - i * 0.08})`;
+                ctx.beginPath();
+                ctx.arc(-kart.radius - i * 6, (Math.random() - 0.5) * 10, 3 + i * 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        // Speed lines effect when going fast
+        if (kart.speed > 8) {
+            ctx.strokeStyle = `rgba(255, 255, 255, ${(kart.speed - 8) * 0.1})`;
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(-kart.radius - 20 - i * 5, (i - 1) * 3);
+                ctx.lineTo(-kart.radius - 30 - i * 5, (i - 1) * 3);
+                ctx.stroke();
+            }
+        }
+    }
+    
+    drawHeart(ctx, x, y, size) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(size / 10, size / 10);
+        ctx.beginPath();
+        ctx.moveTo(0, 3);
+        ctx.bezierCurveTo(-5, -2, -10, 1, -10, 5);
+        ctx.bezierCurveTo(-10, 9, -5, 13, 0, 15);
+        ctx.bezierCurveTo(5, 13, 10, 9, 10, 5);
+        ctx.bezierCurveTo(10, 1, 5, -2, 0, 3);
+        ctx.fill();
+        ctx.restore();
+    }
+    
+    drawStar(ctx, x, y, spikes, outerRadius, innerRadius) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.beginPath();
+        let rot = Math.PI / 2 * 3;
+        let step = Math.PI / spikes;
+        
+        ctx.moveTo(0, -outerRadius);
+        for (let i = 0; i < spikes; i++) {
+            ctx.lineTo(Math.cos(rot) * outerRadius, Math.sin(rot) * outerRadius);
+            rot += step;
+            ctx.lineTo(Math.cos(rot) * innerRadius, Math.sin(rot) * innerRadius);
+            rot += step;
+        }
+        ctx.lineTo(0, -outerRadius);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
     }
     
     renderPowerUps(powerUps) {
