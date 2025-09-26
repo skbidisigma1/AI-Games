@@ -118,6 +118,16 @@ class GameBrowser {
                 fullDescription: 'Master the core mechanic of holding to accelerate downhill and releasing to coast uphill. Perfect timing builds momentum for higher speeds.'
             },
             {
+                name: 'SkyGlider',
+                displayName: 'SkyGlider - Momentum Master',
+                icon: '🌤️',
+                genre: 'arcade',
+                description: 'A momentum-based hill-riding game inspired by Dune and Tiny Wings with smooth physics and beautiful visuals',
+                features: ['smooth sine-wave terrain', 'gravity manipulation', 'day-night cycle', 'character selection', 'combo system', 'particle effects'],
+                path: 'SkyGlider',
+                fullDescription: 'Glide over rolling hills using perfect momentum control. Hold to dive down slopes, release to launch off hills. Features three characters, dynamic lighting, and satisfying physics.'
+            },
+            {
                 name: 'Dune',
                 displayName: 'Dune',
                 icon: '🏜️',
