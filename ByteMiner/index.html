@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Byte Miner: Core Collapse</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="animations.css">
+    <link rel="stylesheet" href="themes.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Header -->
+        <div id="header">
+            <div id="byte-counter">
+                <span id="bytes-display">0</span> Bytes
+            </div>
+            <div id="prestige-info">
+                <span id="fragments-display">0</span> Core Fragments
+                <span id="quantum-keys-display">0</span> Quantum Keys
+            </div>
+            <div id="stats">
+                <div>Passive: <span id="passive-rate">0</span> B/s</div>
+                <div>Click Power: <span id="click-power">1</span></div>
+            </div>
+        </div>
+
+        <!-- Main Game Area -->
+        <div id="main-area">
+            <!-- Click Button -->
+            <div id="click-section">
+                <button id="mine-button">⛏️ MINE BYTES</button>
+                <div id="click-effects"></div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div id="tab-nav">
+                <button class="tab-button active" data-tab="upgrades">Upgrades</button>
+                <button class="tab-button" data-tab="achievements">Achievements</button>
+                <button class="tab-button" data-tab="prestige">Prestige</button>
+                <button class="tab-button" data-tab="quantum">Quantum Lab</button>
+                <button class="tab-button" data-tab="settings">Settings</button>
+            </div>
+
+            <!-- Content Panels -->
+            <div id="content-area">
+                <!-- Upgrade Shop -->
+                <div id="upgrades-panel" class="panel active">
+                    <div class="tier-section" id="tier1">
+                        <h3>🔹 Tier 1: Manual Boosters</h3>
+                        <div class="upgrade-list" id="tier1-upgrades"></div>
+                    </div>
+                    <div class="tier-section" id="tier2">
+                        <h3>🔸 Tier 2: Efficiency Enhancers</h3>
+                        <div class="upgrade-list" id="tier2-upgrades"></div>
+                    </div>
+                    <div class="tier-section" id="tier3">
+                        <h3>🧬 Tier 3: Exotic Tech</h3>
+                        <div class="upgrade-list" id="tier3-upgrades"></div>
+                    </div>
+                </div>
+
+                <!-- Achievement Panel -->
+                <div id="achievements-panel" class="panel">
+                    <div id="achievement-list"></div>
+                </div>
+
+                <!-- Prestige Panel -->
+                <div id="prestige-panel" class="panel">
+                    <div id="prestige-stats">
+                        <h3>Core Collapse Status</h3>
+                        <p>Next Collapse: <span id="next-collapse">1,000,000</span> Bytes</p>
+                        <p>Fragments Gained: <span id="fragments-on-collapse">0</span></p>
+                        <button id="prestige-button" disabled>Core Collapse</button>
+                    </div>
+                    <div id="prestige-upgrades">
+                        <h3>🛸 Tier 4: Prestige Unlocks</h3>
+                        <div class="tier-section" id="tier4">
+                            <div class="upgrade-list" id="tier4-upgrades"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quantum Lab -->
+                <div id="quantum-panel" class="panel">
+                    <div id="quantum-status">
+                        <h3>🧪 Quantum Lab</h3>
+                        <p>Status: <span id="quantum-unlocked">Locked</span></p>
+                    </div>
+                    <div id="quantum-upgrades">
+                        <div class="tier-section" id="tier5">
+                            <div class="upgrade-list" id="tier5-upgrades"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Panel -->
+                <div id="settings-panel" class="panel">
+                    <h3>Settings</h3>
+                    <div class="setting-item">
+                        <label for="theme-select">Theme:</label>
+                        <select id="theme-select">
+                            <option value="terminal">Terminal</option>
+                            <option value="neon">Neon</option>
+                            <option value="glitch">Glitch</option>
+                            <option value="dark">Dark Mode</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <button id="save-game">Save Game</button>
+                        <button id="load-game">Load Game</button>
+                        <button id="reset-game">Reset Game</button>
+                    </div>
+                    <div class="setting-item">
+                        <button id="export-save">Export Save</button>
+                        <button id="import-save">Import Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div id="notifications"></div>
+
+        <!-- AI Assistant (unlockable) -->
+        <div id="ai-assistant" class="hidden">
+            <div id="ai-status">AI Assistant: Active</div>
+            <div id="ai-stats">Auto-clicking at <span id="ai-rate">1</span> clicks/sec</div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="utils.js"></script>
+    <script src="storage.js"></script>
+    <script src="upgrades.js"></script>
+    <script src="achievements.js"></script>
+    <script src="prestige.js"></script>
+    <script src="quantum.js"></script>
+    <script src="gameLoop.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
