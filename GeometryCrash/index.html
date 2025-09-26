@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geometry Crash - Rhythm Platformer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="1024" height="600"></canvas>
+        
+        <!-- UI Overlays -->
+        <div id="ui">
+            <!-- Title Screen -->
+            <div id="titleScreen" class="screen active">
+                <div class="title-content">
+                    <h1 class="game-title">GEOMETRY CRASH</h1>
+                    <h2 class="subtitle">Rhythm-Based Platformer</h2>
+                    <p class="game-description">
+                        Navigate through deadly obstacles in perfect sync with the music!<br>
+                        🟦 CUBE: Click to jump • 🚀 SHIP: Hold to fly • ⚽ BALL: Click to flip gravity<br>
+                        One mistake sends you back to the beginning!
+                    </p>
+                    <div class="controls-info">
+                        <p><strong>Controls:</strong> CLICK or SPACE to interact</p>
+                        <p><strong>Goal:</strong> Reach 100% completion without dying</p>
+                    </div>
+                    <div class="game-modes">
+                        <h3>Game Modes:</h3>
+                        <div class="mode-selector">
+                            <button id="cubeMode" class="mode-btn active" data-mode="cube">🟦 CUBE</button>
+                            <button id="shipMode" class="mode-btn" data-mode="ship">🚀 SHIP</button>
+                            <button id="ballMode" class="mode-btn" data-mode="ball">⚽ BALL</button>
+                        </div>
+                    </div>
+                    <button id="startGame" class="game-button">START GAME</button>
+                    <button id="uploadMusic" class="game-button secondary">UPLOAD MUSIC</button>
+                </div>
+            </div>
+            
+            <!-- Game Screen -->
+            <div id="gameScreen" class="screen">
+                <div id="hud">
+                    <div id="progressInfo">
+                        <span class="hud-label">PROGRESS:</span>
+                        <div id="progressBar">
+                            <div id="progressFill"></div>
+                        </div>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div id="modeInfo">
+                        <span class="hud-label">MODE:</span>
+                        <span id="currentMode">CUBE</span>
+                    </div>
+                    <div id="attempts">
+                        <span class="hud-label">ATTEMPTS:</span>
+                        <span id="attemptCount">1</span>
+                    </div>
+                </div>
+                
+                <!-- Game Over Dialog -->
+                <div id="gameOver" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2>CRASHED!</h2>
+                        <p id="crashMessage">Try again! You reached <span id="bestProgress">0%</span></p>
+                        <button id="restartGame" class="game-button">RESTART</button>
+                        <button id="backToMenu" class="game-button secondary">MAIN MENU</button>
+                    </div>
+                </div>
+                
+                <!-- Level Complete Dialog -->
+                <div id="levelComplete" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2>LEVEL COMPLETE!</h2>
+                        <p>Amazing! You reached 100% completion!</p>
+                        <p>Attempts: <span id="finalAttempts">1</span></p>
+                        <button id="playAgain" class="game-button">PLAY AGAIN</button>
+                        <button id="backToMenuComplete" class="game-button secondary">MAIN MENU</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Music Upload -->
+        <input type="file" id="musicUpload" accept="audio/*" style="display: none;">
+    </div>
+    
+    <!-- Audio -->
+    <audio id="backgroundMusic" loop>
+        <source src="audio/default.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="deathSound" preload="auto">
+        <source src="audio/death.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="clickSound" preload="auto">
+        <source src="audio/click.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="completeSound" preload="auto">
+        <source src="audio/complete.mp3" type="audio/mpeg">
+    </audio>
+    
+    <script src="game.js"></script>
+</body>
+</html>
