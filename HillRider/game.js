@@ -8,6 +8,7 @@ class HillRiderGame {
         this.score = 0;
         this.distance = 0;
         this.coins = 0;
+        this.stars = 0;
         this.startTime = 0;
         
         // Settings
@@ -339,13 +340,18 @@ class HillRiderGame {
         
         if (spawnDistance > lastCoin.x + 300) {
             const groundY = this.getGroundHeight(spawnDistance);
+            
+            // Randomly spawn either coin or star (stars are rarer and worth more)
+            const isStar = Math.random() < 0.2; // 20% chance for star
+            
             this.collectibles.push({
                 x: spawnDistance,
                 y: groundY - 50 - Math.random() * 100,
                 width: 20,
                 height: 20,
                 collected: false,
-                value: 10,
+                type: isStar ? 'star' : 'coin',
+                value: isStar ? 25 : 10,
                 bobOffset: Math.random() * Math.PI * 2,
                 sparkleTimer: 0
             });
@@ -396,6 +402,7 @@ class HillRiderGame {
         this.score = 0;
         this.distance = 0;
         this.coins = 0;
+        this.stars = 0;
         this.startTime = Date.now();
         
         this.createPlayer();
@@ -554,10 +561,18 @@ class HillRiderGame {
                     
                     // Screen glow effect for perfect landings
                     this.camera.shake = Math.min(this.camera.shake + 3, 10);
+                    
+                    // Play perfect landing sound (higher pitch for higher combos)
+                    this.playSound('coinSound'); // Using coin sound as perfect landing sound
                 } else {
                     // Break combo on poor landing
                     if (this.player.combo > 0) {
                         this.player.combo = Math.max(0, this.player.combo - 1);
+                    }
+                    
+                    // Play regular landing sound for hard impacts
+                    if (landingVelocity > 6) {
+                        this.playSound('crashSound');
                     }
                 }
                 
@@ -707,12 +722,20 @@ class HillRiderGame {
     
     checkCollisions() {
         // Coin collection
-        this.collectibles.forEach(coin => {
-            if (!coin.collected && this.isColliding(this.player, coin)) {
-                coin.collected = true;
-                this.coins += 1;
-                this.score += coin.value * (1 + Math.floor(this.player.momentum / 20));
-                this.createParticles(coin.x, coin.y, '#f1c40f', 8);
+        this.collectibles.forEach(item => {
+            if (!item.collected && this.isColliding(this.player, item)) {
+                item.collected = true;
+                
+                if (item.type === 'star') {
+                    this.stars += 1;
+                    this.score += item.value * (1 + Math.floor(this.player.momentum / 15)); // Better bonus for stars
+                    this.createParticles(item.x, item.y, '#fff', 12); // More particles for stars
+                } else {
+                    this.coins += 1;
+                    this.score += item.value * (1 + Math.floor(this.player.momentum / 20));
+                    this.createParticles(item.x, item.y, '#f1c40f', 8);
+                }
+                
                 this.playSound('coinSound');
             }
         });
@@ -851,6 +874,7 @@ class HillRiderGame {
         document.getElementById('distanceValue').textContent = Math.floor(this.distance);
         document.getElementById('speedValue').textContent = Math.floor(this.player.velocityX * 10) / 10;
         document.getElementById('coinsValue').textContent = this.coins;
+        document.getElementById('starsValue').textContent = this.stars;
         document.getElementById('comboValue').textContent = this.player.combo;
         
         // Highlight combo when active
@@ -1352,33 +1376,62 @@ class HillRiderGame {
     }
     
     renderCollectibles() {
-        this.collectibles.forEach(coin => {
-            if (coin.collected) return;
+        this.collectibles.forEach(item => {
+            if (item.collected) return;
             
             this.ctx.save();
-            this.ctx.translate(coin.x + coin.width/2, coin.y + coin.height/2 + Math.sin(coin.bobOffset) * 3);
-            this.ctx.rotate(coin.sparkleTimer);
+            this.ctx.translate(item.x + item.width/2, item.y + item.height/2 + Math.sin(item.bobOffset) * 3);
+            this.ctx.rotate(item.sparkleTimer);
             
-            // Coin body
-            this.ctx.fillStyle = '#f1c40f';
-            this.ctx.strokeStyle = '#f39c12';
-            this.ctx.lineWidth = 2;
-            this.ctx.beginPath();
-            this.ctx.arc(0, 0, coin.width/2, 0, Math.PI * 2);
-            this.ctx.fill();
-            this.ctx.stroke();
+            if (item.type === 'star') {
+                // Render star collectible
+                this.ctx.fillStyle = '#fff';
+                this.ctx.strokeStyle = '#f1c40f';
+                this.ctx.lineWidth = 2;
+                this.ctx.shadowColor = '#f1c40f';
+                this.ctx.shadowBlur = 10;
+                
+                // Draw star shape
+                const spikes = 5;
+                const outerRadius = item.width / 2;
+                const innerRadius = outerRadius * 0.4;
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, -outerRadius);
+                for (let i = 0; i < spikes * 2; i++) {
+                    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                    const angle = (i * Math.PI) / spikes;
+                    this.ctx.lineTo(
+                        Math.cos(angle - Math.PI / 2) * radius,
+                        Math.sin(angle - Math.PI / 2) * radius
+                    );
+                }
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+            } else {
+                // Render coin collectible
+                this.ctx.fillStyle = '#f1c40f';
+                this.ctx.strokeStyle = '#f39c12';
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.arc(0, 0, item.width/2, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.stroke();
+                
+                // Coin shine
+                this.ctx.fillStyle = '#fff';
+                this.ctx.beginPath();
+                this.ctx.arc(-3, -3, 3, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
             
-            // Coin shine
+            // Sparkle effect for both types
+            const sparkleSize = 2 + Math.sin(item.sparkleTimer * 2) * 1;
             this.ctx.fillStyle = '#fff';
-            this.ctx.beginPath();
-            this.ctx.arc(-3, -3, 3, 0, Math.PI * 2);
-            this.ctx.fill();
-            
-            // Sparkle effect
-            const sparkleSize = 2 + Math.sin(coin.sparkleTimer * 2) * 1;
-            this.ctx.fillStyle = '#fff';
-            this.ctx.fillRect(-sparkleSize/2, -coin.width/2 - 10, sparkleSize, sparkleSize);
-            this.ctx.fillRect(coin.width/2 + 5, -sparkleSize/2, sparkleSize, sparkleSize);
+            this.ctx.shadowBlur = 0;
+            this.ctx.fillRect(-sparkleSize/2, -item.width/2 - 10, sparkleSize, sparkleSize);
+            this.ctx.fillRect(item.width/2 + 5, -sparkleSize/2, sparkleSize, sparkleSize);
             
             this.ctx.restore();
         });
@@ -1439,10 +1492,46 @@ class HillRiderGame {
         this.particles.forEach(particle => {
             this.ctx.save();
             this.ctx.globalAlpha = particle.alpha;
+            
+            // Special rendering for sparkle particles (combo effects)
+            if (particle.sparkle) {
+                // Rotate sparkle particles
+                this.ctx.translate(particle.x, particle.y);
+                this.ctx.rotate(Date.now() * 0.01 + particle.x * 0.001);
+                this.ctx.translate(-particle.x, -particle.y);
+                
+                // Add sparkle glow
+                this.ctx.shadowColor = particle.color;
+                this.ctx.shadowBlur = particle.size * 2;
+            }
+            
             this.ctx.fillStyle = particle.color;
             this.ctx.beginPath();
-            this.ctx.arc(particle.x, particle.y, particle.size || 3, 0, Math.PI * 2);
-            this.ctx.fill();
+            
+            if (particle.sparkle) {
+                // Draw star shape for sparkle particles
+                const spikes = 5;
+                const outerRadius = particle.size;
+                const innerRadius = outerRadius * 0.4;
+                
+                this.ctx.moveTo(particle.x, particle.y - outerRadius);
+                for (let i = 0; i < spikes * 2; i++) {
+                    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                    const angle = (i * Math.PI) / spikes;
+                    this.ctx.lineTo(
+                        particle.x + Math.cos(angle - Math.PI / 2) * radius,
+                        particle.y + Math.sin(angle - Math.PI / 2) * radius
+                    );
+                }
+                this.ctx.closePath();
+                this.ctx.fill();
+            } else {
+                // Regular circular particles
+                this.ctx.arc(particle.x, particle.y, particle.size || 3, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+            
+            this.ctx.shadowBlur = 0;
             this.ctx.restore();
         });
     }
