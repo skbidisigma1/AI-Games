@@ -26,6 +26,13 @@ class HillRiderGame {
         this.powerups = [];
         this.particles = [];
         
+        // Background layers for parallax
+        this.backgroundLayers = {
+            stars: [],
+            clouds: [],
+            mountains: []
+        };
+        
         // Input
         this.keys = {};
         this.mouse = { x: 0, y: 0, isDown: false };
@@ -171,7 +178,14 @@ class HillRiderGame {
             onGround: false,
             angle: 0,
             trail: [],
-            color: '#3498db'
+            color: '#3498db',
+            // Combo system
+            combo: 0,
+            maxCombo: 0,
+            perfectLandings: 0,
+            airTime: 0,
+            lastLandingTime: 0,
+            wasOnGround: false
         };
     }
     
@@ -263,6 +277,41 @@ class HillRiderGame {
         return (x - Math.floor(x)) * 2 - 1; // Return value between -1 and 1
     }
     
+    createBackgroundLayers() {
+        // Create stars for night sky
+        for (let i = 0; i < 100; i++) {
+            this.backgroundLayers.stars.push({
+                x: Math.random() * this.canvas.width * 3,
+                y: Math.random() * this.canvas.height * 0.6,
+                size: Math.random() * 2 + 0.5,
+                twinkle: Math.random() * Math.PI * 2,
+                alpha: Math.random() * 0.8 + 0.2
+            });
+        }
+        
+        // Create clouds
+        for (let i = 0; i < 15; i++) {
+            this.backgroundLayers.clouds.push({
+                x: Math.random() * this.canvas.width * 3,
+                y: Math.random() * this.canvas.height * 0.4 + 50,
+                size: Math.random() * 80 + 40,
+                speed: Math.random() * 0.3 + 0.1,
+                alpha: Math.random() * 0.3 + 0.1
+            });
+        }
+        
+        // Create mountain silhouettes
+        for (let i = 0; i < 8; i++) {
+            this.backgroundLayers.mountains.push({
+                x: i * 200,
+                baseHeight: this.canvas.height * 0.7,
+                peaks: Array.from({length: 5}, () => ({
+                    height: Math.random() * 150 + 50,
+                    width: Math.random() * 100 + 80
+                }))
+            });
+        }
+    }
     createCamera() {
         this.camera = {
             x: 0,
@@ -352,6 +401,7 @@ class HillRiderGame {
         this.createPlayer();
         this.createTerrain();
         this.createCamera();
+        this.createBackgroundLayers();
         this.collectibles = [];
         this.powerups = [];
         this.particles = [];
@@ -478,6 +528,43 @@ class HillRiderGame {
         if (this.player.y + this.player.radius > groundY) {
             this.player.y = groundY - this.player.radius;
             
+            // Combo system - check for landing quality
+            if (!this.player.wasOnGround) {
+                const currentTime = Date.now();
+                const landingVelocity = Math.abs(this.player.velocityY);
+                const groundAngle = this.getGroundAngle(this.player.x);
+                const landingAngle = Math.abs(Math.atan2(this.player.velocityY, this.player.velocityX));
+                
+                // Perfect landing conditions: moderate speed, good angle alignment
+                const isPerfectLanding = landingVelocity > 3 && landingVelocity < 8 && 
+                                      Math.abs(landingAngle - Math.abs(groundAngle)) < 0.5 &&
+                                      this.player.airTime > 30; // Must have been airborne for reasonable time
+                
+                if (isPerfectLanding) {
+                    this.player.combo++;
+                    this.player.perfectLandings++;
+                    this.player.maxCombo = Math.max(this.player.maxCombo, this.player.combo);
+                    
+                    // Combo bonus to momentum and score
+                    this.player.momentum = Math.min(this.player.momentum + 15 + this.player.combo * 2, this.player.maxMomentum);
+                    this.score += 50 + this.player.combo * 25;
+                    
+                    // Create special effect particles
+                    this.createComboParticles(this.player.x, this.player.y);
+                    
+                    // Screen glow effect for perfect landings
+                    this.camera.shake = Math.min(this.camera.shake + 3, 10);
+                } else {
+                    // Break combo on poor landing
+                    if (this.player.combo > 0) {
+                        this.player.combo = Math.max(0, this.player.combo - 1);
+                    }
+                }
+                
+                this.player.lastLandingTime = currentTime;
+                this.player.airTime = 0;
+            }
+            
             // Bounce and momentum handling
             if (this.player.velocityY > 2) {
                 // Bounce on hard landing
@@ -501,7 +588,12 @@ class HillRiderGame {
             this.player.onGround = false;
             // Air physics - angle follows velocity
             this.player.angle = Math.atan2(this.player.velocityY, this.player.velocityX) * 0.5;
+            // Track air time for combo system
+            this.player.airTime++;
         }
+        
+        // Update wasOnGround for combo detection
+        this.player.wasOnGround = this.player.onGround;
         
         // Update trail with circular player center
         this.player.trail.push({ x: this.player.x, y: this.player.y });
@@ -685,6 +777,25 @@ class HillRiderGame {
         }
     }
     
+    createComboParticles(x, y) {
+        // Create special golden particles for combo landings
+        const particleCount = 8 + this.player.combo * 2;
+        for (let i = 0; i < particleCount; i++) {
+            this.particles.push({
+                x: x + (Math.random() - 0.5) * 40,
+                y: y + (Math.random() - 0.5) * 20,
+                vx: (Math.random() - 0.5) * 15,
+                vy: (Math.random() - 0.5) * 15 - 5,
+                life: 60 + Math.random() * 40,
+                maxLife: 60 + Math.random() * 40,
+                color: `hsl(${45 + Math.random() * 15}, 100%, ${60 + Math.random() * 20}%)`, // Golden colors
+                alpha: 1,
+                size: 3 + Math.random() * 4,
+                sparkle: true
+            });
+        }
+    }
+    
     createParticles(x, y, color, count = 6) {
         for (let i = 0; i < count; i++) {
             this.particles.push({
@@ -740,6 +851,17 @@ class HillRiderGame {
         document.getElementById('distanceValue').textContent = Math.floor(this.distance);
         document.getElementById('speedValue').textContent = Math.floor(this.player.velocityX * 10) / 10;
         document.getElementById('coinsValue').textContent = this.coins;
+        document.getElementById('comboValue').textContent = this.player.combo;
+        
+        // Highlight combo when active
+        const comboElement = document.getElementById('comboInfo');
+        if (this.player.combo > 0) {
+            comboElement.style.color = '#f39c12';
+            comboElement.style.textShadow = '0 0 10px #f39c12';
+        } else {
+            comboElement.style.color = '';
+            comboElement.style.textShadow = '';
+        }
         
         // Update momentum bar with better visual feedback
         const momentumPercent = (this.player.momentum / this.player.maxMomentum) * 100;
@@ -882,13 +1004,30 @@ class HillRiderGame {
     }
     
     renderGame() {
-        // Sky gradient
+        // Calculate day-night cycle based on distance traveled
+        const dayProgress = (this.distance / 1000) % 2; // Cycle every 1000m
+        const isNight = dayProgress > 1;
+        const fadeProgress = isNight ? (dayProgress - 1) : (1 - dayProgress);
+        
+        // Dynamic sky gradient based on time of day
         const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
-        gradient.addColorStop(0, '#87ceeb');
-        gradient.addColorStop(0.7, '#b8d8eb');
-        gradient.addColorStop(1, '#98fb98');
+        if (isNight) {
+            // Night sky colors
+            gradient.addColorStop(0, `rgba(25, 25, 112, ${0.8 + fadeProgress * 0.2})`); // Midnight blue
+            gradient.addColorStop(0.3, `rgba(72, 61, 139, ${0.6 + fadeProgress * 0.3})`); // Dark slate blue
+            gradient.addColorStop(0.7, `rgba(106, 90, 205, ${0.4 + fadeProgress * 0.4})`); // Slate blue
+            gradient.addColorStop(1, `rgba(135, 206, 235, ${0.2 + fadeProgress * 0.3})`); // Sky blue
+        } else {
+            // Day sky colors
+            gradient.addColorStop(0, `rgba(135, 206, 235, ${0.8 + fadeProgress * 0.2})`); // Sky blue
+            gradient.addColorStop(0.7, `rgba(184, 216, 235, ${0.6 + fadeProgress * 0.3})`); // Light blue
+            gradient.addColorStop(1, `rgba(152, 251, 152, ${0.4 + fadeProgress * 0.4})`); // Pale green
+        }
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Render parallax background layers
+        this.renderBackgroundLayers(isNight, fadeProgress);
         
         // Save context for camera transform
         this.ctx.save();
@@ -904,10 +1043,113 @@ class HillRiderGame {
         this.ctx.restore();
     }
     
+    renderBackgroundLayers(isNight, fadeProgress) {
+        // Render stars (only visible at night)
+        if (isNight) {
+            this.ctx.save();
+            this.ctx.globalAlpha = fadeProgress * 0.8;
+            
+            this.backgroundLayers.stars.forEach(star => {
+                // Parallax effect - stars move very slowly
+                const parallaxX = star.x - this.camera.x * 0.1;
+                const parallaxY = star.y - this.camera.y * 0.05;
+                
+                if (parallaxX > -50 && parallaxX < this.canvas.width + 50) {
+                    star.twinkle += 0.1;
+                    const twinkleAlpha = (Math.sin(star.twinkle) + 1) * 0.5;
+                    
+                    this.ctx.globalAlpha = fadeProgress * star.alpha * twinkleAlpha;
+                    this.ctx.fillStyle = '#ffffff';
+                    this.ctx.beginPath();
+                    this.ctx.arc(parallaxX, parallaxY, star.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+            });
+            this.ctx.restore();
+        }
+        
+        // Render mountains (far background)
+        this.ctx.save();
+        this.ctx.globalAlpha = 0.6;
+        
+        this.backgroundLayers.mountains.forEach(mountain => {
+            // Strong parallax effect - mountains move slowly
+            const parallaxX = mountain.x - this.camera.x * 0.3;
+            
+            if (parallaxX > -300 && parallaxX < this.canvas.width + 300) {
+                this.ctx.fillStyle = isNight ? '#2c3e50' : '#34495e';
+                this.ctx.beginPath();
+                this.ctx.moveTo(parallaxX, mountain.baseHeight);
+                
+                let currentX = parallaxX;
+                mountain.peaks.forEach(peak => {
+                    const peakX = currentX + peak.width / 2;
+                    const peakY = mountain.baseHeight - peak.height;
+                    this.ctx.lineTo(peakX, peakY);
+                    currentX += peak.width;
+                    this.ctx.lineTo(currentX, mountain.baseHeight);
+                });
+                
+                this.ctx.lineTo(parallaxX + 200, this.canvas.height);
+                this.ctx.lineTo(parallaxX, this.canvas.height);
+                this.ctx.closePath();
+                this.ctx.fill();
+            }
+        });
+        this.ctx.restore();
+        
+        // Render clouds
+        this.ctx.save();
+        
+        this.backgroundLayers.clouds.forEach(cloud => {
+            // Medium parallax effect
+            const parallaxX = cloud.x - this.camera.x * 0.5;
+            const parallaxY = cloud.y - this.camera.y * 0.2;
+            
+            // Animate cloud movement
+            cloud.x += cloud.speed;
+            if (cloud.x > this.camera.x + this.canvas.width + 200) {
+                cloud.x = this.camera.x - 200;
+            }
+            
+            if (parallaxX > -cloud.size && parallaxX < this.canvas.width + cloud.size) {
+                this.ctx.globalAlpha = cloud.alpha * (isNight ? 0.3 : 0.7);
+                this.ctx.fillStyle = isNight ? '#6c7b7f' : '#ffffff';
+                
+                // Draw fluffy cloud shape
+                this.ctx.beginPath();
+                this.ctx.arc(parallaxX, parallaxY, cloud.size * 0.5, 0, Math.PI * 2);
+                this.ctx.arc(parallaxX + cloud.size * 0.3, parallaxY, cloud.size * 0.4, 0, Math.PI * 2);
+                this.ctx.arc(parallaxX - cloud.size * 0.3, parallaxY, cloud.size * 0.4, 0, Math.PI * 2);
+                this.ctx.arc(parallaxX, parallaxY - cloud.size * 0.2, cloud.size * 0.6, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+        });
+        this.ctx.restore();
+    }
+    
     renderTerrain() {
-        // Render terrain as smooth curve
-        this.ctx.fillStyle = '#2ecc71';
-        this.ctx.strokeStyle = '#27ae60';
+        // Create dynamic terrain gradient based on day/night
+        const dayProgress = (this.distance / 1000) % 2;
+        const isNight = dayProgress > 1;
+        
+        // Enhanced terrain gradient
+        const topY = this.terrain.points.length > 0 ? Math.min(...this.terrain.points.map(p => p.y)) : this.canvas.height * 0.5;
+        const bottomY = this.canvas.height + this.camera.y;
+        
+        const terrainGradient = this.ctx.createLinearGradient(0, topY, 0, bottomY);
+        if (isNight) {
+            terrainGradient.addColorStop(0, '#2d5a2d'); // Dark green
+            terrainGradient.addColorStop(0.3, '#1e3a1e'); // Darker green
+            terrainGradient.addColorStop(1, '#0f1f0f'); // Very dark green
+        } else {
+            terrainGradient.addColorStop(0, '#2ecc71'); // Bright green
+            terrainGradient.addColorStop(0.3, '#27ae60'); // Medium green  
+            terrainGradient.addColorStop(1, '#1e8449'); // Dark green
+        }
+        
+        this.ctx.fillStyle = terrainGradient;
+        this.ctx.strokeStyle = isNight ? '#1a4a1a' : '#27ae60';
         this.ctx.lineWidth = 3;
         
         this.ctx.beginPath();
@@ -945,23 +1187,28 @@ class HillRiderGame {
         this.ctx.fill();
         this.ctx.stroke();
         
-        // Add grass texture
-        this.ctx.fillStyle = '#27ae60';
+        // Enhanced grass texture with better styling
+        this.ctx.fillStyle = isNight ? '#1a4a1a' : '#27ae60';
+        const grassCount = isNight ? 2 : 3; // Fewer grass blades at night
+        
         for (let i = 0; i < this.terrain.points.length - 1; i++) {
             const point = this.terrain.points[i];
             if (point.x < this.camera.x - 100 || point.x > this.camera.x + this.canvas.width + 100) {
                 continue;
             }
             
-            // Small grass blades
-            for (let j = 0; j < 3; j++) {
-                const grassX = point.x + j * 20 + Math.sin(Date.now() * 0.001 + j) * 5;
-                const grassY = point.y - Math.random() * 10;
+            // Enhanced grass blades with swaying animation
+            for (let j = 0; j < grassCount; j++) {
+                const swayTime = Date.now() * 0.002 + point.x * 0.001;
+                const sway = Math.sin(swayTime + j) * 2;
+                const grassX = point.x + j * 25 + sway;
+                const grassHeight = 6 + Math.random() * 8;
+                const grassY = point.y - Math.random() * 5;
                 
                 this.ctx.beginPath();
                 this.ctx.moveTo(grassX, grassY);
-                this.ctx.lineTo(grassX, grassY - 8);
-                this.ctx.lineWidth = 1;
+                this.ctx.lineTo(grassX + sway * 0.5, grassY - grassHeight);
+                this.ctx.lineWidth = 1 + Math.random();
                 this.ctx.stroke();
             }
         }
@@ -970,60 +1217,135 @@ class HillRiderGame {
     renderPlayer() {
         this.ctx.save();
         
-        // Draw player trail
+        // Enhanced trail with speed-based effects
         if (this.player.trail.length > 1) {
-            this.ctx.strokeStyle = 'rgba(52, 152, 219, 0.4)';
-            this.ctx.lineWidth = 4;
+            const speedIntensity = Math.min(this.player.velocityX / this.player.maxSpeed, 1);
+            const momentumIntensity = this.player.momentum / this.player.maxMomentum;
+            
+            // Speed boost trail - glowing effect when moving fast
+            if (speedIntensity > 0.6) {
+                this.ctx.strokeStyle = `rgba(243, 156, 18, ${speedIntensity * 0.8})`;
+                this.ctx.lineWidth = 8;
+                this.ctx.shadowColor = '#f39c12';
+                this.ctx.shadowBlur = 15;
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.player.trail[0].x, this.player.trail[0].y);
+                for (let i = 1; i < this.player.trail.length; i++) {
+                    this.ctx.lineTo(this.player.trail[i].x, this.player.trail[i].y);
+                }
+                this.ctx.stroke();
+                this.ctx.shadowBlur = 0;
+            }
+            
+            // Normal trail
+            this.ctx.strokeStyle = `rgba(52, 152, 219, ${0.4 + momentumIntensity * 0.4})`;
+            this.ctx.lineWidth = 4 + momentumIntensity * 2;
             this.ctx.beginPath();
             this.ctx.moveTo(this.player.trail[0].x, this.player.trail[0].y);
             for (let i = 1; i < this.player.trail.length; i++) {
                 const alpha = i / this.player.trail.length;
+                this.ctx.globalAlpha = alpha * (0.5 + momentumIntensity * 0.5);
                 this.ctx.lineTo(this.player.trail[i].x, this.player.trail[i].y);
             }
             this.ctx.stroke();
+            this.ctx.globalAlpha = 1;
         }
         
-        // Position and rotate player
+        // Position player
         this.ctx.translate(this.player.x, this.player.y);
+        
+        // Squash and stretch effects based on velocity and ground contact
+        let scaleX = 1;
+        let scaleY = 1;
+        
+        if (this.player.onGround) {
+            // Landing squash effect
+            const impactForce = Math.abs(this.player.velocityY) / 10;
+            if (impactForce > 0.5) {
+                scaleX = 1 + impactForce * 0.3;
+                scaleY = 1 - impactForce * 0.2;
+            }
+            
+            // Speed stretch when moving fast on ground
+            const speedStretch = Math.min(this.player.velocityX / this.player.maxSpeed, 1) * 0.2;
+            scaleX += speedStretch;
+            scaleY -= speedStretch * 0.5;
+        } else {
+            // Air stretch based on velocity direction
+            const airStretch = Math.abs(this.player.velocityY) / 15;
+            if (this.player.velocityY < 0) { // Going up
+                scaleX -= airStretch * 0.2;
+                scaleY += airStretch * 0.3;
+            } else { // Falling down
+                scaleX += airStretch * 0.1;
+                scaleY -= airStretch * 0.1;
+            }
+        }
+        
+        // Apply squash/stretch
+        this.ctx.scale(scaleX, scaleY);
+        
+        // Rotate based on movement
         this.ctx.rotate(this.player.angle);
         
-        // Momentum glow effect
+        // Enhanced momentum glow effect
         if (this.player.momentum > 20) {
             const glowIntensity = (this.player.momentum - 20) / 80;
-            const glowSize = 5 + glowIntensity * 20;
+            const glowSize = 5 + glowIntensity * 25;
+            const pulseEffect = Math.sin(Date.now() * 0.01) * 0.2 + 0.8;
             
+            this.ctx.strokeStyle = `rgba(243, 156, 18, ${glowIntensity * 0.8 * pulseEffect})`;
+            this.ctx.lineWidth = 3;
             this.ctx.shadowColor = '#f39c12';
-            this.ctx.shadowBlur = glowSize;
-            this.ctx.fillStyle = `rgba(243, 156, 18, ${glowIntensity * 0.4})`;
+            this.ctx.shadowBlur = glowSize * pulseEffect;
             this.ctx.beginPath();
-            this.ctx.arc(0, 0, this.player.radius + 8, 0, Math.PI * 2);
-            this.ctx.fill();
+            this.ctx.arc(0, 0, this.player.radius + 5 + glowIntensity * 8, 0, Math.PI * 2);
+            this.ctx.stroke();
             this.ctx.shadowBlur = 0;
         }
         
-        // Player body (circular)
-        this.ctx.fillStyle = this.player.color;
-        this.ctx.strokeStyle = '#2980b9';
+        // Player body (circular) with momentum-based color intensity
+        const momentumColor = this.player.momentum / this.player.maxMomentum;
+        const baseBlue = 52 + momentumColor * 50;
+        const baseGreen = 152 + momentumColor * 50;
+        this.ctx.fillStyle = `rgb(${baseBlue}, ${baseGreen}, 219)`;
+        this.ctx.strokeStyle = `rgb(${Math.max(41, baseBlue - 20)}, ${Math.max(128, baseGreen - 30)}, 185)`;
         this.ctx.lineWidth = 3;
         this.ctx.beginPath();
         this.ctx.arc(0, 0, this.player.radius, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.stroke();
         
-        // Player face/direction indicator
+        // Enhanced player face with expressions based on momentum
+        const eyeSize = 3 + momentumColor * 2;
+        const eyeSpacing = this.player.radius * 0.4;
+        
+        // Eyes - get bigger and more excited with momentum
         this.ctx.fillStyle = '#fff';
         this.ctx.beginPath();
-        this.ctx.arc(this.player.radius * 0.3, -this.player.radius * 0.2, 3, 0, Math.PI * 2);
+        this.ctx.arc(eyeSpacing, -this.player.radius * 0.2, eyeSize, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.beginPath();
-        this.ctx.arc(this.player.radius * 0.3, this.player.radius * 0.2, 3, 0, Math.PI * 2);
+        this.ctx.arc(eyeSpacing, this.player.radius * 0.2, eyeSize, 0, Math.PI * 2);
         this.ctx.fill();
         
-        // Smile
+        // Pupils that look in direction of movement  
+        const pupilOffset = Math.sign(this.player.velocityX) * 1;
+        this.ctx.fillStyle = '#000';
+        this.ctx.beginPath();
+        this.ctx.arc(eyeSpacing + pupilOffset, -this.player.radius * 0.2, 1, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.beginPath();
+        this.ctx.arc(eyeSpacing + pupilOffset, this.player.radius * 0.2, 1, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // Smile that gets bigger with momentum
         this.ctx.strokeStyle = '#fff';
         this.ctx.lineWidth = 2;
         this.ctx.beginPath();
-        this.ctx.arc(this.player.radius * 0.2, 0, 4, 0, Math.PI);
+        const smileRadius = 4 + momentumColor * 3;
+        const smileAngle = Math.PI * (0.5 + momentumColor * 0.3);
+        this.ctx.arc(this.player.radius * 0.2, 0, smileRadius, 0, smileAngle);
         this.ctx.stroke();
         
         this.ctx.restore();
