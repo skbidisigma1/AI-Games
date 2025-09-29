@@ -1,10 +1,10 @@
-// HadleeKart - Complete 2D Racing Game
+// Bailey Kart Season 2 - Complete 2D Racing Game
 // Modular architecture for extensibility and maintainability
 
 /**
  * Main Game Class - Orchestrates all game systems
  */
-class HadleeKartGame {
+class BaileyKartGame {
     constructor() {
         // Canvas setup
         this.canvas = document.getElementById('gameCanvas');
@@ -87,6 +87,19 @@ class HadleeKartGame {
             this.backToTitle();
         });
         
+        // Beta mode event listeners
+        document.getElementById('timeTrialMode').addEventListener('click', () => {
+            this.showBetaMode('timeTrial');
+        });
+        
+        document.getElementById('enduranceMode').addEventListener('click', () => {
+            this.showBetaMode('endurance');
+        });
+        
+        document.getElementById('eliminationMode').addEventListener('click', () => {
+            this.showBetaMode('elimination');
+        });
+        
         // Track selection buttons
         document.querySelectorAll('.track-button').forEach((button, index) => {
             button.addEventListener('click', () => {
@@ -164,10 +177,33 @@ class HadleeKartGame {
     }
     
     /**
+     * Show beta mode notification
+     */
+    showBetaMode(modeType) {
+        let modeInfo = {
+            timeTrial: {
+                title: "Time Trial Mode [BETA]",
+                description: "Race against the clock to set the fastest lap times! This mode is currently in beta testing."
+            },
+            endurance: {
+                title: "Endurance Race Mode [BETA]", 
+                description: "Test your stamina in extended races with fuel management and pit stops! This mode is currently in beta testing."
+            },
+            elimination: {
+                title: "Elimination Mode [BETA]",
+                description: "Survive as the last kart standing in this tension-filled elimination race! This mode is currently in beta testing."
+            }
+        };
+        
+        let mode = modeInfo[modeType] || modeInfo.timeTrial;
+        alert(`${mode.title}\n\n${mode.description}\n\nThese beta modes will be fully implemented in future updates. Stay tuned!`);
+    }
+    
+    /**
      * Update story progress and unlock races
      */
     updateStoryProgress() {
-        const completedRaces = parseInt(localStorage.getItem('hadleeKartStoryProgress') || '0');
+        const completedRaces = parseInt(localStorage.getItem('baileyKartStoryProgress') || '0');
         
         document.querySelectorAll('.story-race').forEach((raceEl, index) => {
             const raceNum = index + 1;
@@ -226,71 +262,74 @@ class HadleeKartGame {
     getStoryData(raceNumber) {
         const stories = {
             1: {
-                title: "Race 1: Hearts Racing",
+                title: "Race 1: The Return",
                 track: "classic",
                 preRaceText: `
-                    <p><strong>Luke's Romantic Awakening</strong></p>
-                    <p>Luke's heart pounds as he adjusts his racing gloves, stealing glances at Hadlee in her stunning pink and gold kart. 
-                    The way the sunlight catches her hair as she laughs with other racers makes his chest tight with longing.</p>
-                    <p>"This is it," he whispers to himself, gripping the wheel with determination born of love, not competition. 
-                    "Time to show her what I'm made of. Maybe if I win this race, I'll finally work up the courage to ask her out..."</p>
-                    <p>The other racers notice Luke's focused energy - there's something different about him today. 
-                    His usual shy demeanor has been replaced by quiet confidence. Love, it seems, has given him wings.</p>
-                    <p>As the engines rev, Luke catches Hadlee's eye across the starting line. She gives him an encouraging smile 
-                    that sends butterflies dancing through his stomach. "Win this one for me, Luke!" she calls out playfully.</p>
+                    <p><strong>Stewart's Return</strong></p>
+                    <p>Stewart arrives at the racing circuit after a long break, expecting to find the familiar faces and fair competition he left behind. 
+                    Instead, he discovers the atmosphere has changed completely - the once-welcoming community now seems tense and divided.</p>
+                    <p>"Things aren't the same around here," warns Marcus, an old racing friend. "Some new racer named Juliette showed up a few months ago. 
+                    She's been... changing things. Winning races through tactics that push the boundaries of fair play."</p>
+                    <p>Stewart grips his steering wheel tighter. He built his reputation on integrity and skill, values that seem under threat. 
+                    As he prepares for his first race back, he's determined to show that honorable racing can still prevail.</p>
+                    <p>"Time to remind everyone what true sportsmanship looks like," Stewart mutters, firing up his engine.</p>
                 `,
                 postRaceText: `
-                    <p>Luke's driving was poetry in motion - smooth, elegant turns that showcased not aggression, but artistry. 
-                    The crowd cheered as he executed perfect overtakes with grace and skill.</p>
-                    <p>As he climbs out of his kart, slightly breathless from the adrenaline, Hadlee approaches with a warm smile. 
-                    "That was incredible, Luke! I had no idea you could drive like that," she says, her cheeks flushed with excitement.</p>
-                    <p>Their eyes meet, and for a moment, the world seems to pause. Luke feels his courage building - maybe tonight 
-                    is the night he finally tells her how he feels...</p>
+                    <p>Stewart's driving was flawless - demonstrating the precision and honor that made him a champion. 
+                    His clean overtakes and respectful racing style drew cheers from longtime fans who remembered the golden days.</p>
+                    <p>As he exits his kart, a slow clap echoes across the track. A figure in a sleek black and purple racing suit approaches - 
+                    Juliette, with an enigmatic smile that doesn't reach her calculating eyes.</p>
+                    <p>"Impressive, Stewart. I've heard so much about the legendary 'honorable champion.' 
+                    We should race together sometime... I have so much to teach you about modern racing."</p>
+                    <p>Stewart feels a chill run down his spine. This was just the beginning.</p>
                 `
             },
             2: {
-                title: "Race 2: Love Letters and Fast Cars",
+                title: "Race 2: Juliette's Challenge",
                 track: "figure8",
                 preRaceText: `
-                    <p><strong>Secret Admirer</strong></p>
-                    <p>Luke can barely concentrate on anything but the memory of Hadlee's smile from yesterday. 
-                    He's been writing and rewriting a love letter all night, crumpling draft after draft.</p>
-                    <p>This morning, he found a note tucked under his helmet: "Your driving yesterday was absolutely mesmerizing. 
-                    I'd love to get to know the man behind the wheel better. - A Secret Admirer ♥"</p>
-                    <p>The Figure-8 track's crossing paths seem like a perfect metaphor for fate bringing people together. 
-                    Luke's heart races as he wonders who his mysterious admirer could be.</p>
-                    <p>Before the race, Hadlee approaches him with a playful grin. "Someone's popular," she teases, 
-                    having noticed the pink envelope. "Any idea who your secret admirer is?"</p>
-                    <p>Luke blushes deeply, his heart skipping. Could it be...?</p>
+                    <p><strong>Direct Confrontation</strong></p>
+                    <p>The racing community buzzes with anticipation. Word has spread that Juliette has personally challenged Stewart 
+                    to a race on the treacherous Figure-8 track - where aggressive tactics and psychological warfare reign supreme.</p>
+                    <p>"She's different from any racer I've seen," explains Sarah, another veteran. "She gets inside people's heads, 
+                    makes them doubt themselves. Half the circuit is afraid to race against her now."</p>
+                    <p>Stewart studies the crossing paths of the Figure-8 track. This design rewards cunning and split-second decisions - 
+                    exactly the kind of environment where Juliette's manipulative tactics could thrive.</p>
+                    <p>As he approaches the starting line, Juliette revs her engine in a pattern that sounds almost mocking. 
+                    "Don't disappoint me, champion," she calls out with false sweetness. "I'd hate for this to be too easy."</p>
                 `,
                 postRaceText: `
-                    <p>Luke's driving was inspired, weaving through the crossing section with balletic precision. 
-                    Each turn felt like a dance, smooth and passionate, as if his feelings were flowing through the kart itself.</p>
-                    <p>After the race, he finds another note in his locker: "The way you handle those curves is absolutely divine. 
-                    Meet me at the sunset overlook after tomorrow's race? - Your not-so-secret admirer anymore ♥"</p>
-                    <p>Luke's hands tremble as he reads it, butterflies erupting in his stomach. Tomorrow can't come soon enough...</p>
+                    <p>The race was intense beyond measure. Juliette employed every psychological trick in the book - 
+                    feinting moves, aggressive blocking, and taunting comments transmitted over the racing comm system.</p>
+                    <p>But Stewart's experience and mental fortitude saw him through. He maintained his racing line, 
+                    stayed focused on fair play, and ultimately crossed the finish line with dignity intact.</p>
+                    <p>"Interesting," Juliette muses as she removes her helmet, revealing sharp features and cold, analytical eyes. 
+                    "You're more resilient than I expected. This will be... educational."</p>
+                    <p>Stewart realizes this was just Juliette's way of studying him. The real battle hasn't even begun.</p>
                 `
             },
             3: {
-                title: "Race 3: Mountain Top Romance",
+                title: "Race 3: Underground Circuits",
                 track: "mountain",
                 preRaceText: `
-                    <p><strong>Sunset Rendezvous</strong></p>
-                    <p>Luke's nerves are electric with anticipation. All day he's been wondering who will meet him 
-                    at the mountain overlook tonight. His secret admirer's notes have become increasingly flirtatious and sweet.</p>
-                    <p>Today's message was accompanied by a single red rose: "I love watching you race - 
-                    the passion in your eyes, the way you make the impossible look effortless. You're absolutely captivating."</p>
-                    <p>The mountain track's winding curves and breathtaking vistas seem perfect for romance. 
-                    Luke finds himself driving not just to win, but to impress someone special.</p>
-                    <p>As he warms up his kart, Hadlee walks by and whispers, "Good luck, Luke. 
-                    I have a feeling tonight's going to be very special for you." Her knowing smile makes his heart flutter.</p>
+                    <p><strong>Hidden Networks</strong></p>
+                    <p>Stewart's investigation into Juliette's influence leads him to discover a secret underground racing network 
+                    operating in the mountain valleys. These races operate outside official regulations, with prize money funded by mysterious sources.</p>
+                    <p>"She's been recruiting racers with promises of easy money," reveals an anonymous tip. 
+                    "But once they're in, they can't get out. She has dirt on all of them."</p>
+                    <p>The mountain track's narrow, winding paths are perfect for the kind of dangerous racing that thrives in these underground circuits. 
+                    Stewart knows he needs to infiltrate this network to understand Juliette's true plans.</p>
+                    <p>As he prepares to enter the race under a false identity, Stewart spots several familiar faces - 
+                    good racers who've disappeared from the official circuit. What hold does Juliette have over them?</p>
                 `,
                 postRaceText: `
-                    <p>Luke's performance was breathtaking - literally taking the mountain curves like a lovesick poet, 
-                    each turn executed with passionate precision. The sunset painted the track in golden hues as he crossed the finish line.</p>
-                    <p>Hours later, at the overlook, Luke's heart nearly stops when he sees a familiar silhouette against the sunset. 
-                    Hadlee turns to face him, her cheeks pink with nervous excitement.</p>
-                    <p>"Surprise," she says softly. "I hope you don't mind that your secret admirer... is me."</p>
+                    <p>Racing in the underground circuit was like entering a different world. The rules were loose, the stakes were high, 
+                    and the atmosphere was charged with desperation and fear.</p>
+                    <p>Stewart managed to maintain his cover while gathering crucial intelligence. Juliette wasn't just winning races - 
+                    she was systematically taking control of the entire racing infrastructure, one competitor at a time.</p>
+                    <p>After the race, a racer approaches him nervously. "I know who you really are, Stewart. 
+                    Please... help us. She's destroying everything we love about racing."</p>
+                    <p>The resistance is forming, but Juliette's web of control runs deeper than Stewart imagined.</p>
                 `
             },
             4: {
@@ -531,7 +570,7 @@ class HadleeKartGame {
         });
         
         // Load saved design preference
-        const savedDesign = localStorage.getItem('hadleeKartDesign') || 'classic';
+        const savedDesign = localStorage.getItem('baileyKartDesign') || 'classic';
         this.selectKartDesign(savedDesign);
     }
     
@@ -540,7 +579,7 @@ class HadleeKartGame {
      */
     selectKartDesign(design) {
         this.selectedKartDesign = design;
-        localStorage.setItem('hadleeKartDesign', design);
+        localStorage.setItem('baileyKartDesign', design);
         
         // Update UI
         document.querySelectorAll('.kart-design').forEach(el => {
@@ -878,11 +917,11 @@ class HadleeKartGame {
      */
     completeStoryRace(position) {
         const storyData = this.getStoryData(this.currentStoryRace);
-        const completedRaces = parseInt(localStorage.getItem('hadleeKartStoryProgress') || '0');
+        const completedRaces = parseInt(localStorage.getItem('baileyKartStoryProgress') || '0');
         
         // Update progress if this is a new completion
         if (this.currentStoryRace > completedRaces) {
-            localStorage.setItem('hadleeKartStoryProgress', this.currentStoryRace.toString());
+            localStorage.setItem('baileyKartStoryProgress', this.currentStoryRace.toString());
         }
         
         // Show story completion dialog
@@ -2796,6 +2835,6 @@ class GameStateManager {
 
 // Initialize game when page loads
 window.addEventListener('load', () => {
-    const game = new HadleeKartGame();
+    const game = new BaileyKartGame();
     window.game = game; // Make game accessible for debugging
 });

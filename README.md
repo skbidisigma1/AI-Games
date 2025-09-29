@@ -4,10 +4,10 @@ A collection of innovative games exploring artificial intelligence, consciousnes
 
 ## Games
 
-### 🏎️ HadleeKart
-*A complete top-down 2D racing game with competitive AI and strategic power-ups*
+### 🏎️ Bailey Kart
+*A complete top-down 2D racing game with competitive AI and strategic power-ups - Season 2*
 
-**Location**: `/HadleeKart/`
+**Location**: `/BaileyKart/`
 
 **Features**:
 - 8-kart racing with 7 unique AI personalities
@@ -17,7 +17,7 @@ A collection of innovative games exploring artificial intelligence, consciousnes
 - Smooth camera system and real-time minimap
 - Professional racing HUD with live statistics
 
-**Play**: Open `HadleeKart/index.html` in a web browser
+**Play**: Open `BaileyKart/index.html` in a web browser
 
 **Gameplay**: Race against intelligent AI opponents through 3 laps of intense competition. Collect and use power-ups strategically while mastering drift mechanics and racing lines. Each AI opponent has unique racing personality, from aggressive to cautious, creating dynamic and unpredictable races.
 
