@@ -16,6 +16,7 @@ class BaileyKartGame {
         this.gameState = 'title'; // 'title', 'trackSelection', 'racing', 'paused', 'complete'
         this.selectedTrack = 'classic';
         this.selectedKartDesign = 'classic'; // Add custom kart design selection
+        this.specialGameMode = null; // 'timeTrial', 'endurance', 'elimination', or null for normal racing
         this.currentLap = 1;
         this.totalLaps = 3;
         this.raceTime = 0;
@@ -150,10 +151,17 @@ class BaileyKartGame {
      */
     backToTitle() {
         this.gameState = 'title';
+        this.specialGameMode = null; // Reset special game mode
         document.getElementById('trackSelection').classList.remove('active');
         document.getElementById('storyModeScreen').classList.remove('active');
         document.getElementById('kartCustomizationScreen').classList.remove('active');
         document.getElementById('titleScreen').classList.add('active');
+        
+        // Reset track selection title
+        const titleElement = document.querySelector('#trackSelection h1');
+        if (titleElement) {
+            titleElement.textContent = 'Choose Your Track';
+        }
     }
     
     /**
@@ -177,26 +185,40 @@ class BaileyKartGame {
     }
     
     /**
-     * Show beta mode notification
+     * Show beta mode - now properly implemented
      */
     showBetaMode(modeType) {
         let modeInfo = {
             timeTrial: {
-                title: "Time Trial Mode [BETA]",
-                description: "Race against the clock to set the fastest lap times! This mode is currently in beta testing."
+                title: "Time Trial Mode",
+                description: "Race against the clock to set the fastest lap times!",
+                gameMode: 'timeTrial'
             },
             endurance: {
-                title: "Endurance Race Mode [BETA]", 
-                description: "Test your stamina in extended races with fuel management and pit stops! This mode is currently in beta testing."
+                title: "Endurance Race Mode", 
+                description: "Test your stamina in extended races with fuel management!",
+                gameMode: 'endurance'
             },
             elimination: {
-                title: "Elimination Mode [BETA]",
-                description: "Survive as the last kart standing in this tension-filled elimination race! This mode is currently in beta testing."
+                title: "Elimination Mode",
+                description: "Survive as the last kart standing in this elimination race!",
+                gameMode: 'elimination'
             }
         };
         
         let mode = modeInfo[modeType] || modeInfo.timeTrial;
-        alert(`${mode.title}\n\n${mode.description}\n\nThese beta modes will be fully implemented in future updates. Stay tuned!`);
+        
+        // Set the special game mode
+        this.specialGameMode = mode.gameMode;
+        
+        // Show track selection with the special mode indicated
+        this.showTrackSelection();
+        
+        // Update the title to show the mode
+        const titleElement = document.querySelector('#trackSelection h1');
+        if (titleElement) {
+            titleElement.textContent = `${mode.title} - Choose Your Track`;
+        }
     }
     
     /**
@@ -468,9 +490,41 @@ class BaileyKartGame {
      */
     selectTrack(trackType) {
         this.selectedTrack = trackType;
+        
+        // Apply special game mode settings if any
+        if (this.specialGameMode) {
+            this.applySpecialGameModeSettings();
+        }
+        
         this.createTrack();
         this.createKarts();
         this.startRace();
+    }
+    
+    /**
+     * Apply settings for special game modes
+     */
+    applySpecialGameModeSettings() {
+        switch (this.specialGameMode) {
+            case 'timeTrial':
+                // Time trial: only player kart, focus on lap times
+                this.totalLaps = 5; // More laps for time trial
+                this.gameMode = 'timeTrial';
+                break;
+            case 'endurance':
+                // Endurance: longer race with more laps
+                this.totalLaps = 10;
+                this.gameMode = 'endurance';
+                break;
+            case 'elimination':
+                // Elimination: normal settings but with elimination mechanics
+                this.totalLaps = 3;
+                this.gameMode = 'elimination';
+                break;
+            default:
+                this.totalLaps = 3;
+                this.gameMode = 'normal';
+        }
     }
     
     /**
@@ -1821,11 +1875,12 @@ class PowerUpSystem {
         this.powerUps = [];
         this.maxPowerUps = 15; // Limit max power-ups on track
         this.powerUpTypes = [
-            { type: 'mushroom', name: '🍄', spawnRate: 0.25 },
-            { type: 'banana', name: '🍌', spawnRate: 0.20 },
+            { type: 'mushroom', name: '🍄', spawnRate: 0.22 },
+            { type: 'banana', name: '🍌', spawnRate: 0.18 },
             { type: 'shell', name: '🔴', spawnRate: 0.15 },
+            { type: 'blueShell', name: '🔵', spawnRate: 0.08 }, // New blue shell targeting first place
             { type: 'lightning', name: '⚡', spawnRate: 0.05 },
-            { type: 'oil', name: '🛢️', spawnRate: 0.15 },
+            { type: 'oil', name: '🛢️', spawnRate: 0.12 },
             { type: 'shield', name: '🛡️', spawnRate: 0.10 },
             { type: 'teleporter', name: '🌀', spawnRate: 0.05 },
             { type: 'star', name: '⭐', spawnRate: 0.05 }
@@ -1911,6 +1966,9 @@ class PowerUpSystem {
             case 'shell':
                 this.fireHomingShell(kart, allKarts);
                 break;
+            case 'blueShell':
+                this.fireBlueShell(kart, allKarts);
+                break;
             case 'lightning':
                 this.castLightning(kart, allKarts);
                 break;
@@ -1966,6 +2024,29 @@ class PowerUpSystem {
         if (nearestKart) {
             // Create homing shell
             this.powerUps.push(new HomingShell(kart.x, kart.y, nearestKart));
+        }
+    }
+    
+    fireBlueShell(kart, allKarts) {
+        // Find kart in first place (lowest lap progress or ahead in current lap)
+        let firstPlaceKart = null;
+        let bestProgress = -1;
+        
+        allKarts.forEach(otherKart => {
+            if (otherKart !== kart) {
+                // Calculate progress: laps completed + progress on current lap
+                const progress = (otherKart.lapNumber - 1) + (otherKart.checkpointIndex / 10.0);
+                
+                if (progress > bestProgress) {
+                    bestProgress = progress;
+                    firstPlaceKart = otherKart;
+                }
+            }
+        });
+        
+        if (firstPlaceKart) {
+            // Create blue shell that targets first place with more damage
+            this.powerUps.push(new BlueShell(kart.x, kart.y, firstPlaceKart));
         }
     }
     
@@ -2148,7 +2229,76 @@ class HomingShell extends PowerUp {
     
     hitTarget() {
         if (this.target) {
+            // Red shell impact - moderate effect
+            this.target.speed *= 0.5; // Slow down target
+            setTimeout(() => {
+                if (this.target) {
+                    this.target.speed = Math.max(this.target.speed * 2, 3); // Restore speed
+                }
+            }, 2000);
         }
+        this.active = false;
+    }
+}
+
+/**
+ * Blue Shell Class - Targets first place with devastating impact
+ */
+class BlueShell extends PowerUp {
+    constructor(x, y, target) {
+        super(x, y, { type: 'blueShell', name: '🔵' });
+        this.target = target;
+        this.speed = 8; // Faster than red shell
+        this.vx = 0;
+        this.vy = 0;
+        this.lifetime = 12; // Longer lifetime than red shell
+        this.explosionRadius = 60; // Larger explosion area
+    }
+    
+    update(deltaTime) {
+        super.update(deltaTime);
+        
+        if (this.target && this.active) {
+            // Home in on target
+            const dx = this.target.x - this.x;
+            const dy = this.target.y - this.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance > 0) {
+                this.vx = (dx / distance) * this.speed;
+                this.vy = (dy / distance) * this.speed;
+                
+                this.x += this.vx * deltaTime * 60;
+                this.y += this.vy * deltaTime * 60;
+                
+                // Check collision with target
+                if (distance < this.radius + this.target.radius) {
+                    this.explode();
+                }
+            }
+        }
+        
+        this.lifetime -= deltaTime;
+        if (this.lifetime <= 0) {
+            this.active = false;
+        }
+    }
+    
+    explode() {
+        if (this.target) {
+            // Blue shell explosion - devastating impact
+            this.target.speed *= 0.2; // Massive slowdown
+            
+            // Create visual explosion effect (spinning effect)
+            this.target.angle += Math.PI; // Spin the kart
+            
+            setTimeout(() => {
+                if (this.target) {
+                    this.target.speed = Math.max(this.target.speed * 5, 2); // Restore speed
+                }
+            }, 3000); // Longer effect duration
+        }
+        this.active = false;
     }
 }
 
