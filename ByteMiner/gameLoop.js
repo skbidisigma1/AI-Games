@@ -125,9 +125,9 @@ class GameLoop {
             this.gameState.totalBytes += bytesEarned;
             this.gameState.stats.bytesEarned += bytesEarned;
             
-            // Show passive income indicator occasionally
+            // Show passive income indicator occasionally (show actual passive rate)
             if (Math.random() < 0.05 && passiveIncome > 0) { // 5% chance per update
-                this.showPassiveIncomeIndicator(bytesEarned);
+                this.showPassiveIncomeIndicator(passiveIncome);
             }
         }
     }
@@ -257,13 +257,13 @@ class GameLoop {
     }
 
     createClickEffect(value) {
-        // Get click button position
-        const button = document.getElementById('mine-button');
-        if (!button) return;
+        // Create click effect relative to the click-effects container
+        const container = document.getElementById('click-effects');
+        if (!container) return;
         
-        const rect = button.getBoundingClientRect();
-        const x = rect.left + rect.width / 2 + (Math.random() - 0.5) * 100;
-        const y = rect.top + rect.height / 2 + (Math.random() - 0.5) * 50;
+        // Use relative positioning within the container
+        const x = (Math.random() - 0.5) * 100; // Random spread around center
+        const y = (Math.random() - 0.5) * 50;  // Random vertical spread
         
         Utils.createClickEffect(x, y, value);
     }
@@ -307,6 +307,11 @@ class GameLoop {
         
         // Update AI assistant display
         this.updateAIDisplay();
+        
+        // Update upgrade panel to reflect affordability changes
+        if (window.game) {
+            window.game.updateUpgradePanel();
+        }
     }
 
     updateMainCounters() {

@@ -109,18 +109,23 @@ const Utils = {
         const effect = document.createElement('div');
         effect.className = 'click-effect';
         effect.textContent = '+' + Utils.formatNumber(value);
+        
+        // Use relative positioning since container is already positioned
+        effect.style.position = 'relative';
         effect.style.left = x + 'px';
         effect.style.top = y + 'px';
         
         const container = document.getElementById('click-effects');
-        container.appendChild(effect);
-        
-        // Remove after animation
-        setTimeout(() => {
-            if (container.contains(effect)) {
-                container.removeChild(effect);
-            }
-        }, 1000);
+        if (container) {
+            container.appendChild(effect);
+            
+            // Remove after animation
+            setTimeout(() => {
+                if (container.contains(effect)) {
+                    container.removeChild(effect);
+                }
+            }, 1000);
+        }
     },
 
     // Debounce function
