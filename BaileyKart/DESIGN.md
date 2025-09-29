@@ -1,8 +1,34 @@
-# HadleeKart Game Design Document
+# Bailey Kart Season 2 Game Design Document
 
 ## 🎯 Game Vision
 
-HadleeKart is a complete top-down 2D racing game that captures the excitement of classic kart racing games like Mario Kart, featuring competitive AI opponents, strategic power-ups, and smooth racing mechanics in a browser-based experience.
+Bailey Kart Season 2 is a complete top-down 2D racing game that captures the excitement of classic kart racing games like Mario Kart, featuring competitive AI opponents, strategic power-ups, and smooth racing mechanics in a browser-based experience. This season introduces Stewart as the heroic protagonist facing off against the cunning antagonist Juliette in an epic story of rivalry and redemption.
+
+## 📚 Season 2 Story and Characters
+
+### Main Characters
+
+#### Stewart - The Protagonist
+- **Role**: Champion racer and defender of fair play
+- **Background**: Veteran of Season 1, known for his integrity and skill
+- **Motivation**: Protect the racing community from Juliette's schemes
+- **Racing Style**: Balanced approach with strategic power-up usage
+
+#### Juliette - The Antagonist  
+- **Role**: Mysterious racing villain with advanced tactics
+- **Background**: Emerged after Season 1 to dominate the racing circuit
+- **Motivation**: Control the racing world through cunning and manipulation
+- **Racing Style**: Aggressive and unpredictable, uses psychological warfare
+
+### Season 2 Narrative Arc
+1. **The Return**: Stewart discovers the racing circuit under new management
+2. **First Contact**: Juliette reveals herself as the new power player
+3. **Escalation**: Underground racing and secret networks exposed
+4. **Confrontation**: Direct challenges and dangerous trap races
+5. **Breaking Point**: Stewart pushed to his absolute limits
+6. **Alliance Building**: Community rallies around Stewart's cause
+7. **Final Showdown**: Epic championship determining the circuit's future
+8. **Resolution**: Restoration of honor and community in racing
 
 ## 🎮 Core Gameplay
 
@@ -209,6 +235,33 @@ Game Loop (60 FPS)
 - Advanced AI machine learning for adaptive difficulty
 - Mobile touch controls optimization
 - Progressive Web App (PWA) capabilities
+
+## 🚧 Beta Game Modes
+
+Season 2 introduces experimental game modes that expand beyond traditional racing:
+
+### Time Trial Mode [BETA]
+- **Objective**: Set the fastest lap time on any track
+- **Features**: Ghost racer from previous best time, precision timing system
+- **Progression**: Unlock new time trial challenges and earn time-based achievements
+- **Beta Status**: Testing optimal difficulty curves and reward systems
+
+### Endurance Race Mode [BETA]  
+- **Objective**: Survive as long as possible in continuous racing
+- **Features**: Fuel management, pit stops, increasing AI difficulty over time
+- **Progression**: Distance-based scoring, upgrade unlocks for longer runs
+- **Beta Status**: Balancing fuel consumption rates and AI scaling
+
+### Elimination Mode [BETA]
+- **Objective**: Avoid being last place as karts are eliminated each lap
+- **Features**: Tension-building format, strategic power-up usage crucial
+- **Progression**: Survival-based rewards, unlock elimination-specific power-ups
+- **Beta Status**: Fine-tuning elimination timing and power-up balance
+
+### Future Beta Modes (Planned)
+- **Team Racing**: 2v2v2v2 team-based competition
+- **Battle Mode**: Arena combat with kart-based weaponry
+- **Track Builder**: User-generated content creation tools
 
 ---
 

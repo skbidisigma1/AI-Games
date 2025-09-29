@@ -1,10 +1,10 @@
-// HadleeKart - Complete 2D Racing Game
+// Bailey Kart Season 2 - Complete 2D Racing Game
 // Modular architecture for extensibility and maintainability
 
 /**
  * Main Game Class - Orchestrates all game systems
  */
-class HadleeKartGame {
+class BaileyKartGame {
     constructor() {
         // Canvas setup
         this.canvas = document.getElementById('gameCanvas');
@@ -167,7 +167,7 @@ class HadleeKartGame {
      * Update story progress and unlock races
      */
     updateStoryProgress() {
-        const completedRaces = parseInt(localStorage.getItem('hadleeKartStoryProgress') || '0');
+        const completedRaces = parseInt(localStorage.getItem('baileyKartStoryProgress') || '0');
         
         document.querySelectorAll('.story-race').forEach((raceEl, index) => {
             const raceNum = index + 1;
@@ -226,26 +226,26 @@ class HadleeKartGame {
     getStoryData(raceNumber) {
         const stories = {
             1: {
-                title: "Race 1: Hearts Racing",
+                title: "Race 1: The Return",
                 track: "classic",
                 preRaceText: `
-                    <p><strong>Luke's Romantic Awakening</strong></p>
-                    <p>Luke's heart pounds as he adjusts his racing gloves, stealing glances at Hadlee in her stunning pink and gold kart. 
-                    The way the sunlight catches her hair as she laughs with other racers makes his chest tight with longing.</p>
-                    <p>"This is it," he whispers to himself, gripping the wheel with determination born of love, not competition. 
-                    "Time to show her what I'm made of. Maybe if I win this race, I'll finally work up the courage to ask her out..."</p>
-                    <p>The other racers notice Luke's focused energy - there's something different about him today. 
-                    His usual shy demeanor has been replaced by quiet confidence. Love, it seems, has given him wings.</p>
-                    <p>As the engines rev, Luke catches Hadlee's eye across the starting line. She gives him an encouraging smile 
-                    that sends butterflies dancing through his stomach. "Win this one for me, Luke!" she calls out playfully.</p>
+                    <p><strong>Stewart's Return</strong></p>
+                    <p>Stewart arrives at the racing circuit after a long break, expecting to find the familiar faces and fair competition he left behind. 
+                    Instead, he discovers the atmosphere has changed completely - the once-welcoming community now seems tense and divided.</p>
+                    <p>"Things aren't the same around here," warns Marcus, an old racing friend. "Some new racer named Juliette showed up a few months ago. 
+                    She's been... changing things. Winning races through tactics that push the boundaries of fair play."</p>
+                    <p>Stewart grips his steering wheel tighter. He built his reputation on integrity and skill, values that seem under threat. 
+                    As he prepares for his first race back, he's determined to show that honorable racing can still prevail.</p>
+                    <p>"Time to remind everyone what true sportsmanship looks like," Stewart mutters, firing up his engine.</p>
                 `,
                 postRaceText: `
-                    <p>Luke's driving was poetry in motion - smooth, elegant turns that showcased not aggression, but artistry. 
-                    The crowd cheered as he executed perfect overtakes with grace and skill.</p>
-                    <p>As he climbs out of his kart, slightly breathless from the adrenaline, Hadlee approaches with a warm smile. 
-                    "That was incredible, Luke! I had no idea you could drive like that," she says, her cheeks flushed with excitement.</p>
-                    <p>Their eyes meet, and for a moment, the world seems to pause. Luke feels his courage building - maybe tonight 
-                    is the night he finally tells her how he feels...</p>
+                    <p>Stewart's driving was flawless - demonstrating the precision and honor that made him a champion. 
+                    His clean overtakes and respectful racing style drew cheers from longtime fans who remembered the golden days.</p>
+                    <p>As he exits his kart, a slow clap echoes across the track. A figure in a sleek black and purple racing suit approaches - 
+                    Juliette, with an enigmatic smile that doesn't reach her calculating eyes.</p>
+                    <p>"Impressive, Stewart. I've heard so much about the legendary 'honorable champion.' 
+                    We should race together sometime... I have so much to teach you about modern racing."</p>
+                    <p>Stewart feels a chill run down his spine. This was just the beginning.</p>
                 `
             },
             2: {
@@ -531,7 +531,7 @@ class HadleeKartGame {
         });
         
         // Load saved design preference
-        const savedDesign = localStorage.getItem('hadleeKartDesign') || 'classic';
+        const savedDesign = localStorage.getItem('baileyKartDesign') || 'classic';
         this.selectKartDesign(savedDesign);
     }
     
@@ -540,7 +540,7 @@ class HadleeKartGame {
      */
     selectKartDesign(design) {
         this.selectedKartDesign = design;
-        localStorage.setItem('hadleeKartDesign', design);
+        localStorage.setItem('baileyKartDesign', design);
         
         // Update UI
         document.querySelectorAll('.kart-design').forEach(el => {
@@ -878,11 +878,11 @@ class HadleeKartGame {
      */
     completeStoryRace(position) {
         const storyData = this.getStoryData(this.currentStoryRace);
-        const completedRaces = parseInt(localStorage.getItem('hadleeKartStoryProgress') || '0');
+        const completedRaces = parseInt(localStorage.getItem('baileyKartStoryProgress') || '0');
         
         // Update progress if this is a new completion
         if (this.currentStoryRace > completedRaces) {
-            localStorage.setItem('hadleeKartStoryProgress', this.currentStoryRace.toString());
+            localStorage.setItem('baileyKartStoryProgress', this.currentStoryRace.toString());
         }
         
         // Show story completion dialog
@@ -2796,6 +2796,6 @@ class GameStateManager {
 
 // Initialize game when page loads
 window.addEventListener('load', () => {
-    const game = new HadleeKartGame();
+    const game = new BaileyKartGame();
     window.game = game; // Make game accessible for debugging
 });

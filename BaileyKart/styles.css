@@ -155,6 +155,40 @@ body {
     transform: translateY(-1px);
 }
 
+.beta-button {
+    background: linear-gradient(45deg, #ff6b6b, #e55353) !important;
+    border: 2px solid #ffd93d !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.beta-button:hover {
+    background: linear-gradient(45deg, #e55353, #d63031) !important;
+    border: 2px solid #fdcb6e !important;
+}
+
+.beta-button::before {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.5s;
+}
+
+.beta-button:hover::before {
+    left: 100%;
+}
+
+.beta-modes {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 15px;
+    backdrop-filter: blur(10px);
+}
+
 /* Game Screen */
 #gameScreen {
     justify-content: flex-start;

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HadleeKart - Racing Adventure</title>
+    <title>Bailey Kart - Racing Adventure Season 2</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -15,8 +15,8 @@
             <!-- Title Screen -->
             <div id="titleScreen" class="screen active">
                 <div class="title-content">
-                    <h1 class="racing-title">HadleeKart</h1>
-                    <h2 class="subtitle">High-Speed Racing Adventure</h2>
+                    <h1 class="racing-title">Bailey Kart</h1>
+                    <h2 class="subtitle">Season 2 - Racing Adventure</h2>
                     <p class="game-description">
                         Race against 7 AI opponents in thrilling kart racing action!<br>
                         🏎️ Use power-ups strategically • 🍄 Speed boost mushrooms<br>
@@ -31,6 +31,12 @@
                     <button id="startRace" class="racing-button">SELECT TRACK!</button>
                     <button id="kartCustomization" class="racing-button" style="margin-top: 15px;">CUSTOMIZE KART</button>
                     <button id="storyMode" class="racing-button" style="margin-top: 15px;">STORY MODE</button>
+                    <div class="beta-modes" style="margin-top: 25px; border-top: 2px solid #ff6b6b; padding-top: 15px;">
+                        <h3 style="color: #ff6b6b; margin: 0 0 10px 0;">🚧 BETA MODES 🚧</h3>
+                        <button id="timeTrialMode" class="racing-button beta-button" style="margin-top: 10px;">TIME TRIAL [BETA]</button>
+                        <button id="enduranceMode" class="racing-button beta-button" style="margin-top: 10px;">ENDURANCE RACE [BETA]</button>
+                        <button id="eliminationMode" class="racing-button beta-button" style="margin-top: 10px;">ELIMINATION MODE [BETA]</button>
+                    </div>
                 </div>
             </div>
             
@@ -38,51 +44,52 @@
             <div id="storyModeScreen" class="screen">
                 <div class="story-content">
                     <h1 class="racing-title">Story Mode</h1>
-                    <h2 class="story-subtitle">Luke's Racing Journey</h2>
+                    <h2 class="story-subtitle">Stewart's Season 2 Journey</h2>
                     <div class="story-intro">
-                        <p>Follow Luke's heartwarming journey from shy racer to confident lover as romance, passion, and sweet moments 
-                        unfold on the racing circuit. A tender tale of first love, growing intimacy, and the joy of finding your soulmate. 
-                        <strong>A beautiful love story for all ages.</strong></p>
+                        <p>Join Stewart in Season 2 as he faces his greatest challenge yet - racing against the mysterious and ruthless 
+                        Juliette, who has taken over the racing circuit with her advanced tactics and cunning strategies. Stewart must 
+                        master new tracks and discover hidden racing techniques to reclaim his title and protect the racing community from Juliette's schemes. 
+                        <strong>An epic adventure of rivalry, determination, and triumph.</strong></p>
                     </div>
                     <div class="story-races">
                         <div class="story-race" data-race="1">
-                            <h3>Race 1: Hearts Racing</h3>
-                            <p>Luke's first racing experience with butterflies, not from nerves but from love at first sight.</p>
+                            <h3>Race 1: The Return</h3>
+                            <p>Stewart returns to find the racing circuit under Juliette's control. Time to reclaim what's rightfully his.</p>
                             <button class="story-race-button">START RACE</button>
                         </div>
                         <div class="story-race locked" data-race="2">
-                            <h3>Race 2: Love Letters and Fast Cars</h3>
-                            <p>Secret admirer notes and the thrill of romantic mystery...</p>
+                            <h3>Race 2: Juliette's Challenge</h3>
+                            <p>The mysterious antagonist reveals herself and challenges Stewart to a direct confrontation...</p>
                             <button class="story-race-button">LOCKED</button>
                         </div>
                         <div class="story-race locked" data-race="3">
-                            <h3>Race 3: Mountain Top Romance</h3>
-                            <p>A sunset rendezvous that changes everything for Luke and his secret admirer...</p>
+                            <h3>Race 3: Underground Circuits</h3>
+                            <p>Stewart discovers Juliette's secret underground racing network and must infiltrate it...</p>
                             <button class="story-race-button">LOCKED</button>
                         </div>
                         <div class="story-race locked" data-race="4">
-                            <h3>Race 4: First Kiss Under City Lights</h3>
-                            <p>Urban racing leads to a magical first kiss that neither will ever forget...</p>
+                            <h3>Race 4: The Trap</h3>
+                            <p>Juliette lures Stewart into a dangerous race designed to end his career once and for all...</p>
                             <button class="story-race-button">LOCKED</button>
                         </div>
                         <div class="story-race locked" data-race="5">
-                            <h3>Race 5: Desert Heat and Passion</h3>
-                            <p>A romantic weekend getaway where things get steamy under the desert stars...</p>
+                            <h3>Race 5: Breaking Point</h3>
+                            <p>Stewart pushes his limits in a brutal desert race where only survival matters...</p>
                             <button class="story-race-button">LOCKED</button>
                         </div>
                         <div class="story-race locked" data-race="6">
-                            <h3>Race 6: Forest of Love</h3>
-                            <p>Promise rings and declarations of forever in an enchanted woodland setting...</p>
+                            <h3>Race 6: Allies and Enemies</h3>
+                            <p>Stewart must choose his allies carefully as Juliette turns the racing community against him...</p>
                             <button class="story-race-button">LOCKED</button>
                         </div>
                         <div class="story-race locked" data-race="7">
-                            <h3>Race 7: The Big Proposal</h3>
-                            <p>Championship racing leads to the most romantic proposal in sports history...</p>
+                            <h3>Race 7: The Final Showdown</h3>
+                            <p>Stewart faces Juliette in an epic championship race that will determine the fate of racing...</p>
                             <button class="story-race-button">LOCKED</button>
                         </div>
                         <div class="story-race locked" data-race="8">
-                            <h3>Race 8: Honeymoon Grand Prix</h3>
-                            <p>Newlyweds racing together toward their happily ever after...</p>
+                            <h3>Race 8: Victory and Redemption</h3>
+                            <p>The aftermath of Stewart's triumph and the rebuilding of the racing community...</p>
                             <button class="story-race-button">LOCKED</button>
                         </div>
                     </div>
@@ -228,12 +235,12 @@
                         </div>
                     </div>
                     <div class="lore-section">
-                        <h3>🏁 Luke's Racing Legend</h3>
-                        <p>Young Luke has been secretly racing to impress someone special... 
-                        He claims it's all about "Hadlee's racing skills," but everyone knows 
-                        he's actually trying to win the heart of <em>Eliza</em>, who goes by 
-                        Hadlee in the racing circuit. His dedication to kart racing is really 
-                        just a cover for his romantic pursuit!</p>
+                        <h3>🏁 Stewart's Racing Legend - Season 2</h3>
+                        <p>After dominating Season 1, champion racer Stewart faces his greatest challenge yet. 
+                        The mysterious Juliette has emerged as a formidable antagonist, using cunning tactics and 
+                        advanced racing techniques to take control of the racing circuit. Stewart must master new 
+                        skills and forge new alliances to reclaim his title and protect the racing community from 
+                        Juliette's schemes. The stage is set for an epic showdown!</p>
                     </div>
                     <button id="backToTitle" class="racing-button secondary">← BACK TO MENU</button>
                 </div>

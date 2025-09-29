@@ -1,6 +1,6 @@
-# HadleeKart - High-Speed Racing Adventure
+# Bailey Kart - Season 2 Racing Adventure
 
-A complete top-down 2D racing game built with HTML5 Canvas and vanilla JavaScript, featuring competitive AI, interactive power-ups, and smooth racing mechanics.
+A complete top-down 2D racing game built with HTML5 Canvas and vanilla JavaScript, featuring competitive AI, interactive power-ups, and smooth racing mechanics. Season 2 introduces Stewart as the protagonist facing off against the cunning antagonist Juliette in an epic racing showdown.
 
 ## 🎮 Game Features
 
@@ -41,7 +41,7 @@ A complete top-down 2D racing game built with HTML5 Canvas and vanilla JavaScrip
 The game is built with a clean, modular architecture for easy extension:
 
 ```
-HadleeKartGame (Main orchestrator)
+BaileyKartGame (Main orchestrator)
 ├── InputHandler (Keyboard input management)
 ├── PhysicsEngine (Movement and collision physics)
 ├── AISystem (AI behavior and pathfinding)
@@ -123,4 +123,4 @@ Requires JavaScript enabled and HTML5 Canvas support.
 
 ---
 
-**HadleeKart** - Experience the thrill of competitive kart racing with intelligent AI opponents and strategic power-up gameplay!
+**Bailey Kart Season 2** - Experience the thrill of competitive kart racing with intelligent AI opponents, strategic power-up gameplay, and an epic story of rivalry between Stewart and Juliette!
