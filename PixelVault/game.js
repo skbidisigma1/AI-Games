@@ -4,6 +4,17 @@ class PixelVaultGame {
         this.ctx = this.canvas.getContext('2d');
         this.gameState = 'title'; // 'title', 'playing', 'levelComplete', 'gameComplete', 'gameOver'
         
+        // Camera system
+        this.camera = {
+            x: 0,
+            y: 0,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            targetX: 0,
+            targetY: 0,
+            smoothing: 0.1
+        };
+        
         // Game settings
         this.GRAVITY = 0.6;
         this.FRICTION = 0.85;
@@ -19,12 +30,13 @@ class PixelVaultGame {
         
         // Game state
         this.currentLevel = 1;
-        this.maxLevel = 12;
+        this.maxLevel = 16; // Increased for new levels
         this.keys = {};
         this.particles = [];
         this.dashCooldown = 0;
         this.coyoteTime = 0;
         this.jumpBuffer = 0;
+        this.devMenuOpen = false;
         
         // Initialize player
         this.player = {
@@ -57,9 +69,27 @@ class PixelVaultGame {
     }
     
     init() {
+        this.setupCanvas();
         this.setupEventListeners();
         this.loadLevel(this.currentLevel);
         this.gameLoop();
+    }
+    
+    setupCanvas() {
+        // Make canvas fullscreen
+        this.resizeCanvas();
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            this.resizeCanvas();
+        });
+    }
+    
+    resizeCanvas() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.camera.width = window.innerWidth;
+        this.camera.height = window.innerHeight;
     }
     
     setupEventListeners() {
@@ -67,6 +97,51 @@ class PixelVaultGame {
         document.addEventListener('keydown', (e) => {
             this.keys[e.key.toLowerCase()] = true;
             this.keys[e.code.toLowerCase()] = true;
+            
+            // Dev menu toggle with tilda key
+            if (e.key === '`' || e.key === '~') {
+                this.toggleDevMenu();
+                e.preventDefault();
+            }
+            
+            // Dev menu number keys for level warping
+            if (this.devMenuOpen && this.gameState === 'playing') {
+                const num = parseInt(e.key);
+                if (num >= 1 && num <= 9) {
+                    this.warpToLevel(num);
+                    e.preventDefault();
+                }
+                // Handle double digit levels with specific key combinations
+                if (e.key === '0') {
+                    this.warpToLevel(10);
+                    e.preventDefault();
+                }
+                // For levels 11-16, use special keys
+                if (e.key === 'q') {
+                    this.warpToLevel(11);
+                    e.preventDefault();
+                }
+                if (e.key === 'w') {
+                    this.warpToLevel(12);
+                    e.preventDefault();
+                }
+                if (e.key === 'e') {
+                    this.warpToLevel(13);
+                    e.preventDefault();
+                }
+                if (e.key === 'r') {
+                    this.warpToLevel(14);
+                    e.preventDefault();
+                }
+                if (e.key === 't') {
+                    this.warpToLevel(15);
+                    e.preventDefault();
+                }
+                if (e.key === 'y') {
+                    this.warpToLevel(16);
+                    e.preventDefault();
+                }
+            }
             
             // Prevent default for game keys
             if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
@@ -110,6 +185,18 @@ class PixelVaultGame {
         });
     }
     
+    toggleDevMenu() {
+        if (this.gameState === 'playing') {
+            this.devMenuOpen = !this.devMenuOpen;
+        }
+    }
+    
+    warpToLevel(level) {
+        this.currentLevel = level;
+        this.loadLevel(level);
+        this.devMenuOpen = false;
+    }
+    
     startGame() {
         this.gameState = 'playing';
         document.getElementById('titleScreen').classList.remove('active');
@@ -141,7 +228,7 @@ class PixelVaultGame {
         this.player.trail = [];
         
         // Load the specific level
-        if (levelNum >= 1 && levelNum <= 12) {
+        if (levelNum >= 1 && levelNum <= 16) {
             this[`loadLevel${levelNum}`]();
         }
         
@@ -492,6 +579,191 @@ class PixelVaultGame {
         this.exit = {x: 720, y: -40, width: 40, height: 80};
     }
     
+    loadLevel13() {
+        // Introducing dash-through platforms
+        this.blocks = [
+            {x: 0, y: 1160, width: 1600, height: 40, type: 'solid', color: '#0066cc'},
+            {x: 0, y: 0, width: 20, height: 1200, type: 'solid', color: '#0066cc'},
+            {x: 1580, y: 0, width: 20, height: 1200, type: 'solid', color: '#0066cc'},
+            
+            // Starting area
+            {x: 100, y: 1080, width: 200, height: 20, type: 'solid', color: '#0066cc'},
+            
+            // Dash-through barriers
+            {x: 400, y: 900, width: 20, height: 200, type: 'dashthrough', color: '#00cc00'},
+            {x: 600, y: 800, width: 20, height: 300, type: 'dashthrough', color: '#00cc00'},
+            {x: 800, y: 700, width: 20, height: 400, type: 'dashthrough', color: '#00cc00'},
+            
+            // Platforms to land on
+            {x: 450, y: 880, width: 100, height: 20, type: 'solid', color: '#0066cc'},
+            {x: 650, y: 780, width: 100, height: 20, type: 'solid', color: '#0066cc'},
+            {x: 850, y: 680, width: 100, height: 20, type: 'solid', color: '#0066cc'},
+            
+            // Exit area
+            {x: 1200, y: 600, width: 200, height: 20, type: 'solid', color: '#0066cc'}
+        ];
+        
+        this.fragments = [
+            {x: 150, y: 1040, collected: false},
+            {x: 480, y: 840, collected: false},
+            {x: 680, y: 740, collected: false},
+            {x: 880, y: 640, collected: false},
+            {x: 1250, y: 560, collected: false}
+        ];
+        
+        this.exit = {x: 1300, y: 520, width: 40, height: 80};
+    }
+    
+    loadLevel14() {
+        // Vertical dash challenges
+        this.blocks = [
+            {x: 0, y: 1160, width: 1600, height: 40, type: 'solid', color: '#0066cc'},
+            {x: 0, y: 0, width: 20, height: 1200, type: 'solid', color: '#0066cc'},
+            {x: 1580, y: 0, width: 20, height: 1200, type: 'solid', color: '#0066cc'},
+            
+            // Starting platform
+            {x: 100, y: 1080, width: 150, height: 20, type: 'solid', color: '#0066cc'},
+            
+            // Vertical dash-through ceiling
+            {x: 300, y: 950, width: 200, height: 20, type: 'dashthrough', color: '#00cc00'},
+            {x: 300, y: 850, width: 200, height: 20, type: 'solid', color: '#0066cc'},
+            
+            // More vertical challenges
+            {x: 600, y: 750, width: 200, height: 20, type: 'dashthrough', color: '#00cc00'},
+            {x: 600, y: 650, width: 200, height: 20, type: 'solid', color: '#0066cc'},
+            
+            {x: 900, y: 550, width: 200, height: 20, type: 'dashthrough', color: '#00cc00'},
+            {x: 900, y: 450, width: 200, height: 20, type: 'solid', color: '#0066cc'},
+            
+            // Final area
+            {x: 1200, y: 300, width: 300, height: 20, type: 'solid', color: '#0066cc'}
+        ];
+        
+        this.fragments = [
+            {x: 150, y: 1040, collected: false},
+            {x: 380, y: 810, collected: false},
+            {x: 680, y: 610, collected: false},
+            {x: 980, y: 410, collected: false},
+            {x: 1350, y: 260, collected: false}
+        ];
+        
+        this.exit = {x: 1400, y: 220, width: 40, height: 80};
+    }
+    
+    loadLevel15() {
+        // Complex maze with all mechanics
+        this.blocks = [
+            {x: 0, y: 1160, width: 1600, height: 40, type: 'solid', color: '#0066cc'},
+            {x: 0, y: 0, width: 20, height: 1200, type: 'solid', color: '#0066cc'},
+            {x: 1580, y: 0, width: 20, height: 1200, type: 'solid', color: '#0066cc'},
+            
+            // Complex maze structure
+            {x: 100, y: 1080, width: 100, height: 20, type: 'solid', color: '#0066cc'},
+            
+            // First section - dash through barriers
+            {x: 250, y: 900, width: 20, height: 180, type: 'dashthrough', color: '#00cc00'},
+            {x: 300, y: 950, width: 150, height: 20, type: 'solid', color: '#0066cc'},
+            {x: 500, y: 850, width: 20, height: 130, type: 'solid', color: '#0066cc'},
+            
+            // Second section - corrupted and moving
+            {x: 600, y: 800, width: 100, height: 20, type: 'corrupted', color: '#cc00cc', timer: 0, visible: true},
+            {x: 750, y: 700, width: 20, height: 100, type: 'dashthrough', color: '#00cc00'},
+            {x: 800, y: 750, width: 150, height: 20, type: 'solid', color: '#0066cc'},
+            
+            // Third section - wall jumping with dash-through
+            {x: 1000, y: 650, width: 20, height: 100, type: 'solid', color: '#0066cc'},
+            {x: 1100, y: 550, width: 20, height: 200, type: 'dashthrough', color: '#00cc00'},
+            {x: 1200, y: 450, width: 20, height: 300, type: 'solid', color: '#0066cc'},
+            
+            // Final area
+            {x: 1300, y: 300, width: 200, height: 20, type: 'solid', color: '#0066cc'}
+        ];
+        
+        this.movingPlatforms = [
+            {x: 550, y: 650, width: 80, height: 20, vx: 0, vy: 2, minX: 550, maxX: 550, minY: 600, maxY: 750, type: 'vertical'}
+        ];
+        
+        this.hazards = [
+            {x: 400, y: 800, width: 20, height: 180, type: 'energy', color: '#ff0000'},
+            {x: 850, y: 600, width: 20, height: 150, type: 'energy', color: '#ff0000'}
+        ];
+        
+        this.fragments = [
+            {x: 130, y: 1040, collected: false},
+            {x: 320, y: 910, collected: false},
+            {x: 630, y: 760, collected: false},
+            {x: 580, y: 610, collected: false},
+            {x: 1050, y: 510, collected: false},
+            {x: 1350, y: 260, collected: false}
+        ];
+        
+        this.exit = {x: 1420, y: 220, width: 40, height: 80};
+    }
+    
+    loadLevel16() {
+        // Ultimate challenge - Master level
+        this.blocks = [
+            {x: 0, y: 1160, width: 1600, height: 40, type: 'solid', color: '#0066cc'},
+            {x: 0, y: 0, width: 20, height: 1200, type: 'solid', color: '#0066cc'},
+            {x: 1580, y: 0, width: 20, height: 1200, type: 'solid', color: '#0066cc'},
+            
+            // Starting area
+            {x: 50, y: 1080, width: 100, height: 20, type: 'solid', color: '#0066cc'},
+            
+            // Section 1: Precision dash-through timing
+            {x: 200, y: 1000, width: 20, height: 80, type: 'dashthrough', color: '#00cc00'},
+            {x: 250, y: 980, width: 80, height: 20, type: 'corrupted', color: '#cc00cc', timer: 0, visible: true},
+            {x: 380, y: 920, width: 20, height: 80, type: 'dashthrough', color: '#00cc00'},
+            
+            // Section 2: Vertical dash maze
+            {x: 450, y: 850, width: 100, height: 20, type: 'solid', color: '#0066cc'},
+            {x: 500, y: 750, width: 20, height: 100, type: 'dashthrough', color: '#00cc00'},
+            {x: 450, y: 650, width: 100, height: 20, type: 'solid', color: '#0066cc'},
+            {x: 500, y: 550, width: 20, height: 100, type: 'dashthrough', color: '#00cc00'},
+            {x: 450, y: 450, width: 100, height: 20, type: 'solid', color: '#0066cc'},
+            
+            // Section 3: Complex wall jumping with hazards
+            {x: 650, y: 400, width: 20, height: 50, type: 'solid', color: '#0066cc'},
+            {x: 750, y: 300, width: 20, height: 150, type: 'solid', color: '#0066cc'},
+            {x: 850, y: 200, width: 20, height: 250, type: 'dashthrough', color: '#00cc00'},
+            {x: 950, y: 100, width: 20, height: 350, type: 'solid', color: '#0066cc'},
+            
+            // Section 4: Moving platform gauntlet
+            {x: 1200, y: 300, width: 100, height: 20, type: 'solid', color: '#0066cc'},
+            {x: 1400, y: 150, width: 150, height: 20, type: 'solid', color: '#0066cc'},
+            
+            // Final dash-through ceiling to exit
+            {x: 1300, y: 50, width: 200, height: 20, type: 'dashthrough', color: '#00cc00'},
+            {x: 1350, y: 0, width: 100, height: 20, type: 'solid', color: '#0066cc'}
+        ];
+        
+        this.movingPlatforms = [
+            {x: 600, y: 350, width: 40, height: 20, vx: 2, vy: 0, minX: 600, maxX: 700, minY: 350, maxY: 350, type: 'horizontal'},
+            {x: 1050, y: 250, width: 40, height: 20, vx: 0, vy: 2, minX: 1050, maxX: 1050, minY: 200, maxY: 350, type: 'vertical'},
+            {x: 1100, y: 200, width: 40, height: 20, vx: -1.5, vy: 0, minX: 1100, maxX: 1180, minY: 200, maxY: 200, type: 'horizontal'}
+        ];
+        
+        this.hazards = [
+            {x: 320, y: 800, width: 20, height: 180, type: 'energy', color: '#ff0000'},
+            {x: 600, y: 500, width: 20, height: 200, type: 'energy', color: '#ff0000'},
+            {x: 800, y: 150, width: 20, height: 250, type: 'energy', color: '#ff0000'},
+            {x: 1150, y: 100, width: 20, height: 200, type: 'energy', color: '#ff0000'}
+        ];
+        
+        this.fragments = [
+            {x: 80, y: 1040, collected: false},
+            {x: 270, y: 940, collected: false},
+            {x: 410, y: 880, collected: false},
+            {x: 480, y: 410, collected: false},
+            {x: 620, y: 310, collected: false},
+            {x: 1070, y: 210, collected: false},
+            {x: 1250, y: 260, collected: false},
+            {x: 1380, y: -30, collected: false}
+        ];
+        
+        this.exit = {x: 1400, y: -40, width: 40, height: 80};
+    }
+    
     gameLoop() {
         this.update();
         this.render();
@@ -502,6 +774,7 @@ class PixelVaultGame {
         if (this.gameState !== 'playing') return;
         
         this.updatePlayer();
+        this.updateCamera();
         this.updateMovingPlatforms();
         this.updateCorruptedBlocks();
         this.updateParticles();
@@ -515,6 +788,23 @@ class PixelVaultGame {
         if (this.jumpBuffer > 0) this.jumpBuffer--;
     }
     
+    updateCamera() {
+        // Set camera target to follow player
+        this.camera.targetX = this.player.x + this.player.width / 2 - this.camera.width / 2;
+        this.camera.targetY = this.player.y + this.player.height / 2 - this.camera.height / 2;
+        
+        // Smooth camera movement
+        this.camera.x += (this.camera.targetX - this.camera.x) * this.camera.smoothing;
+        this.camera.y += (this.camera.targetY - this.camera.y) * this.camera.smoothing;
+        
+        // Keep camera within level bounds (if level has bounds)
+        const levelWidth = 1600; // Make levels wider
+        const levelHeight = 1200; // Make levels taller
+        
+        this.camera.x = Math.max(0, Math.min(this.camera.x, levelWidth - this.camera.width));
+        this.camera.y = Math.max(0, Math.min(this.camera.y, levelHeight - this.camera.height));
+    }
+    
     updatePlayer() {
         const player = this.player;
         
@@ -523,11 +813,28 @@ class PixelVaultGame {
         if (this.keys['a'] || this.keys['arrowleft']) moveX = -1;
         if (this.keys['d'] || this.keys['arrowright']) moveX = 1;
         
-        // Handle dashing
+        // Handle dashing (horizontal and vertical)
         if ((this.keys['shift'] || this.keys['shiftleft'] || this.keys['shiftright']) && 
             this.dashCooldown === 0 && player.dashesRemaining > 0) {
+            
+            let dashX = 0, dashY = 0;
+            
+            // Horizontal dash
             if (moveX !== 0) {
-                player.vx = moveX * this.DASH_FORCE;
+                dashX = moveX;
+            }
+            
+            // Vertical dash
+            if (this.keys['w'] || this.keys['arrowup']) {
+                dashY = -1;
+            } else if (this.keys['s'] || this.keys['arrowdown']) {
+                dashY = 1;
+            }
+            
+            // Execute dash if any direction is pressed
+            if (dashX !== 0 || dashY !== 0) {
+                player.vx = dashX * this.DASH_FORCE;
+                player.vy = dashY * this.DASH_FORCE;
                 player.dashesRemaining--;
                 this.dashCooldown = 20;
                 this.createDashParticles();
@@ -682,16 +989,16 @@ class PixelVaultGame {
             }
         });
         
-        // Boundary checks
+        // Boundary checks (expanded for larger levels)
         if (player.x < 20) {
             player.x = 20;
             player.vx = 0;
         }
-        if (player.x + player.width > 780) {
-            player.x = 780 - player.width;
+        if (player.x + player.width > 1580) { // Wider level boundary
+            player.x = 1580 - player.width;
             player.vx = 0;
         }
-        if (player.y > 600) {
+        if (player.y > 1200) { // Taller level boundary
             this.gameOver();
         }
     }
@@ -706,6 +1013,11 @@ class PixelVaultGame {
     handleBlockCollision(block) {
         const player = this.player;
         const wasOnMovingPlatform = this.movingPlatforms.includes(block);
+        
+        // Check if this is a dash-through platform and player is dashing
+        if (block.type === 'dashthrough' && this.dashCooldown > 10) {
+            return; // Player can pass through while dashing
+        }
         
         // Calculate collision sides
         const overlapLeft = (player.x + player.width) - block.x;
@@ -884,34 +1196,34 @@ class PixelVaultGame {
         const ctx = this.ctx;
         
         // Clear canvas with gradient background
-        const gradient = ctx.createLinearGradient(0, 0, 0, 600);
+        const gradient = ctx.createLinearGradient(0, 0, 0, this.camera.height);
         gradient.addColorStop(0, '#001122');
         gradient.addColorStop(1, '#000000');
         ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 800, 600);
+        ctx.fillRect(0, 0, this.camera.width, this.camera.height);
         
         if (this.gameState !== 'playing') return;
         
-        // Render blocks
+        // Apply camera transform
+        ctx.save();
+        ctx.translate(-this.camera.x, -this.camera.y);
+        
+        // Render game objects
         this.renderBlocks();
-        
-        // Render moving platforms
         this.renderMovingPlatforms();
-        
-        // Render hazards
         this.renderHazards();
-        
-        // Render fragments
         this.renderFragments();
-        
-        // Render exit
         this.renderExit();
-        
-        // Render player
         this.renderPlayer();
-        
-        // Render particles
         this.renderParticles();
+        
+        // Restore transform for UI elements
+        ctx.restore();
+        
+        // Render dev menu
+        if (this.devMenuOpen) {
+            this.renderDevMenu();
+        }
     }
     
     renderBlocks() {
@@ -928,7 +1240,7 @@ class PixelVaultGame {
             this.ctx.fillStyle = block.color;
             this.ctx.fillRect(block.x, block.y, block.width, block.height);
             
-            // Add glow effect for corrupted blocks
+            // Add glow effect for special blocks
             if (block.type === 'corrupted') {
                 this.ctx.shadowColor = block.color;
                 this.ctx.shadowBlur = 10;
@@ -936,6 +1248,20 @@ class PixelVaultGame {
                 this.ctx.lineWidth = 2;
                 this.ctx.strokeRect(block.x, block.y, block.width, block.height);
                 this.ctx.shadowBlur = 0;
+            } else if (block.type === 'dashthrough') {
+                this.ctx.shadowColor = block.color;
+                this.ctx.shadowBlur = 8;
+                this.ctx.strokeStyle = block.color;
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(block.x, block.y, block.width, block.height);
+                this.ctx.shadowBlur = 0;
+                
+                // Add dash-through indicator (dotted pattern)
+                this.ctx.strokeStyle = '#ffffff';
+                this.ctx.lineWidth = 1;
+                this.ctx.setLineDash([3, 3]);
+                this.ctx.strokeRect(block.x + 2, block.y + 2, block.width - 4, block.height - 4);
+                this.ctx.setLineDash([]);
             } else {
                 // Normal block outline
                 this.ctx.strokeStyle = '#004488';
@@ -1063,6 +1389,275 @@ class PixelVaultGame {
             );
         });
         this.ctx.globalAlpha = 1;
+    }
+    
+    renderDevMenu() {
+        const ctx = this.ctx;
+        
+        // Semi-transparent background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillRect(0, 0, this.camera.width, this.camera.height);
+        
+        // Menu background
+        const menuWidth = 400;
+        const menuHeight = 300;
+        const menuX = (this.camera.width - menuWidth) / 2;
+        const menuY = (this.camera.height - menuHeight) / 2;
+        
+        ctx.fillStyle = 'rgba(0, 30, 60, 0.95)';
+        ctx.fillRect(menuX, menuY, menuWidth, menuHeight);
+        
+        ctx.strokeStyle = '#00ffff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(menuX, menuY, menuWidth, menuHeight);
+        
+        // Title
+        ctx.fillStyle = '#00ffff';
+        ctx.font = '24px Orbitron';
+        ctx.textAlign = 'center';
+        ctx.fillText('DEV MENU', menuX + menuWidth/2, menuY + 40);
+        
+        // Instructions
+        ctx.fillStyle = '#ccffff';
+        ctx.font = '16px Orbitron';
+        ctx.fillText('Press number keys to warp to level:', menuX + menuWidth/2, menuY + 80);
+        ctx.font = '12px Orbitron';
+        ctx.fillText('1-9: Levels 1-9, 0: Level 10', menuX + menuWidth/2, menuY + 100);
+        ctx.fillText('Q/W/E/R/T/Y: Levels 11-16', menuX + menuWidth/2, menuY + 115);
+        
+        // Level grid
+        const cols = 4;
+        const rows = Math.ceil(this.maxLevel / cols);
+        const cellWidth = 60;
+        const cellHeight = 30;
+        const startX = menuX + (menuWidth - (cols * cellWidth + (cols-1) * 10)) / 2;
+        const startY = menuY + 130;
+        
+        for (let i = 1; i <= this.maxLevel; i++) {
+            const col = (i - 1) % cols;
+            const row = Math.floor((i - 1) / cols);
+            const x = startX + col * (cellWidth + 10);
+            const y = startY + row * (cellHeight + 10);
+            
+            // Highlight current level
+            if (i === this.currentLevel) {
+                ctx.fillStyle = '#00ffff';
+                ctx.fillRect(x - 2, y - 2, cellWidth + 4, cellHeight + 4);
+            }
+            
+            ctx.fillStyle = i === this.currentLevel ? '#000000' : '#0066cc';
+            ctx.fillRect(x, y, cellWidth, cellHeight);
+            
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, cellWidth, cellHeight);
+            
+            ctx.fillStyle = i === this.currentLevel ? '#000000' : '#ffffff';
+            ctx.font = '12px Orbitron';
+            ctx.textAlign = 'center';
+            
+            // Add key hints for levels 10+
+            let keyHint = i.toString();
+            if (i === 10) keyHint = '0';
+            else if (i === 11) keyHint = 'Q';
+            else if (i === 12) keyHint = 'W';
+            else if (i === 13) keyHint = 'E';
+            else if (i === 14) keyHint = 'R';
+            else if (i === 15) keyHint = 'T';
+            else if (i === 16) keyHint = 'Y';
+            
+            ctx.fillText(keyHint, x + cellWidth/2, y + cellHeight/2 + 2);
+        }
+        
+        // Instructions
+        ctx.fillStyle = '#ccffff';
+        ctx.font = '12px Orbitron';
+        ctx.fillText('Press ~ to close', menuX + menuWidth/2, menuY + menuHeight - 20);
+    }
+    
+    loadLevel13() {
+        // Introducing dash-through platforms
+        this.blocks = [
+            {x: 0, y: 1160, width: 1600, height: 40, type: 'solid', color: '#0066cc'},
+            {x: 0, y: 0, width: 20, height: 1200, type: 'solid', color: '#0066cc'},
+            {x: 1580, y: 0, width: 20, height: 1200, type: 'solid', color: '#0066cc'},
+            
+            // Starting area
+            {x: 100, y: 1080, width: 200, height: 20, type: 'solid', color: '#0066cc'},
+            
+            // Dash-through barriers
+            {x: 400, y: 900, width: 20, height: 200, type: 'dashthrough', color: '#00cc00'},
+            {x: 600, y: 800, width: 20, height: 300, type: 'dashthrough', color: '#00cc00'},
+            {x: 800, y: 700, width: 20, height: 400, type: 'dashthrough', color: '#00cc00'},
+            
+            // Platforms to land on
+            {x: 450, y: 880, width: 100, height: 20, type: 'solid', color: '#0066cc'},
+            {x: 650, y: 780, width: 100, height: 20, type: 'solid', color: '#0066cc'},
+            {x: 850, y: 680, width: 100, height: 20, type: 'solid', color: '#0066cc'},
+            
+            // Exit area
+            {x: 1200, y: 600, width: 200, height: 20, type: 'solid', color: '#0066cc'}
+        ];
+        
+        this.fragments = [
+            {x: 150, y: 1040, collected: false},
+            {x: 480, y: 840, collected: false},
+            {x: 680, y: 740, collected: false},
+            {x: 880, y: 640, collected: false},
+            {x: 1250, y: 560, collected: false}
+        ];
+        
+        this.exit = {x: 1300, y: 520, width: 40, height: 80};
+    }
+    
+    loadLevel14() {
+        // Vertical dash challenges
+        this.blocks = [
+            {x: 0, y: 1160, width: 1600, height: 40, type: 'solid', color: '#0066cc'},
+            {x: 0, y: 0, width: 20, height: 1200, type: 'solid', color: '#0066cc'},
+            {x: 1580, y: 0, width: 20, height: 1200, type: 'solid', color: '#0066cc'},
+            
+            // Starting platform
+            {x: 100, y: 1080, width: 150, height: 20, type: 'solid', color: '#0066cc'},
+            
+            // Vertical dash-through ceiling
+            {x: 300, y: 950, width: 200, height: 20, type: 'dashthrough', color: '#00cc00'},
+            {x: 300, y: 850, width: 200, height: 20, type: 'solid', color: '#0066cc'},
+            
+            // More vertical challenges
+            {x: 600, y: 750, width: 200, height: 20, type: 'dashthrough', color: '#00cc00'},
+            {x: 600, y: 650, width: 200, height: 20, type: 'solid', color: '#0066cc'},
+            
+            {x: 900, y: 550, width: 200, height: 20, type: 'dashthrough', color: '#00cc00'},
+            {x: 900, y: 450, width: 200, height: 20, type: 'solid', color: '#0066cc'},
+            
+            // Final area
+            {x: 1200, y: 300, width: 300, height: 20, type: 'solid', color: '#0066cc'}
+        ];
+        
+        this.fragments = [
+            {x: 150, y: 1040, collected: false},
+            {x: 380, y: 810, collected: false},
+            {x: 680, y: 610, collected: false},
+            {x: 980, y: 410, collected: false},
+            {x: 1350, y: 260, collected: false}
+        ];
+        
+        this.exit = {x: 1400, y: 220, width: 40, height: 80};
+    }
+    
+    loadLevel15() {
+        // Complex maze with all mechanics
+        this.blocks = [
+            {x: 0, y: 1160, width: 1600, height: 40, type: 'solid', color: '#0066cc'},
+            {x: 0, y: 0, width: 20, height: 1200, type: 'solid', color: '#0066cc'},
+            {x: 1580, y: 0, width: 20, height: 1200, type: 'solid', color: '#0066cc'},
+            
+            // Complex maze structure
+            {x: 100, y: 1080, width: 100, height: 20, type: 'solid', color: '#0066cc'},
+            
+            // First section - dash through barriers
+            {x: 250, y: 900, width: 20, height: 180, type: 'dashthrough', color: '#00cc00'},
+            {x: 300, y: 950, width: 150, height: 20, type: 'solid', color: '#0066cc'},
+            {x: 500, y: 850, width: 20, height: 130, type: 'solid', color: '#0066cc'},
+            
+            // Second section - corrupted and moving
+            {x: 600, y: 800, width: 100, height: 20, type: 'corrupted', color: '#cc00cc', timer: 0, visible: true},
+            {x: 750, y: 700, width: 20, height: 100, type: 'dashthrough', color: '#00cc00'},
+            {x: 800, y: 750, width: 150, height: 20, type: 'solid', color: '#0066cc'},
+            
+            // Third section - wall jumping with dash-through
+            {x: 1000, y: 650, width: 20, height: 100, type: 'solid', color: '#0066cc'},
+            {x: 1100, y: 550, width: 20, height: 200, type: 'dashthrough', color: '#00cc00'},
+            {x: 1200, y: 450, width: 20, height: 300, type: 'solid', color: '#0066cc'},
+            
+            // Final area
+            {x: 1300, y: 300, width: 200, height: 20, type: 'solid', color: '#0066cc'}
+        ];
+        
+        this.movingPlatforms = [
+            {x: 550, y: 650, width: 80, height: 20, vx: 0, vy: 2, minX: 550, maxX: 550, minY: 600, maxY: 750, type: 'vertical'}
+        ];
+        
+        this.hazards = [
+            {x: 400, y: 800, width: 20, height: 180, type: 'energy', color: '#ff0000'},
+            {x: 850, y: 600, width: 20, height: 150, type: 'energy', color: '#ff0000'}
+        ];
+        
+        this.fragments = [
+            {x: 130, y: 1040, collected: false},
+            {x: 320, y: 910, collected: false},
+            {x: 630, y: 760, collected: false},
+            {x: 580, y: 610, collected: false},
+            {x: 1050, y: 510, collected: false},
+            {x: 1350, y: 260, collected: false}
+        ];
+        
+        this.exit = {x: 1420, y: 220, width: 40, height: 80};
+    }
+    
+    loadLevel16() {
+        // Ultimate challenge - Master level
+        this.blocks = [
+            {x: 0, y: 1160, width: 1600, height: 40, type: 'solid', color: '#0066cc'},
+            {x: 0, y: 0, width: 20, height: 1200, type: 'solid', color: '#0066cc'},
+            {x: 1580, y: 0, width: 20, height: 1200, type: 'solid', color: '#0066cc'},
+            
+            // Starting area
+            {x: 50, y: 1080, width: 100, height: 20, type: 'solid', color: '#0066cc'},
+            
+            // Section 1: Precision dash-through timing
+            {x: 200, y: 1000, width: 20, height: 80, type: 'dashthrough', color: '#00cc00'},
+            {x: 250, y: 980, width: 80, height: 20, type: 'corrupted', color: '#cc00cc', timer: 0, visible: true},
+            {x: 380, y: 920, width: 20, height: 80, type: 'dashthrough', color: '#00cc00'},
+            
+            // Section 2: Vertical dash maze
+            {x: 450, y: 850, width: 100, height: 20, type: 'solid', color: '#0066cc'},
+            {x: 500, y: 750, width: 20, height: 100, type: 'dashthrough', color: '#00cc00'},
+            {x: 450, y: 650, width: 100, height: 20, type: 'solid', color: '#0066cc'},
+            {x: 500, y: 550, width: 20, height: 100, type: 'dashthrough', color: '#00cc00'},
+            {x: 450, y: 450, width: 100, height: 20, type: 'solid', color: '#0066cc'},
+            
+            // Section 3: Complex wall jumping with hazards
+            {x: 650, y: 400, width: 20, height: 50, type: 'solid', color: '#0066cc'},
+            {x: 750, y: 300, width: 20, height: 150, type: 'solid', color: '#0066cc'},
+            {x: 850, y: 200, width: 20, height: 250, type: 'dashthrough', color: '#00cc00'},
+            {x: 950, y: 100, width: 20, height: 350, type: 'solid', color: '#0066cc'},
+            
+            // Section 4: Moving platform gauntlet
+            {x: 1200, y: 300, width: 100, height: 20, type: 'solid', color: '#0066cc'},
+            {x: 1400, y: 150, width: 150, height: 20, type: 'solid', color: '#0066cc'},
+            
+            // Final dash-through ceiling to exit
+            {x: 1300, y: 50, width: 200, height: 20, type: 'dashthrough', color: '#00cc00'},
+            {x: 1350, y: 0, width: 100, height: 20, type: 'solid', color: '#0066cc'}
+        ];
+        
+        this.movingPlatforms = [
+            {x: 600, y: 350, width: 40, height: 20, vx: 2, vy: 0, minX: 600, maxX: 700, minY: 350, maxY: 350, type: 'horizontal'},
+            {x: 1050, y: 250, width: 40, height: 20, vx: 0, vy: 2, minX: 1050, maxX: 1050, minY: 200, maxY: 350, type: 'vertical'},
+            {x: 1100, y: 200, width: 40, height: 20, vx: -1.5, vy: 0, minX: 1100, maxX: 1180, minY: 200, maxY: 200, type: 'horizontal'}
+        ];
+        
+        this.hazards = [
+            {x: 320, y: 800, width: 20, height: 180, type: 'energy', color: '#ff0000'},
+            {x: 600, y: 500, width: 20, height: 200, type: 'energy', color: '#ff0000'},
+            {x: 800, y: 150, width: 20, height: 250, type: 'energy', color: '#ff0000'},
+            {x: 1150, y: 100, width: 20, height: 200, type: 'energy', color: '#ff0000'}
+        ];
+        
+        this.fragments = [
+            {x: 80, y: 1040, collected: false},
+            {x: 270, y: 940, collected: false},
+            {x: 410, y: 880, collected: false},
+            {x: 480, y: 410, collected: false},
+            {x: 620, y: 310, collected: false},
+            {x: 1070, y: 210, collected: false},
+            {x: 1250, y: 260, collected: false},
+            {x: 1380, y: -30, collected: false}
+        ];
+        
+        this.exit = {x: 1400, y: -40, width: 40, height: 80};
     }
 }
 
