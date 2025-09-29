@@ -244,6 +244,73 @@ class UIManager {
             if (secretsElement) secretsElement.textContent = stats.secretsFound;
         }
     }
+
+    // Update method called every frame by the game loop
+    update(deltaTime) {
+        // Update HUD elements
+        this.updateHUD();
+        
+        // Update ability icons if ability manager exists
+        if (this.game.abilityManager) {
+            this.game.abilityManager.updateUI();
+        }
+        
+        // Update any animated UI elements here if needed
+    }
+
+    // Add methods for boss health bar
+    showBossHealth(boss) {
+        const bossHealthBar = document.getElementById('bossHealthBar');
+        const bossName = document.getElementById('bossName');
+        
+        if (bossHealthBar && bossName) {
+            bossName.textContent = boss.name;
+            bossHealthBar.classList.remove('hidden');
+            this.updateBossHealth(boss);
+        }
+    }
+
+    updateBossHealth(boss) {
+        const bossHealthFill = document.getElementById('bossHealthFill');
+        if (bossHealthFill) {
+            const healthPercent = (boss.health / boss.maxHealth) * 100;
+            bossHealthFill.style.width = `${healthPercent}%`;
+        }
+    }
+
+    hideBossHealth() {
+        const bossHealthBar = document.getElementById('bossHealthBar');
+        if (bossHealthBar) {
+            bossHealthBar.classList.add('hidden');
+        }
+    }
+
+    // Add method for ability unlocks
+    showAbilityUnlock(ability) {
+        const dialog = document.getElementById('abilityUnlock');
+        const icon = document.getElementById('abilityIcon');
+        const name = document.getElementById('abilityName');
+        const description = document.getElementById('abilityDescription');
+        
+        if (dialog && icon && name && description) {
+            icon.textContent = ability.icon;
+            name.textContent = ability.name;
+            description.textContent = ability.description;
+            
+            this.showDialog('abilityUnlock');
+            
+            // Auto-close after 3 seconds
+            setTimeout(() => {
+                this.hideDialog('abilityUnlock');
+            }, 3000);
+        }
+    }
+
+    // Render method for any canvas-based UI elements
+    render(ctx) {
+        // Currently all UI is DOM-based, but this is here for future use
+        // Could be used for custom HUD elements drawn on canvas
+    }
 }
 
 // Make UIManager available globally

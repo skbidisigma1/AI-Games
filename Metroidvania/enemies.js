@@ -873,8 +873,8 @@ class Enemy {
     render(ctx, camera) {
         if (this.destroyed) return;
         
-        const screenX = camera.getScreenX(this.x);
-        const screenY = camera.getScreenY(this.y);
+        let screenX = camera.getScreenX(this.x);
+        let screenY = camera.getScreenY(this.y);
         
         if (screenX < -this.width || screenX > CONFIG.CANVAS_WIDTH ||
             screenY < -this.height || screenY > CONFIG.CANVAS_HEIGHT) {
@@ -1070,6 +1070,13 @@ class Enemy {
         
         ctx.restore();
     }
+}
+
+// Export for browser use
+if (typeof window !== 'undefined') {
+    window.Enemy = Enemy;
+    window.ENEMY_TYPES = ENEMY_TYPES;
+    window.ENEMY_STATES = ENEMY_STATES;
 }
 
 // Export for other modules
