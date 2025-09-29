@@ -186,6 +186,16 @@ class GameBrowser {
                 features: ['metroidvania progression', 'ability unlocks', 'procedural rooms', 'mythical zones', 'persistent upgrades', 'combat system'],
                 path: 'Aether',
                 fullDescription: 'You are Nyra, a soul-forged warrior awakened in the mythical void. Explore fragmented realms, collect Aether Coins, and unlock movement abilities that persist across runs. Master combat, platforming, and progression as you restore balance to the shattered world of Aether.'
+            },
+            {
+                name: 'TerminalVelocity',
+                displayName: 'Terminal Velocity',
+                icon: '🔬',
+                genre: 'adventure',
+                description: 'A fast-paced, grid-based cyberpunk roguelike where you play as V0-LT, a rogue AI escaping deletion',
+                features: ['grid-based movement', 'node hacking puzzles', 'enemy AI', 'story system', 'abilities (cloak, pulse, dash)', 'procedural levels'],
+                path: 'Terminal Velocity',
+                fullDescription: 'You are V0-LT, a rogue AI escaping deletion by infiltrating procedurally generated networks. Hack nodes, avoid enemies, and uncover the truth about your creation across 10 network layers. Features minimalist visuals, modular systems, and rich branching story.'
             }
         ];
         
