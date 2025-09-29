@@ -88,6 +88,22 @@ class BaileyKartGame {
             this.backToTitle();
         });
         
+        // Settings button
+        document.getElementById('showSettings').addEventListener('click', () => {
+            this.showSettings();
+        });
+        
+        document.getElementById('backToTitleFromSettings').addEventListener('click', () => {
+            this.backToTitle();
+        });
+        
+        document.getElementById('resetSettings').addEventListener('click', () => {
+            this.resetSettings();
+        });
+        
+        // Settings change listeners
+        this.setupSettingsListeners();
+        
         // Beta mode event listeners
         document.getElementById('timeTrialMode').addEventListener('click', () => {
             this.showBetaMode('timeTrial');
@@ -182,6 +198,215 @@ class BaileyKartGame {
         document.getElementById('titleScreen').classList.remove('active');
         document.getElementById('kartCustomizationScreen').classList.add('active');
         this.updateKartPreviews();
+    }
+    
+    /**
+     * Show settings screen
+     */
+    showSettings() {
+        this.gameState = 'settings';
+        document.getElementById('titleScreen').classList.remove('active');
+        document.getElementById('settingsScreen').classList.add('active');
+        this.loadSettings();
+    }
+    
+    /**
+     * Setup settings event listeners
+     */
+    setupSettingsListeners() {
+        // AI difficulty slider
+        const aiDifficultySlider = document.getElementById('aiDifficulty');
+        const aiDifficultyValue = document.getElementById('aiDifficultyValue');
+        aiDifficultySlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            let label = 'Normal';
+            if (value < 0.8) label = 'Easy';
+            else if (value > 1.2) label = 'Hard';
+            else if (value > 1.5) label = 'Expert';
+            aiDifficultyValue.textContent = `${label} (${value}x)`;
+        });
+        
+        // Volume sliders
+        ['masterVolume', 'sfxVolume', 'musicVolume'].forEach(volumeType => {
+            const slider = document.getElementById(volumeType);
+            const valueSpan = document.getElementById(volumeType + 'Value');
+            slider.addEventListener('input', (e) => {
+                valueSpan.textContent = e.target.value + '%';
+            });
+        });
+        
+        // Screen fit changes
+        document.getElementById('screenFit').addEventListener('change', (e) => {
+            this.applyScreenFit(e.target.value);
+        });
+        
+        // UI scale changes
+        document.getElementById('uiScale').addEventListener('change', (e) => {
+            this.applyUIScale(parseFloat(e.target.value));
+        });
+        
+        // Colorblind mode changes
+        document.getElementById('colorblindMode').addEventListener('change', (e) => {
+            this.applyColorblindMode(e.target.value);
+        });
+        
+        // Save settings on any change
+        document.querySelectorAll('#settingsScreen select, #settingsScreen input').forEach(element => {
+            element.addEventListener('change', () => {
+                this.saveSettings();
+            });
+        });
+    }
+    
+    /**
+     * Load settings from localStorage
+     */
+    loadSettings() {
+        const defaultSettings = {
+            screenFit: 'auto',
+            uiScale: 1.0,
+            aiDifficulty: 1.0,
+            aiAggression: 'normal',
+            aiPersonality: 'varied',
+            guideMeArrows: true,
+            racingLine: false,
+            minimapSize: 'normal',
+            colorblindMode: 'none',
+            highContrast: false,
+            reducedMotion: false,
+            masterVolume: 70,
+            sfxVolume: 80,
+            musicVolume: 60
+        };
+        
+        const savedSettings = JSON.parse(localStorage.getItem('hadleeKartSettings') || '{}');
+        this.settings = { ...defaultSettings, ...savedSettings };
+        
+        // Apply settings to UI
+        Object.keys(this.settings).forEach(key => {
+            const element = document.getElementById(key);
+            if (element) {
+                if (element.type === 'checkbox') {
+                    element.checked = this.settings[key];
+                } else if (element.type === 'range') {
+                    element.value = this.settings[key];
+                    const valueSpan = document.getElementById(key + 'Value');
+                    if (valueSpan) {
+                        if (key === 'aiDifficulty') {
+                            const value = this.settings[key];
+                            let label = 'Normal';
+                            if (value < 0.8) label = 'Easy';
+                            else if (value > 1.2) label = 'Hard';
+                            else if (value > 1.5) label = 'Expert';
+                            valueSpan.textContent = `${label} (${value}x)`;
+                        } else {
+                            valueSpan.textContent = this.settings[key] + '%';
+                        }
+                    }
+                } else {
+                    element.value = this.settings[key];
+                }
+            }
+        });
+        
+        // Apply visual settings immediately
+        this.applyScreenFit(this.settings.screenFit);
+        this.applyUIScale(this.settings.uiScale);
+        this.applyColorblindMode(this.settings.colorblindMode);
+    }
+    
+    /**
+     * Save settings to localStorage
+     */
+    saveSettings() {
+        const settings = {};
+        
+        // Collect all setting values
+        document.querySelectorAll('#settingsScreen select, #settingsScreen input').forEach(element => {
+            if (element.id) {
+                if (element.type === 'checkbox') {
+                    settings[element.id] = element.checked;
+                } else if (element.type === 'range') {
+                    settings[element.id] = parseFloat(element.value);
+                } else {
+                    settings[element.id] = element.value;
+                }
+            }
+        });
+        
+        this.settings = settings;
+        localStorage.setItem('hadleeKartSettings', JSON.stringify(settings));
+        
+        // Apply certain settings immediately
+        this.applyScreenFit(settings.screenFit);
+        this.applyUIScale(settings.uiScale);
+        this.applyColorblindMode(settings.colorblindMode);
+    }
+    
+    /**
+     * Reset settings to defaults
+     */
+    resetSettings() {
+        localStorage.removeItem('hadleeKartSettings');
+        this.loadSettings();
+    }
+    
+    /**
+     * Apply screen fit setting
+     */
+    applyScreenFit(mode) {
+        const canvas = document.getElementById('gameCanvas');
+        const container = document.getElementById('gameContainer');
+        
+        switch (mode) {
+            case 'stretch':
+                canvas.style.width = '100vw';
+                canvas.style.height = '100vh';
+                canvas.style.objectFit = 'fill';
+                break;
+            case 'letterbox':
+                canvas.style.width = 'auto';
+                canvas.style.height = 'auto';
+                canvas.style.maxWidth = '95vw';
+                canvas.style.maxHeight = '85vh';
+                canvas.style.objectFit = 'contain';
+                break;
+            case 'crop':
+                canvas.style.width = '100vw';
+                canvas.style.height = '100vh';
+                canvas.style.objectFit = 'cover';
+                break;
+            default: // auto
+                canvas.style.width = 'auto';
+                canvas.style.height = 'auto';
+                canvas.style.maxWidth = '95vw';
+                canvas.style.maxHeight = '85vh';
+                canvas.style.objectFit = 'contain';
+                break;
+        }
+    }
+    
+    /**
+     * Apply UI scale setting
+     */
+    applyUIScale(scale) {
+        const ui = document.getElementById('ui');
+        ui.style.transform = `scale(${scale})`;
+        ui.style.transformOrigin = 'center center';
+    }
+    
+    /**
+     * Apply colorblind mode
+     */
+    applyColorblindMode(mode) {
+        const body = document.body;
+        
+        // Remove existing colorblind classes
+        body.classList.remove('protanopia', 'deuteranopia', 'tritanopia', 'monochrome');
+        
+        if (mode !== 'none') {
+            body.classList.add(mode);
+        }
     }
     
     /**
@@ -704,11 +929,29 @@ class BaileyKartGame {
         // Create AI karts
         this.aiKarts = [];
         const kartColors = ['#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22', '#34495e'];
+        const kartNames = ['Alex', 'Bailey', 'Casey', 'Drew', 'Ellis', 'Finley', 'Juliette'];
         
         for (let i = 0; i < 7; i++) {
             const pos = this.track.getStartPosition(i + 1);
             const aiKart = new Kart(pos.x, pos.y, kartColors[i], false);
-            aiKart.aiPersonality = this.aiSystem.generatePersonality();
+            
+            // Special handling for Juliette (the antagonist)
+            if (i === 6) { // Last AI kart is Juliette
+                aiKart.name = 'Juliette';
+                aiKart.isAntagonist = true;
+                aiKart.color = '#8e44ad'; // Special purple color for the antagonist
+                // Give Juliette enhanced abilities
+                aiKart.aiPersonality = {
+                    aggression: 0.99,
+                    skill: 0.99,
+                    riskTaking: 0.95,
+                    name: 'Mastermind'
+                };
+            } else {
+                aiKart.name = kartNames[i];
+                aiKart.aiPersonality = this.aiSystem.generatePersonality();
+            }
+            
             this.aiKarts.push(aiKart);
         }
     }
@@ -812,6 +1055,20 @@ class BaileyKartGame {
                 
                 // Increase chance based on aggression
                 usePowerUpChance *= (1 + kart.aiPersonality.aggression);
+                
+                // Juliette (antagonist) gets special power-up behavior
+                if (kart.isAntagonist) {
+                    usePowerUpChance *= 1.5; // 50% more likely to use power-ups
+                    
+                    // Juliette prefers offensive power-ups and uses them strategically
+                    const playerPosition = this.getKartPosition(this.playerKart);
+                    const juliettePosition = this.getKartPosition(kart);
+                    
+                    // If Juliette is behind the player, she's more aggressive
+                    if (juliettePosition > playerPosition) {
+                        usePowerUpChance *= 2;
+                    }
+                }
                 
                 // Use power-ups more often when behind
                 const position = this.getKartPosition(kart);
@@ -1203,8 +1460,14 @@ class PhysicsEngine {
     updateKart(kart, input, deltaTime) {
         // Different physics for AI vs player to make AI more competitive
         const isAI = !kart.isPlayer;
-        const maxSpeed = isAI ? this.maxSpeed * 1.15 : this.maxSpeed; // AI gets 15% speed boost
-        const acceleration = isAI ? this.acceleration * 1.1 : this.acceleration; // AI gets 10% acceleration boost
+        let maxSpeed = isAI ? this.maxSpeed * 1.15 : this.maxSpeed; // AI gets 15% speed boost
+        let acceleration = isAI ? this.acceleration * 1.1 : this.acceleration; // AI gets 10% acceleration boost
+        
+        // Juliette (antagonist) gets even better performance
+        if (kart.isAntagonist) {
+            maxSpeed = this.maxSpeed * 1.25; // 25% speed boost for Juliette
+            acceleration = this.acceleration * 1.2; // 20% acceleration boost for Juliette
+        }
         
         // Handle acceleration and braking
         if (input.accelerate) {
@@ -1220,7 +1483,13 @@ class PhysicsEngine {
         
         // Handle turning (only when moving)
         if (Math.abs(kart.speed) > 0.1) {
-            const turnSpeed = isAI ? this.turnSpeed * 1.05 : this.turnSpeed; // AI gets 5% better turning
+            let turnSpeed = isAI ? this.turnSpeed * 1.05 : this.turnSpeed; // AI gets 5% better turning
+            
+            // Juliette gets superior handling
+            if (kart.isAntagonist) {
+                turnSpeed = this.turnSpeed * 1.1; // 10% better turning for Juliette
+            }
+            
             if (input.turnLeft) {
                 kart.angle -= turnSpeed * (kart.speed / maxSpeed);
             }
@@ -1358,6 +1627,8 @@ class Kart {
         this.y = y;
         this.color = color;
         this.isPlayer = isPlayer;
+        this.name = isPlayer ? 'Stewart' : 'AI Racer'; // Default names
+        this.isAntagonist = false;
         
         // Physics properties
         this.speed = 0;
@@ -2653,11 +2924,16 @@ class RenderingEngine {
             // Render custom kart design based on type
             if (kart.isPlayer && kart.design) {
                 this.renderCustomKart(ctx, kart);
+            } else if (kart.isAntagonist) {
+                this.renderAntagonistKart(ctx, kart);
             } else {
                 this.renderStandardKart(ctx, kart);
             }
             
             ctx.restore();
+            
+            // Draw name labels above karts (unrotated)
+            this.renderKartNameLabel(ctx, kart);
             
             // Draw shield effect (after restore to avoid rotation)
             if (kart.hasShield) {
@@ -2695,6 +2971,97 @@ class RenderingEngine {
                 ctx.restore();
             }
         });
+    }
+    
+    /**
+     * Render name label above kart
+     */
+    renderKartNameLabel(ctx, kart) {
+        // Only show names for antagonist and player in story mode, or when in debug mode
+        const showName = kart.isAntagonist || kart.isPlayer || (kart.name && kart.name !== 'AI Racer');
+        
+        if (showName) {
+            ctx.save();
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            
+            // Special styling for antagonist
+            if (kart.isAntagonist) {
+                ctx.fillStyle = '#8e44ad';
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.strokeText(kart.name, kart.x, kart.y - kart.radius - 15);
+                ctx.fillText(kart.name, kart.x, kart.y - kart.radius - 15);
+                
+                // Add crown icon for antagonist
+                ctx.fillStyle = '#f1c40f';
+                ctx.font = '16px Arial';
+                ctx.fillText('👑', kart.x, kart.y - kart.radius - 30);
+            } else if (kart.isPlayer) {
+                ctx.fillStyle = '#e74c3c';
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1;
+                ctx.strokeText(kart.name, kart.x, kart.y - kart.radius - 15);
+                ctx.fillText(kart.name, kart.x, kart.y - kart.radius - 15);
+            } else {
+                ctx.fillStyle = '#2c3e50';
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1;
+                ctx.strokeText(kart.name, kart.x, kart.y - kart.radius - 15);
+                ctx.fillText(kart.name, kart.x, kart.y - kart.radius - 15);
+            }
+            
+            ctx.restore();
+        }
+    }
+    
+    /**
+     * Render special antagonist kart (Juliette)
+     */
+    renderAntagonistKart(ctx, kart) {
+        // Create menacing purple gradient
+        const gradient = ctx.createLinearGradient(-kart.radius, -kart.radius/2, kart.radius, kart.radius/2);
+        gradient.addColorStop(0, '#8e44ad');
+        gradient.addColorStop(0.5, '#9b59b6');
+        gradient.addColorStop(1, '#6c3483');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+        
+        // Add intimidating spikes/edges
+        ctx.fillStyle = '#5b2c87';
+        ctx.beginPath();
+        ctx.moveTo(-kart.radius, -kart.radius/2);
+        ctx.lineTo(-kart.radius + 4, -kart.radius/2 - 3);
+        ctx.lineTo(-kart.radius + 8, -kart.radius/2);
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.moveTo(kart.radius, -kart.radius/2);
+        ctx.lineTo(kart.radius - 4, -kart.radius/2 - 3);
+        ctx.lineTo(kart.radius - 8, -kart.radius/2);
+        ctx.fill();
+        
+        // Draw menacing outline
+        ctx.strokeStyle = '#2c1810';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-kart.radius, -kart.radius/2, kart.radius * 2, kart.radius);
+        
+        // Add evil glow effect
+        const time = Date.now() * 0.003;
+        ctx.strokeStyle = `rgba(142, 68, 173, ${0.8 + Math.sin(time) * 0.2})`;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(-kart.radius - 2, -kart.radius/2 - 2, kart.radius * 2 + 4, kart.radius + 4);
+        
+        // Draw intimidating details
+        ctx.fillStyle = '#f1c40f';
+        ctx.beginPath();
+        ctx.arc(-kart.radius/3, 0, 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(kart.radius/3, 0, 2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        this.renderKartEffects(ctx, kart);
     }
     
     renderStandardKart(ctx, kart) {
