@@ -1875,15 +1875,16 @@ class PowerUpSystem {
         this.powerUps = [];
         this.maxPowerUps = 15; // Limit max power-ups on track
         this.powerUpTypes = [
-            { type: 'mushroom', name: '🍄', spawnRate: 0.22 },
+            { type: 'mushroom', name: '🍄', spawnRate: 0.20 },
             { type: 'banana', name: '🍌', spawnRate: 0.18 },
             { type: 'shell', name: '🔴', spawnRate: 0.15 },
-            { type: 'blueShell', name: '🔵', spawnRate: 0.08 }, // New blue shell targeting first place
+            { type: 'blueShell', name: '🔵', spawnRate: 0.08 }, // Blue shell targeting first place
+            { type: 'bomb', name: '💣', spawnRate: 0.06 }, // New demolition power-up
             { type: 'lightning', name: '⚡', spawnRate: 0.05 },
             { type: 'oil', name: '🛢️', spawnRate: 0.12 },
             { type: 'shield', name: '🛡️', spawnRate: 0.10 },
-            { type: 'teleporter', name: '🌀', spawnRate: 0.05 },
-            { type: 'star', name: '⭐', spawnRate: 0.05 }
+            { type: 'teleporter', name: '🌀', spawnRate: 0.03 },
+            { type: 'star', name: '⭐', spawnRate: 0.03 }
         ];
     }
     
@@ -1969,6 +1970,9 @@ class PowerUpSystem {
             case 'blueShell':
                 this.fireBlueShell(kart, allKarts);
                 break;
+            case 'bomb':
+                this.deployBomb(kart, allKarts);
+                break;
             case 'lightning':
                 this.castLightning(kart, allKarts);
                 break;
@@ -2048,6 +2052,14 @@ class PowerUpSystem {
             // Create blue shell that targets first place with more damage
             this.powerUps.push(new BlueShell(kart.x, kart.y, firstPlaceKart));
         }
+    }
+    
+    deployBomb(kart, allKarts) {
+        // Create explosive bomb behind the kart
+        const bombX = kart.x - Math.cos(kart.angle) * 40;
+        const bombY = kart.y - Math.sin(kart.angle) * 40;
+        
+        this.powerUps.push(new DemolitionBomb(bombX, bombY, allKarts));
     }
     
     castLightning(caster, allKarts) {
@@ -2202,20 +2214,38 @@ class HomingShell extends PowerUp {
         super.update(deltaTime);
         
         if (this.target && this.active) {
-            // Home in on target
+            // Improved homing logic with prediction
             const dx = this.target.x - this.x;
             const dy = this.target.y - this.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
             
             if (distance > 0) {
-                this.vx = (dx / distance) * this.speed;
-                this.vy = (dy / distance) * this.speed;
+                // Predict target's future position for better accuracy
+                const targetVx = this.target.vx || 0;
+                const targetVy = this.target.vy || 0;
+                const timeToReach = distance / this.speed;
+                
+                const predictedX = this.target.x + targetVx * timeToReach * 0.5;
+                const predictedY = this.target.y + targetVy * timeToReach * 0.5;
+                
+                const pdx = predictedX - this.x;
+                const pdy = predictedY - this.y;
+                const predictedDistance = Math.sqrt(pdx * pdx + pdy * pdy);
+                
+                if (predictedDistance > 0) {
+                    this.vx = (pdx / predictedDistance) * this.speed;
+                    this.vy = (pdy / predictedDistance) * this.speed;
+                } else {
+                    this.vx = (dx / distance) * this.speed;
+                    this.vy = (dy / distance) * this.speed;
+                }
                 
                 this.x += this.vx * deltaTime * 60;
                 this.y += this.vy * deltaTime * 60;
                 
-                // Check collision with target
-                if (distance < this.radius + this.target.radius) {
+                // Improved collision detection with larger hit radius
+                const hitRadius = this.radius + this.target.radius + 5;
+                if (distance < hitRadius) {
                     this.hitTarget();
                 }
             }
@@ -2298,6 +2328,80 @@ class BlueShell extends PowerUp {
                 }
             }, 3000); // Longer effect duration
         }
+        this.active = false;
+    }
+}
+
+/**
+ * Demolition Bomb Class - Explosive device that can eliminate opponents
+ */
+class DemolitionBomb extends PowerUp {
+    constructor(x, y, allKarts) {
+        super(x, y, { type: 'bomb', name: '💣' });
+        this.explosionRadius = 80; // Large explosion radius
+        this.timer = 3000; // 3 second timer
+        this.allKarts = allKarts;
+        this.exploded = false;
+        this.blinking = false;
+    }
+    
+    update(deltaTime) {
+        super.update(deltaTime);
+        
+        if (!this.exploded) {
+            this.timer -= deltaTime * 1000;
+            
+            // Start blinking when timer is low
+            if (this.timer < 1000) {
+                this.blinking = true;
+            }
+            
+            // Check for kart collisions to trigger early explosion
+            for (let kart of this.allKarts) {
+                const dx = kart.x - this.x;
+                const dy = kart.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < this.radius + kart.radius) {
+                    this.explode();
+                    return;
+                }
+            }
+            
+            // Timer explosion
+            if (this.timer <= 0) {
+                this.explode();
+            }
+        }
+    }
+    
+    explode() {
+        if (this.exploded) return;
+        this.exploded = true;
+        
+        // Affect all karts within explosion radius
+        for (let kart of this.allKarts) {
+            const dx = kart.x - this.x;
+            const dy = kart.y - this.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < this.explosionRadius) {
+                // Demolition effect - temporary "elimination"
+                kart.speed *= 0.1; // Nearly stop the kart
+                kart.angle += Math.PI * 2; // Multiple spins
+                
+                // Create visual explosion effect
+                kart.demolished = true;
+                
+                setTimeout(() => {
+                    if (kart) {
+                        kart.speed = Math.max(kart.speed * 10, 2); // Restore speed
+                        kart.demolished = false;
+                    }
+                }, 4000); // 4 second demolition effect
+            }
+        }
+        
         this.active = false;
     }
 }
