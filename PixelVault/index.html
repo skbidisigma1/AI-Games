@@ -8,7 +8,7 @@
 </head>
 <body>
     <div id="gameContainer">
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <canvas id="gameCanvas"></canvas>
         
         <!-- UI Overlays -->
         <div id="ui">
@@ -19,7 +19,7 @@
                     <h2 class="subtitle">Digital Platformer</h2>
                     <p class="game-description">
                         Navigate corrupted data vaults as a digital entity!<br>
-                        🟦 Stable data blocks • 🟪 Corrupted platforms<br>
+                        🟦 Stable data blocks • 🟪 Corrupted platforms • 🟩 Dash-through platforms<br>
                         🟨 Energy nodes boost you • 🟥 Firewalls block movement<br>
                         Master wall-jumping, double-jumping, and dash abilities!<br>
                         Collect all 💎 data fragments and reach the 🚪 vault exit!
@@ -28,7 +28,8 @@
                         <p><strong>Controls:</strong></p>
                         <p>A/D or ←/→ - Move • SPACE/W/↑ - Jump/Double Jump</p>
                         <p>Hold against wall while falling - Wall Slide</p>
-                        <p>SHIFT + Direction - Dash (limited uses per level)</p>
+                        <p>SHIFT + Direction - Dash (horizontal/vertical, limited uses per level)</p>
+                        <p>~ - Dev Menu (level select during gameplay)</p>
                     </div>
                     <button id="startGame" class="pixel-button">ENTER THE VAULT</button>
                 </div>
@@ -41,7 +42,7 @@
                         <span class="hud-label">VAULT:</span>
                         <span id="currentLevel">1</span>
                         <span class="hud-separator">/</span>
-                        <span id="maxLevel">12</span>
+                        <span id="maxLevel">16</span>
                     </div>
                     <div id="fragmentsInfo">
                         <span class="hud-label">FRAGMENTS:</span>
@@ -71,7 +72,7 @@
                 <div id="gameComplete" class="dialog hidden">
                     <div class="dialog-content">
                         <h2>System Infiltrated!</h2>
-                        <p>Congratulations! You've breached all 12 data vaults and collected every fragment!</p>
+                        <p>Congratulations! You've breached all 16 data vaults and collected every fragment!</p>
                         <p>The digital realm is now under your control.</p>
                         <button id="restartGame" class="pixel-button">Restart Mission</button>
                         <button id="backToMenu" class="pixel-button">Back to Menu</button>

@@ -14,24 +14,23 @@ body {
     font-family: 'Orbitron', monospace;
     overflow: hidden;
     min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    margin: 0;
+    padding: 0;
 }
 
 #gameContainer {
-    position: relative;
-    border: 2px solid #00ffff;
-    border-radius: 12px;
-    box-shadow: 
-        0 0 20px #00ffff,
-        inset 0 0 20px rgba(0, 255, 255, 0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
     background: #000011;
 }
 
 #gameCanvas {
     display: block;
-    border-radius: 10px;
+    width: 100%;
+    height: 100%;
     background: radial-gradient(circle at center, #001122 0%, #000000 100%);
 }
 
