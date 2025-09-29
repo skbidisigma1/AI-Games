@@ -806,9 +806,22 @@ class BaileyKartGame {
             const aiInput = this.aiSystem.getAIInput(kart, this.track, this.getAllKarts());
             this.physics.updateKart(kart, aiInput, deltaTime);
             
-            // AI power-up usage
-            if (kart.powerUp && Math.random() < 0.02) { // 2% chance per frame
-                this.powerUpSystem.usePowerUp(kart, this.getAllKarts());
+            // Enhanced AI power-up usage based on personality and situation
+            if (kart.powerUp) {
+                let usePowerUpChance = 0.03; // Base 3% chance per frame
+                
+                // Increase chance based on aggression
+                usePowerUpChance *= (1 + kart.aiPersonality.aggression);
+                
+                // Use power-ups more often when behind
+                const position = this.getKartPosition(kart);
+                if (position > 4) { // If in bottom half
+                    usePowerUpChance *= 1.5;
+                }
+                
+                if (Math.random() < usePowerUpChance) {
+                    this.powerUpSystem.usePowerUp(kart, this.getAllKarts());
+                }
             }
         });
     }
@@ -1093,6 +1106,21 @@ class BaileyKartGame {
     }
     
     /**
+     * Get the current position of a kart in the race
+     */
+    getKartPosition(targetKart) {
+        const allKarts = this.getAllKarts();
+        const sortedKarts = allKarts.sort((a, b) => {
+            // Sort by lap number first, then by checkpoint progress
+            const aProgress = (a.lapNumber - 1) + (a.checkpointIndex / 10.0);
+            const bProgress = (b.lapNumber - 1) + (b.checkpointIndex / 10.0);
+            return bProgress - aProgress; // Higher progress first
+        });
+        
+        return sortedKarts.indexOf(targetKart) + 1; // 1-based position
+    }
+    
+    /**
      * Restart the race
      */
     restartRace() {
@@ -1173,25 +1201,31 @@ class PhysicsEngine {
     }
     
     updateKart(kart, input, deltaTime) {
+        // Different physics for AI vs player to make AI more competitive
+        const isAI = !kart.isPlayer;
+        const maxSpeed = isAI ? this.maxSpeed * 1.15 : this.maxSpeed; // AI gets 15% speed boost
+        const acceleration = isAI ? this.acceleration * 1.1 : this.acceleration; // AI gets 10% acceleration boost
+        
         // Handle acceleration and braking
         if (input.accelerate) {
-            kart.speed += this.acceleration * deltaTime * 60;
+            kart.speed += acceleration * deltaTime * 60;
         } else if (input.brake) {
-            kart.speed -= this.acceleration * 1.5 * deltaTime * 60;
+            kart.speed -= acceleration * 1.5 * deltaTime * 60;
         } else {
             kart.speed *= this.deceleration;
         }
         
         // Clamp speed
-        kart.speed = Math.max(-this.maxSpeed * 0.5, Math.min(this.maxSpeed, kart.speed));
+        kart.speed = Math.max(-maxSpeed * 0.5, Math.min(maxSpeed, kart.speed));
         
         // Handle turning (only when moving)
         if (Math.abs(kart.speed) > 0.1) {
+            const turnSpeed = isAI ? this.turnSpeed * 1.05 : this.turnSpeed; // AI gets 5% better turning
             if (input.turnLeft) {
-                kart.angle -= this.turnSpeed * (kart.speed / this.maxSpeed);
+                kart.angle -= turnSpeed * (kart.speed / maxSpeed);
             }
             if (input.turnRight) {
-                kart.angle += this.turnSpeed * (kart.speed / this.maxSpeed);
+                kart.angle += turnSpeed * (kart.speed / maxSpeed);
             }
         }
         
@@ -1771,13 +1805,13 @@ class RacingTrack {
 class AISystem {
     constructor() {
         this.personalityTypes = [
-            { aggression: 0.9, skill: 0.95, riskTaking: 0.8, name: 'Aggressive' },
-            { aggression: 0.6, skill: 0.92, riskTaking: 0.5, name: 'Cautious' },
-            { aggression: 0.8, skill: 0.98, riskTaking: 0.7, name: 'Skilled' },
-            { aggression: 0.85, skill: 0.88, riskTaking: 0.9, name: 'Risky' },
-            { aggression: 0.7, skill: 0.9, riskTaking: 0.4, name: 'Defensive' },
-            { aggression: 0.95, skill: 0.85, riskTaking: 0.95, name: 'Reckless' },
-            { aggression: 0.75, skill: 0.94, riskTaking: 0.7, name: 'Balanced' }
+            { aggression: 0.95, skill: 0.98, riskTaking: 0.85, name: 'Aggressive' },
+            { aggression: 0.75, skill: 0.96, riskTaking: 0.6, name: 'Cautious' },
+            { aggression: 0.9, skill: 0.99, riskTaking: 0.8, name: 'Skilled' },
+            { aggression: 0.9, skill: 0.92, riskTaking: 0.95, name: 'Risky' },
+            { aggression: 0.8, skill: 0.94, riskTaking: 0.5, name: 'Defensive' },
+            { aggression: 0.98, skill: 0.89, riskTaking: 0.98, name: 'Reckless' },
+            { aggression: 0.85, skill: 0.97, riskTaking: 0.75, name: 'Balanced' }
         ];
     }
     
