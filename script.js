@@ -158,6 +158,16 @@ class GameBrowser {
                 fullDescription: 'Explore strategic rule-based systems in this innovative puzzle game that challenges your understanding of cause and effect.'
             },
             {
+                name: 'ByteMiner',
+                displayName: 'Byte Miner: Core Collapse',
+                icon: '⛏️',
+                genre: 'idle',
+                description: 'A comprehensive idle mining game where you excavate bytes from digital quarries and unlock quantum technologies',
+                features: ['click mining', 'auto miners', 'prestige system', 'quantum lab', 'achievement system', 'multiple upgrade tiers'],
+                path: 'ByteMiner',
+                fullDescription: 'Mine bytes through manual clicking and automated systems. Unlock upgrades, achieve prestigious milestones, and venture into quantum computing territories to maximize your byte production.'
+            },
+            {
                 name: 'SpaceGuardian',
                 displayName: 'Space Guardian',
                 icon: '🛡️',
