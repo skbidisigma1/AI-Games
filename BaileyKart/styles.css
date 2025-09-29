@@ -626,6 +626,71 @@ body {
     text-align: left;
 }
 
+/* Settings Screen */
+.settings-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin: 2rem 0;
+    text-align: left;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    border: 2px solid #e74c3c;
+}
+
+.setting-item label {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.setting-item select {
+    padding: 0.5rem;
+    border: 2px solid #e74c3c;
+    border-radius: 5px;
+    background: white;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
+    color: #2c3e50;
+    min-width: 150px;
+}
+
+.setting-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #e74c3c;
+}
+
+@media (max-width: 768px) {
+    .setting-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .setting-item label {
+        font-size: 1rem;
+    }
+}
+
 /* Kart Customization Screen */
 .customization-content {
     max-width: 1200px;

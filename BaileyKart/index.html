@@ -31,6 +31,7 @@
                     <button id="startRace" class="racing-button">SELECT TRACK!</button>
                     <button id="kartCustomization" class="racing-button" style="margin-top: 15px;">CUSTOMIZE KART</button>
                     <button id="storyMode" class="racing-button" style="margin-top: 15px;">STORY MODE</button>
+                    <button id="settingsMenu" class="racing-button" style="margin-top: 15px;">⚙️ SETTINGS</button>
                     <div class="beta-modes" style="margin-top: 25px; border-top: 2px solid #ff6b6b; padding-top: 15px;">
                         <h3 style="color: #ff6b6b; margin: 0 0 10px 0;">🚧 BETA MODES 🚧</h3>
                         <button id="timeTrialMode" class="racing-button beta-button" style="margin-top: 10px;">TIME TRIAL [BETA]</button>
@@ -67,33 +68,55 @@
                             <p>Stewart discovers Juliette's secret underground racing network and must infiltrate it...</p>
                             <button class="story-race-button">LOCKED</button>
                         </div>
-                        <div class="story-race locked" data-race="4">
-                            <h3>Race 4: The Trap</h3>
-                            <p>Juliette lures Stewart into a dangerous race designed to end his career once and for all...</p>
-                            <button class="story-race-button">LOCKED</button>
-                        </div>
-                        <div class="story-race locked" data-race="5">
-                            <h3>Race 5: Breaking Point</h3>
-                            <p>Stewart pushes his limits in a brutal desert race where only survival matters...</p>
-                            <button class="story-race-button">LOCKED</button>
-                        </div>
-                        <div class="story-race locked" data-race="6">
-                            <h3>Race 6: Allies and Enemies</h3>
-                            <p>Stewart must choose his allies carefully as Juliette turns the racing community against him...</p>
-                            <button class="story-race-button">LOCKED</button>
-                        </div>
-                        <div class="story-race locked" data-race="7">
-                            <h3>Race 7: The Final Showdown</h3>
-                            <p>Stewart faces Juliette in an epic championship race that will determine the fate of racing...</p>
-                            <button class="story-race-button">LOCKED</button>
-                        </div>
-                        <div class="story-race locked" data-race="8">
-                            <h3>Race 8: Victory and Redemption</h3>
-                            <p>The aftermath of Stewart's triumph and the rebuilding of the racing community...</p>
-                            <button class="story-race-button">LOCKED</button>
-                        </div>
+
                     </div>
                     <button id="backToTitleFromStory" class="racing-button secondary">← BACK TO MENU</button>
+                </div>
+            </div>
+            
+            <!-- Settings Screen -->
+            <div id="settingsScreen" class="screen">
+                <div class="settings-content">
+                    <h1 class="racing-title">⚙️ Settings</h1>
+                    <h2 class="story-subtitle">Game Configuration</h2>
+                    <div class="settings-grid">
+                        <div class="setting-item">
+                            <label for="aiDifficultySelect">🤖 AI Difficulty:</label>
+                            <select id="aiDifficultySelect">
+                                <option value="easy">Easy</option>
+                                <option value="normal" selected>Normal</option>
+                                <option value="hard">Hard</option>
+                                <option value="expert">Expert</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label for="windowScaleSelect">📺 Window Scale:</label>
+                            <select id="windowScaleSelect">
+                                <option value="auto" selected>Auto Fit</option>
+                                <option value="small">75% Scale</option>
+                                <option value="normal">100% Scale</option>
+                                <option value="large">125% Scale</option>
+                                <option value="fullscreen">Fullscreen</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label for="uiScaleSelect">🎮 UI Scale:</label>
+                            <select id="uiScaleSelect">
+                                <option value="small">Small</option>
+                                <option value="normal" selected>Normal</option>
+                                <option value="large">Large</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label for="soundToggle">🔊 Sound Effects:</label>
+                            <input type="checkbox" id="soundToggle" checked>
+                        </div>
+                        <div class="setting-item">
+                            <label for="showPerformanceToggle">📊 Show Performance:</label>
+                            <input type="checkbox" id="showPerformanceToggle">
+                        </div>
+                    </div>
+                    <button id="backToTitleFromSettings" class="racing-button secondary">← BACK TO MENU</button>
                 </div>
             </div>
             
