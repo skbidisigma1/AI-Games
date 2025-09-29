@@ -94,7 +94,7 @@ class GameBrowser {
                 genre: 'platformer',
                 description: 'A challenging digital platformer with advanced movement mechanics and 12 progressive levels',
                 features: ['wall jumping', 'double jump', 'dash ability', '12 challenging levels', 'corrupted platforms', 'moving platforms'],
-                path: 'AI-Games/PixelVault',
+                path: 'PixelVault',
                 fullDescription: 'Navigate corrupted data vaults as a digital entity. Master wall-jumping, double-jumping, and dash abilities to collect all data fragments and breach the system across 12 increasingly challenging levels.'
             },
             {
