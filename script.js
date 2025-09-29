@@ -176,6 +176,16 @@ class GameBrowser {
                 features: ['shield mechanics', 'wave-based survival', 'energy management', 'particle effects', 'space theme'],
                 path: 'SpaceGuardian',
                 fullDescription: 'As the last guardian of an ancient space station, use your energy shield to deflect waves of asteroids and hostile entities. Master energy management and precise positioning to survive!'
+            },
+            {
+                name: 'Aether',
+                displayName: 'Echoes of Aether',
+                icon: '🌀',
+                genre: 'adventure',
+                description: 'A 2D side-scrolling action platformer where you explore fragmented mythical realms and unlock ancient abilities',
+                features: ['metroidvania progression', 'ability unlocks', 'procedural rooms', 'mythical zones', 'persistent upgrades', 'combat system'],
+                path: 'Aether',
+                fullDescription: 'You are Nyra, a soul-forged warrior awakened in the mythical void. Explore fragmented realms, collect Aether Coins, and unlock movement abilities that persist across runs. Master combat, platforming, and progression as you restore balance to the shattered world of Aether.'
             }
         ];
         
