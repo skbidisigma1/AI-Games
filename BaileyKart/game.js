@@ -735,20 +735,30 @@ class BaileyKartGame {
                 // Time trial: only player kart, focus on lap times
                 this.totalLaps = 5; // More laps for time trial
                 this.gameMode = 'timeTrial';
+                // Reduce AI karts to just 2 for ghost racing feel
+                this.maxAIKarts = 2;
                 break;
             case 'endurance':
-                // Endurance: longer race with more laps
-                this.totalLaps = 10;
+                // Endurance: longer race with more laps and fuel management
+                this.totalLaps = 15;
                 this.gameMode = 'endurance';
+                this.maxAIKarts = 7;
+                // Add fuel system (will be implemented in kart creation)
+                this.fuelSystemEnabled = true;
                 break;
             case 'elimination':
-                // Elimination: normal settings but with elimination mechanics
-                this.totalLaps = 3;
+                // Elimination: last place eliminated each lap
+                this.totalLaps = 8;
                 this.gameMode = 'elimination';
+                this.maxAIKarts = 7;
+                this.eliminationTimer = 0;
+                this.eliminationInterval = 45; // 45 seconds between eliminations
                 break;
             default:
                 this.totalLaps = 3;
                 this.gameMode = 'normal';
+                this.maxAIKarts = 7;
+                this.fuelSystemEnabled = false;
         }
     }
     
@@ -1440,7 +1450,8 @@ class InputHandler {
             turnLeft: this.keys['a'] || this.keys['arrowleft'],
             turnRight: this.keys['d'] || this.keys['arrowright'],
             drift: this.keys['shift'],
-            usePowerUp: this.keys[' '] // spacebar
+            usePowerUp: this.keys[' '], // spacebar
+            glide: this.keys['g'] // G key for gliding
         };
     }
 }
@@ -1506,6 +1517,28 @@ class PhysicsEngine {
         } else {
             kart.isDrifting = false;
             kart.driftAngle *= 0.9; // Gradually reduce drift
+        }
+        
+        // Handle gliding
+        if (input.glide && kart.speed > 4 && kart.glideTime < kart.maxGlideTime) {
+            kart.isGliding = true;
+            kart.glideTime += deltaTime;
+            
+            // Gliding physics - maintain speed and get slight lift
+            kart.speed *= 1.02; // Small speed boost while gliding
+            
+            // Improved air control during gliding
+            if (input.turnLeft) {
+                kart.angle -= this.turnSpeed * 1.5; // Better turning in air
+            }
+            if (input.turnRight) {
+                kart.angle += this.turnSpeed * 1.5;
+            }
+        } else {
+            kart.isGliding = false;
+            if (!input.glide) {
+                kart.glideTime = Math.max(0, kart.glideTime - deltaTime * 2); // Recharge when not gliding
+            }
         }
         
         // Calculate movement
@@ -1640,6 +1673,12 @@ class Kart {
         // Drift properties
         this.isDrifting = false;
         this.driftAngle = 0;
+        
+        // Glider properties
+        this.isGliding = false;
+        this.glideTime = 0;
+        this.gliderType = 'standard'; // 'standard', 'advanced', 'turbo'
+        this.maxGlideTime = 3; // seconds
         
         // Race properties
         this.lapsCompleted = 0;
@@ -3294,6 +3333,32 @@ class RenderingEngine {
                 ctx.fillStyle = `rgba(200, 200, 200, ${0.4 - i * 0.08})`;
                 ctx.beginPath();
                 ctx.arc(-kart.radius - i * 6, (Math.random() - 0.5) * 10, 3 + i * 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        // Glider effects
+        if (kart.isGliding) {
+            // Draw glider wings
+            ctx.strokeStyle = `rgba(52, 152, 219, 0.8)`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-kart.radius - 8, -kart.radius/2);
+            ctx.lineTo(-kart.radius - 15, -kart.radius);
+            ctx.lineTo(-kart.radius - 8, -kart.radius);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(kart.radius + 8, -kart.radius/2);
+            ctx.lineTo(kart.radius + 15, -kart.radius);
+            ctx.lineTo(kart.radius + 8, -kart.radius);
+            ctx.stroke();
+            
+            // Add gliding particles
+            for (let i = 0; i < 3; i++) {
+                ctx.fillStyle = `rgba(135, 206, 250, ${0.6 - i * 0.2})`;
+                ctx.beginPath();
+                ctx.arc(-kart.radius - 10 - i * 4, (Math.random() - 0.5) * 8, 2, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
