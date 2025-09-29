@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echoes of Aether - AI Games</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <!-- Title Screen -->
+        <div id="titleScreen" class="screen active">
+            <div class="title-content">
+                <h1 class="game-title">ECHOES OF AETHER</h1>
+                <h2 class="subtitle">MYTHICAL REALM EXPLORER</h2>
+                <p class="story-intro">
+                    You are Nyra, a soul-forged warrior awakened in the mythical void.<br>
+                    Explore fragmented realms, unlock ancient abilities, and restore balance<br>
+                    to the shattered world of Aether.
+                </p>
+                <div class="title-buttons">
+                    <button id="startGame" class="aether-button">BEGIN JOURNEY</button>
+                    <button id="showHelp" class="aether-button secondary">HOW TO PLAY</button>
+                    <button id="showProgress" class="aether-button secondary">PROGRESS</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Screen -->
+        <div id="helpScreen" class="screen">
+            <div class="help-content">
+                <h1 class="game-title">HOW TO PLAY</h1>
+                <div class="help-sections">
+                    <div class="help-section">
+                        <h3>🎯 OBJECTIVE</h3>
+                        <p>Explore procedurally generated mythical realms, collect Aether Coins, and unlock movement abilities that persist across runs. Access deeper zones to uncover the mystery of the shattered realm.</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h3>🎮 CONTROLS</h3>
+                        <p><strong>A/D or Arrow Keys</strong>: Move left/right</p>
+                        <p><strong>W/Space or Up Arrow</strong>: Jump</p>
+                        <p><strong>S or Down Arrow</strong>: Drop down/Ground Smash (when unlocked)</p>
+                        <p><strong>Shift</strong>: Dash (when unlocked)</p>
+                        <p><strong>Mouse Click</strong>: Melee attack</p>
+                        <p><strong>Right Click</strong>: Ranged spell (limited uses)</p>
+                        <p><strong>ESC</strong>: Pause/Show this help</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h3>🗺️ WORLD ZONES</h3>
+                        <p><strong>Pyra Ruins</strong>: Fire realm - Unlock Dash ability</p>
+                        <p><strong>Glacium Peaks</strong>: Ice realm - Unlock Wall Climb ability</p>
+                        <p><strong>Zephyra Canopy</strong>: Air realm - Unlock Double Jump ability</p>
+                        <p><strong>Terran Depths</strong>: Earth realm - Unlock Ground Smash ability</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h3>⚡ PROGRESSION</h3>
+                        <p><strong>Aether Coins</strong>: Earned by defeating enemies and finding secrets</p>
+                        <p><strong>Movement Abilities</strong>: Persist across runs and unlock new areas</p>
+                        <p><strong>Mini-Bosses</strong>: Guard ability upgrades in each zone</p>
+                        <p><strong>Final Goal</strong>: Unlock all abilities to access Central Nexus</p>
+                    </div>
+                </div>
+                <div class="help-buttons">
+                    <button id="startFromHelp" class="aether-button">START GAME</button>
+                    <button id="backToTitle" class="aether-button secondary">BACK TO TITLE</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Screen -->
+        <div id="progressScreen" class="screen">
+            <div class="progress-content">
+                <h1 class="game-title">PROGRESSION</h1>
+                <div class="progress-sections">
+                    <div class="coins-section">
+                        <h3>💰 Aether Coins: <span id="totalCoins">0</span></h3>
+                    </div>
+                    
+                    <div class="abilities-section">
+                        <h3>⚡ Movement Abilities</h3>
+                        <div class="ability-grid">
+                            <div class="ability-item" id="abilityDoubleJump">
+                                <span class="ability-icon">🌪️</span>
+                                <span class="ability-name">Double Jump</span>
+                                <span class="ability-status">LOCKED</span>
+                            </div>
+                            <div class="ability-item" id="abilityDash">
+                                <span class="ability-icon">🔥</span>
+                                <span class="ability-name">Dash</span>
+                                <span class="ability-status">LOCKED</span>
+                            </div>
+                            <div class="ability-item" id="abilityWallClimb">
+                                <span class="ability-icon">🧊</span>
+                                <span class="ability-name">Wall Climb</span>
+                                <span class="ability-status">LOCKED</span>
+                            </div>
+                            <div class="ability-item" id="abilityGroundSmash">
+                                <span class="ability-icon">🌍</span>
+                                <span class="ability-name">Ground Smash</span>
+                                <span class="ability-status">LOCKED</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="upgrades-section">
+                        <h3>🛡️ Passive Upgrades</h3>
+                        <div class="upgrade-grid">
+                            <div class="upgrade-item" id="upgradeCoinMagnet">
+                                <span class="upgrade-name">Coin Magnet</span>
+                                <span class="upgrade-cost">50 coins</span>
+                                <button class="upgrade-buy" disabled>LOCKED</button>
+                            </div>
+                            <div class="upgrade-item" id="upgradeExtraHealth">
+                                <span class="upgrade-name">Extra Health</span>
+                                <span class="upgrade-cost">100 coins</span>
+                                <button class="upgrade-buy" disabled>LOCKED</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-buttons">
+                    <button id="backToTitleFromProgress" class="aether-button">BACK TO TITLE</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="screen">
+            <div id="gameHUD">
+                <div class="hud-top">
+                    <div class="hud-item">
+                        <span class="hud-label">HEALTH:</span>
+                        <div id="healthBar">
+                            <div id="healthFill"></div>
+                        </div>
+                    </div>
+                    <div class="hud-item">
+                        <span class="hud-label">COINS:</span>
+                        <span id="currentCoins">0</span>
+                    </div>
+                    <div class="hud-item">
+                        <span class="hud-label">ZONE:</span>
+                        <span id="currentZone">Central</span>
+                    </div>
+                    <div class="hud-item">
+                        <span class="hud-label">SPELLS:</span>
+                        <span id="spellCharges">3</span>
+                    </div>
+                </div>
+                <div class="hud-abilities">
+                    <div class="ability-indicator" id="hudDoubleJump">2x Jump</div>
+                    <div class="ability-indicator" id="hudDash">Dash</div>
+                    <div class="ability-indicator" id="hudWallClimb">Wall Climb</div>
+                    <div class="ability-indicator" id="hudGroundSmash">Ground Smash</div>
+                </div>
+            </div>
+
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+            
+            <div id="pauseMenu" class="modal hidden">
+                <div class="modal-content">
+                    <h2>GAME PAUSED</h2>
+                    <div class="modal-buttons">
+                        <button id="resumeGame" class="aether-button">RESUME</button>
+                        <button id="showHelpFromGame" class="aether-button secondary">HELP</button>
+                        <button id="backToMenuFromGame" class="aether-button secondary">MAIN MENU</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="gameOverMenu" class="modal hidden">
+                <div class="modal-content">
+                    <h2>JOURNEY ENDED</h2>
+                    <div id="runStats">
+                        <p>Coins Collected: <span id="runCoins">0</span></p>
+                        <p>Enemies Defeated: <span id="runEnemies">0</span></p>
+                        <p>Deepest Zone: <span id="runZone">Central</span></p>
+                    </div>
+                    <div class="modal-buttons">
+                        <button id="restartGame" class="aether-button">NEW RUN</button>
+                        <button id="backToMenuFromGameOver" class="aether-button secondary">MAIN MENU</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
