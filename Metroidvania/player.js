@@ -145,7 +145,8 @@ class Player {
     update(deltaTime) {
         if (this.dead) return;
         
-        const input = game.input;
+        const input = window.game?.input;
+        if (!input) return; // No input manager available
         
         // Update timers
         this.updateTimers(deltaTime);
@@ -299,10 +300,10 @@ class Player {
                 this.coyoteTime = 0;
                 this.hasDoubleJump = true;
                 jumped = true;
-                game.audio.playSound('jump');
+                window.game?.audio.playSound('jump');
                 
                 // Jump particles
-                game.particles.addExplosion(
+                window.game?.particles.addExplosion(
                     this.x + this.width / 2,
                     this.y + this.height,
                     6,
@@ -317,10 +318,10 @@ class Player {
                 this.wallDirection = 0;
                 this.hasDoubleJump = true;
                 jumped = true;
-                game.audio.playSound('jump');
+                window.game?.audio.playSound('jump');
                 
                 // Wall jump particles
-                game.particles.addExplosion(
+                window.game?.particles.addExplosion(
                     this.x + (this.wallDirection > 0 ? 0 : this.width),
                     this.y + this.height / 2,
                     8,
@@ -332,10 +333,10 @@ class Player {
                 this.vy = PLAYER_CONFIG.DOUBLE_JUMP_FORCE;
                 this.hasDoubleJump = false;
                 jumped = true;
-                game.audio.playSound('jump', 1.2);
+                window.game?.audio.playSound('jump', 1.2);
                 
                 // Double jump particles
-                game.particles.addExplosion(
+                window.game?.particles.addExplosion(
                     this.x + this.width / 2,
                     this.y + this.height / 2,
                     10,
@@ -381,12 +382,12 @@ class Player {
         this.invincibilityTime = PLAYER_CONFIG.DASH_DURATION;
         
         this.currentAnimation = PLAYER_ANIMATIONS.DASH;
-        game.audio.playSound('dash');
-        game.camera.shake(3);
+        window.game?.audio.playSound('dash');
+        window.game?.camera.shake(3);
         
         // Dash particles
         for (let i = 0; i < 15; i++) {
-            game.particles.addParticle(
+            window.game?.particles.addParticle(
                 this.x + this.width / 2,
                 this.y + this.height / 2,
                 {
@@ -417,13 +418,13 @@ class Player {
         this.comboTime = PLAYER_CONFIG.COMBO_WINDOW;
         
         this.currentAnimation = PLAYER_ANIMATIONS.ATTACK;
-        game.audio.playSound('attack');
+        window.game?.audio.playSound('attack');
         
         // Create attack particles
         const attackX = this.x + (this.facing > 0 ? this.width : 0);
         const attackY = this.y + this.height / 2;
         
-        game.particles.addExplosion(
+        window.game?.particles.addExplosion(
             attackX,
             attackY,
             8,
@@ -437,7 +438,7 @@ class Player {
         );
         
         // Screen shake based on combo
-        game.camera.shake(2 + this.combo);
+        window.game?.camera.shake(2 + this.combo);
     }
     
     trySpecialAbility() {
@@ -480,7 +481,7 @@ class Player {
             
             // Wall slide particles
             if (Math.random() < 0.3) {
-                game.particles.addParticle(
+                window.game?.particles.addParticle(
                     this.x + (this.wallDirection > 0 ? 0 : this.width),
                     this.y + Math.random() * this.height,
                     {
@@ -511,18 +512,18 @@ class Player {
     }
     
     handleCollisions() {
-        if (!game.world) return;
+        if (!window.game?.world) return;
         
         // Reset collision flags
         this.onGround = false;
         this.onWall = false;
         this.wallDirection = 0;
         
-        const tiles = game.world.getTilesNearPlayer(this);
+        const tiles = window.game?.world.getTilesNearPlayer(this);
         
         // Horizontal collision
         for (const tile of tiles) {
-            if (game.checkCollision(this, tile) && tile.solid) {
+            if (window.game?.checkCollision(this, tile) && tile.solid) {
                 if (this.vx > 0) { // Moving right
                     this.x = tile.x - this.width;
                     this.vx = 0;
@@ -539,7 +540,7 @@ class Player {
         
         // Vertical collision
         for (const tile of tiles) {
-            if (game.checkCollision(this, tile) && tile.solid) {
+            if (window.game?.checkCollision(this, tile) && tile.solid) {
                 if (this.vy > 0) { // Falling
                     this.y = tile.y - this.height;
                     this.vy = 0;
@@ -548,8 +549,8 @@ class Player {
                     
                     // Landing sound and particles
                     if (!this.wasOnGround) {
-                        game.audio.playSound('land');
-                        game.particles.addExplosion(
+                        window.game?.audio.playSound('land');
+                        window.game?.particles.addExplosion(
                             this.x + this.width / 2,
                             this.y + this.height,
                             4,
@@ -565,7 +566,7 @@ class Player {
         
         // Handle special tile types
         for (const tile of tiles) {
-            if (game.checkCollision(this, tile)) {
+            if (window.game?.checkCollision(this, tile)) {
                 this.handleSpecialTile(tile);
             }
         }
@@ -592,7 +593,7 @@ class Player {
                 
                 // Water particles
                 if (Math.random() < 0.1) {
-                    game.particles.addParticle(
+                    window.game?.particles.addParticle(
                         this.x + Math.random() * this.width,
                         this.y + Math.random() * this.height,
                         {
@@ -618,8 +619,8 @@ class Player {
             case 'bouncy':
                 if (this.vy > 0) {
                     this.vy = -Math.abs(this.vy) * 1.5;
-                    game.audio.playSound('jump', 0.7);
-                    game.particles.addExplosion(
+                    window.game?.audio.playSound('jump', 0.7);
+                    window.game?.particles.addExplosion(
                         this.x + this.width / 2,
                         this.y + this.height,
                         8,
@@ -631,11 +632,11 @@ class Player {
     }
     
     checkHazards() {
-        if (!game.world || this.invincible) return;
+        if (!window.game?.world || this.invincible) return;
         
-        const hazards = game.world.getHazardsNearPlayer(this);
+        const hazards = window.game?.world.getHazardsNearPlayer(this);
         for (const hazard of hazards) {
-            if (game.checkCollision(this, hazard)) {
+            if (window.game?.checkCollision(this, hazard)) {
                 this.takeDamage(hazard.damage || 10, hazard.x + hazard.width / 2, hazard.y + hazard.height / 2);
                 break; // Only take damage from one hazard per frame
             }
@@ -643,14 +644,14 @@ class Player {
     }
     
     checkCollectibles() {
-        if (!game.world) return;
+        if (!window.game?.world) return;
         
-        const collectibles = game.world.getCollectiblesNearPlayer(this);
+        const collectibles = window.game?.world.getCollectiblesNearPlayer(this);
         for (let i = collectibles.length - 1; i >= 0; i--) {
             const item = collectibles[i];
-            if (game.checkCollision(this, item)) {
+            if (window.game?.checkCollision(this, item)) {
                 this.collectItem(item);
-                game.world.removeCollectible(item);
+                window.game?.world.removeCollectible(item);
             }
         }
     }
@@ -659,32 +660,32 @@ class Player {
         switch (item.type) {
             case 'health':
                 this.heal(item.amount || 25);
-                game.audio.playSound('collect');
+                window.game?.audio.playSound('collect');
                 break;
                 
             case 'energy':
                 this.restoreEnergy(item.amount || 30);
-                game.audio.playSound('collect');
+                window.game?.audio.playSound('collect');
                 break;
                 
             case 'ability':
                 this.unlockAbility(item.ability);
-                game.audio.playSound('unlock');
-                if (game.ui) {
-                    game.ui.showAbilityUnlock(item.ability);
+                window.game?.audio.playSound('unlock');
+                if (window.game?.ui) {
+                    window.game?.ui.showAbilityUnlock(item.ability);
                 }
                 break;
                 
             case 'key':
-                if (game.world) {
-                    game.world.addKey(item.keyType);
+                if (window.game?.world) {
+                    window.game?.world.addKey(item.keyType);
                 }
-                game.audio.playSound('collect');
+                window.game?.audio.playSound('collect');
                 break;
         }
         
         // Collect particles
-        game.particles.addExplosion(
+        window.game?.particles.addExplosion(
             item.x + item.width / 2,
             item.y + item.height / 2,
             12,
@@ -722,8 +723,8 @@ class Player {
     
     checkAttackHits() {
         // Check enemies
-        for (const enemy of game.enemies) {
-            if (game.checkCollision(this.attackHitbox, enemy) && !enemy.invincible) {
+        for (const enemy of window.game?.enemies) {
+            if (window.game?.checkCollision(this.attackHitbox, enemy) && !enemy.invincible) {
                 const damage = PLAYER_CONFIG.ATTACK_DAMAGE * this.combo;
                 const criticalHit = Math.random() < CONFIG.COMBAT.CRITICAL_HIT_CHANCE;
                 
@@ -742,11 +743,11 @@ class Player {
                 const knockbackX = this.facing * CONFIG.COMBAT.KNOCKBACK_STRENGTH;
                 enemy.applyKnockback(knockbackX, -2);
                 
-                game.audio.playSound('hit');
-                game.camera.shake(4 + (criticalHit ? 3 : 0));
+                window.game?.audio.playSound('hit');
+                window.game?.camera.shake(4 + (criticalHit ? 3 : 0));
                 
                 // Hit particles
-                game.particles.addExplosion(
+                window.game?.particles.addExplosion(
                     enemy.x + enemy.width / 2,
                     enemy.y + enemy.height / 2,
                     criticalHit ? 15 : 10,
@@ -762,14 +763,14 @@ class Player {
         }
         
         // Check bosses
-        for (const boss of game.bosses) {
-            if (game.checkCollision(this.attackHitbox, boss) && !boss.invincible) {
+        for (const boss of window.game?.bosses) {
+            if (window.game?.checkCollision(this.attackHitbox, boss) && !boss.invincible) {
                 const damage = PLAYER_CONFIG.ATTACK_DAMAGE * this.combo;
                 boss.takeDamage(damage, this.x + this.width / 2, this.y + this.height / 2);
                 this.damageDealt += damage;
                 
-                game.audio.playSound('boss_hit');
-                game.camera.shake(6);
+                window.game?.audio.playSound('boss_hit');
+                window.game?.camera.shake(6);
                 
                 break;
             }
@@ -856,7 +857,7 @@ class Player {
         
         // Add movement particles when running
         if (this.currentAnimation === PLAYER_ANIMATIONS.RUN && this.onGround && Math.random() < 0.3) {
-            game.particles.addParticle(
+            window.game?.particles.addParticle(
                 this.x + Math.random() * this.width,
                 this.y + this.height,
                 {
@@ -901,11 +902,11 @@ class Player {
         this.vx += knockbackX;
         this.vy -= 3;
         
-        game.audio.playSound('hit');
-        game.camera.shake(8);
+        window.game?.audio.playSound('hit');
+        window.game?.camera.shake(8);
         
         // Damage particles
-        game.particles.addExplosion(
+        window.game?.particles.addExplosion(
             this.x + this.width / 2,
             this.y + this.height / 2,
             12,
@@ -929,7 +930,7 @@ class Player {
         this.health = Math.min(this.maxHealth, this.health + amount);
         
         // Healing particles
-        game.particles.addExplosion(
+        window.game?.particles.addExplosion(
             this.x + this.width / 2,
             this.y + this.height / 2,
             8,
@@ -946,7 +947,7 @@ class Player {
         this.energy = Math.min(this.maxEnergy, this.energy + amount);
         
         // Energy particles
-        game.particles.addExplosion(
+        window.game?.particles.addExplosion(
             this.x + this.width / 2,
             this.y + this.height / 2,
             6,
@@ -974,7 +975,7 @@ class Player {
         this.vy = 0;
         
         // Death explosion
-        game.particles.addExplosion(
+        window.game?.particles.addExplosion(
             this.x + this.width / 2,
             this.y + this.height / 2,
             20,
@@ -986,13 +987,13 @@ class Player {
             }
         );
         
-        game.camera.shake(15);
+        window.game?.camera.shake(15);
         
         // Transition to death state
         setTimeout(() => {
-            game.state.setState('dead');
-            if (game.ui) {
-                game.ui.showDeathScreen();
+            window.game?.state.setState('dead');
+            if (window.game?.ui) {
+                window.game?.ui.showDeathScreen();
             }
         }, 1000);
     }
@@ -1097,7 +1098,7 @@ class Player {
         ctx.restore();
         
         // Debug: render hitboxes
-        if (game.debugMode) {
+        if (window.game?.debugMode) {
             this.renderDebug(ctx, camera);
         }
     }
@@ -1164,6 +1165,13 @@ class Player {
         
         ctx.restore();
     }
+}
+
+// Export for browser use
+if (typeof window !== 'undefined') {
+    window.Player = Player;
+    window.PLAYER_CONFIG = PLAYER_CONFIG;
+    window.PLAYER_ANIMATIONS = PLAYER_ANIMATIONS;
 }
 
 // Export for other modules

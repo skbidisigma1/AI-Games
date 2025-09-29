@@ -1379,6 +1379,13 @@ class World {
     }
 }
 
+// Export for browser use
+if (typeof window !== 'undefined') {
+    window.World = World;
+    window.TILE_TYPES = TILE_TYPES;
+    window.ROOM_DATA = ROOM_DATA;
+}
+
 // Export for other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { World, TILE_TYPES, ROOM_DATA };
