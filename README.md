@@ -4,6 +4,26 @@ A collection of innovative games exploring artificial intelligence, consciousnes
 
 ## Games
 
+### ₿ Bitcoin Clicker
+*A Bitcoin mining empire builder with hash-solving mechanics, power management, and prestige systems*
+
+**Location**: `/BitcoinClicker/`
+
+**Features**:
+- Hash-based clicking system (keeps clicking relevant throughout)
+- Progressive mining hardware: CPU, GPU, ASIC, Quantum miners
+- Soft power constraint system with generators (solar, diesel, hydro, nuclear, fusion)
+- Prestige system with Hash Points for permanent multipliers
+- Dynamic Bitcoin market with fluctuating prices
+- Random events (market crashes, booms, halvening, power surges)
+- Comprehensive upgrade system
+- Offline earnings support
+- Auto-save with local storage
+
+**Play**: Open `BitcoinClicker/index.html` in a web browser
+
+**Gameplay**: Build a Bitcoin mining empire by clicking to solve hashes manually and purchasing automated mining hardware. Balance your power consumption with generator capacity to maintain efficiency. Watch the Bitcoin market fluctuate and respond to random events. Prestige to earn Hash Points that provide permanent multipliers to all production. Strategic decisions about when to upgrade, expand, and prestige lead to exponential growth in your mining operation.
+
 ### 🏎️ Bailey Kart
 *A complete top-down 2D racing game with competitive AI and strategic power-ups - Season 2*
 

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin Clicker - Mine Your Fortune</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Header -->
+        <div id="header">
+            <div class="header-main">
+                <h1>₿ BITCOIN CLICKER</h1>
+                <div id="stats-display">
+                    <div class="stat-group">
+                        <div class="stat-item">
+                            <span class="stat-label">Bitcoin</span>
+                            <span class="stat-value" id="btc-display">0.00000000</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Hash Points</span>
+                            <span class="stat-value" id="hp-display">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-group">
+                        <div class="stat-item">
+                            <span class="stat-label">Hashes/s</span>
+                            <span class="stat-value" id="hashrate-display">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">BTC/s</span>
+                            <span class="stat-value" id="btcrate-display">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="header-secondary">
+                <div class="power-meter">
+                    <span class="power-label">⚡ Power:</span>
+                    <span id="power-used">0</span>/<span id="power-capacity">0</span> kW
+                    <div class="power-bar">
+                        <div class="power-fill" id="power-fill"></div>
+                    </div>
+                </div>
+                <div class="market-info">
+                    <span class="market-label">📈 Market:</span>
+                    <span id="market-rate">$50,000</span>
+                    <span id="market-trend" class="trend-neutral">─</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Game Area -->
+        <div id="main-area">
+            <!-- Mining Section -->
+            <div id="mining-section">
+                <div id="click-area">
+                    <button id="mine-button" class="mine-btn">
+                        <span class="btn-icon">⛏️</span>
+                        <span class="btn-text">SOLVE HASH</span>
+                        <span class="btn-subtitle" id="click-power-display">+1 hash/click</span>
+                    </button>
+                    <div id="hash-counter">
+                        <span class="hash-label">Pending Hashes:</span>
+                        <span id="pending-hashes">0</span>
+                    </div>
+                    <div id="click-effects"></div>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div id="tab-nav">
+                <button class="tab-button active" data-tab="hardware">⚙️ Mining Hardware</button>
+                <button class="tab-button" data-tab="power">⚡ Power Systems</button>
+                <button class="tab-button" data-tab="upgrades">🔧 Upgrades</button>
+                <button class="tab-button" data-tab="prestige">🌟 Prestige</button>
+                <button class="tab-button" data-tab="stats">📊 Stats</button>
+            </div>
+
+            <!-- Content Panels -->
+            <div id="content-area">
+                <!-- Hardware Shop Panel -->
+                <div id="hardware-panel" class="panel active">
+                    <h2>Mining Hardware Shop</h2>
+                    <div id="hardware-list" class="shop-list"></div>
+                </div>
+
+                <!-- Power Systems Panel -->
+                <div id="power-panel" class="panel">
+                    <h2>Power Generation</h2>
+                    <p class="panel-description">Build generators to power your mining operation. Insufficient power reduces mining efficiency.</p>
+                    <div id="power-list" class="shop-list"></div>
+                </div>
+
+                <!-- Upgrades Panel -->
+                <div id="upgrades-panel" class="panel">
+                    <h2>Mining Upgrades</h2>
+                    <p class="panel-description">Permanent improvements to your mining operation.</p>
+                    <div id="upgrades-list" class="shop-list"></div>
+                </div>
+
+                <!-- Prestige Panel -->
+                <div id="prestige-panel" class="panel">
+                    <h2>Prestige System</h2>
+                    <div class="prestige-info">
+                        <p class="prestige-description">
+                            Reset your mining operation to earn <strong>Hash Points</strong> based on your total BTC mined.
+                            Hash Points provide permanent multipliers to all production.
+                        </p>
+                        <div class="prestige-stats">
+                            <div class="prestige-stat">
+                                <span class="prestige-label">Total BTC This Run:</span>
+                                <span id="total-btc-run">0</span>
+                            </div>
+                            <div class="prestige-stat">
+                                <span class="prestige-label">Hash Points on Prestige:</span>
+                                <span id="hp-on-prestige">0</span>
+                            </div>
+                            <div class="prestige-stat">
+                                <span class="prestige-label">Current HP Multiplier:</span>
+                                <span id="hp-multiplier">1.00x</span>
+                            </div>
+                        </div>
+                        <button id="prestige-button" class="prestige-btn">PRESTIGE NOW</button>
+                    </div>
+                </div>
+
+                <!-- Stats Panel -->
+                <div id="stats-panel" class="panel">
+                    <h2>Statistics</h2>
+                    <div id="stats-content" class="stats-grid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event Notifications -->
+        <div id="notifications"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="utils.js"></script>
+    <script src="storage.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
