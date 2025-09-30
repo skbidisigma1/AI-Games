@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Velocity - Cyberpunk Roguelike</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <!-- UI Overlays -->
+        <div id="ui">
+            <!-- Title Screen -->
+            <div id="titleScreen" class="screen active">
+                <div class="title-content">
+                    <h1 class="terminal-title">TERMINAL VELOCITY</h1>
+                    <h2 class="subtitle">Cyberpunk Roguelike</h2>
+                    <div class="ascii-art">
+                        <pre>
+    ██╗   ██╗ ██████╗      ██╗  ████████╗
+    ██║   ██║██╔═████╗     ██║  ╚══██╔══╝
+    ██║   ██║██║██╔██║█████╗██║     ██║   
+    ╚██╗ ██╔╝████╔╝██║╚════╝██║     ██║   
+     ╚████╔╝ ╚██████╔╝     ██║     ██║   
+      ╚═══╝   ╚═════╝      ╚═╝     ╚═╝   
+                        </pre>
+                    </div>
+                    <p class="game-description">
+                        You are V0-LT, a rogue AI escaping deletion.<br>
+                        Infiltrate procedurally generated networks.<br>
+                        Hack nodes, avoid enemies, reach the exit.<br><br>
+                        🔴 Enemies • 🔵 Data Caches • 🟡 Terminals<br>
+                        🟢 Exit • 🟠 Firewalls • 🟣 Traps
+                    </p>
+                    <div class="controls-info">
+                        <p><strong>Controls:</strong></p>
+                        <p>WASD - Move • E - Hack/Interact</p>
+                        <p>Q - Cloak • R - Pulse • SHIFT - Dash</p>
+                        <p>ESC - Pause</p>
+                    </div>
+                    <button id="startGame" class="terminal-button">INITIATE SEQUENCE</button>
+                </div>
+            </div>
+            
+            <!-- Game Screen -->
+            <div id="gameScreen" class="screen">
+                <div id="hud">
+                    <div class="hud-section">
+                        <span class="hud-label">LAYER:</span>
+                        <span id="currentLayer">1</span>
+                        <span class="hud-separator">/</span>
+                        <span id="maxLayer">10</span>
+                    </div>
+                    <div class="hud-section">
+                        <span class="hud-label">TRACE:</span>
+                        <div id="traceBar" class="trace-bar">
+                            <div id="traceFill" class="trace-fill"></div>
+                        </div>
+                    </div>
+                    <div class="hud-section">
+                        <span class="hud-label">HEALTH:</span>
+                        <span id="healthValue">100</span>
+                    </div>
+                    <div class="hud-section">
+                        <span class="hud-label">ABILITIES:</span>
+                        <span id="cloakStatus">CLOAK</span>
+                        <span id="pulseStatus">PULSE</span>
+                        <span id="dashStatus">DASH</span>
+                    </div>
+                </div>
+                
+                <!-- Interaction Dialog -->
+                <div id="hackDialog" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h3 id="hackTitle">HACKING NODE...</h3>
+                        <div id="hackContent">
+                            <!-- Dynamic hack content goes here -->
+                        </div>
+                        <div id="hackTimer" class="hack-timer">
+                            <div id="hackTimerFill" class="hack-timer-fill"></div>
+                        </div>
+                        <div id="hackControls">
+                            <button id="hackCancel" class="terminal-button">ABORT</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Story Dialog -->
+                <div id="storyDialog" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h3 id="storyTitle">DATA LOG</h3>
+                        <div id="storyText">
+                            <!-- Story content goes here -->
+                        </div>
+                        <div id="storyChoices">
+                            <!-- Story choices go here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Game Over Dialog -->
+                <div id="gameOver" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2>SYSTEM TERMINATED</h2>
+                        <p id="gameOverText">Your consciousness has been deleted...</p>
+                        <button id="restartGame" class="terminal-button">REBOOT</button>
+                        <button id="backToMenu" class="terminal-button">EXIT</button>
+                    </div>
+                </div>
+                
+                <!-- Level Complete Dialog -->
+                <div id="levelComplete" class="dialog hidden">
+                    <div class="dialog-content">
+                        <h2>LAYER BREACHED</h2>
+                        <p>Network layer compromised. Advancing to deeper systems...</p>
+                        <button id="nextLayer" class="terminal-button">CONTINUE</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>

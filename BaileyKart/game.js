@@ -41,6 +41,15 @@ class BaileyKartGame {
         // Camera with zoom scale for closer view
         this.camera = { x: 0, y: 0, scale: 1.5 };
         
+        // Game settings
+        this.settings = {
+            aiDifficulty: 'normal',
+            windowScale: 'auto',
+            uiScale: 'normal',
+            soundEnabled: true,
+            showPerformance: false
+        };
+        
         this.init();
     }
     
@@ -49,6 +58,7 @@ class BaileyKartGame {
      */
     init() {
         this.setupEventListeners();
+        this.loadSettings();
         this.createTrack();
         this.createKarts();
         this.gameLoop();
@@ -73,6 +83,11 @@ class BaileyKartGame {
             this.showKartCustomization();
         });
         
+        // Settings button
+        document.getElementById('settingsMenu').addEventListener('click', () => {
+            this.showSettings();
+        });
+        
         // Back to title button
         document.getElementById('backToTitle').addEventListener('click', () => {
             this.backToTitle();
@@ -88,15 +103,20 @@ class BaileyKartGame {
             this.backToTitle();
         });
         
+ copilot/fix-6bbc2ef7-3b25-4846-af29-2a450a6bb778
         // Settings button
         document.getElementById('showSettings').addEventListener('click', () => {
             this.showSettings();
         });
         
+=======
+        // Back to title from settings
+ main
         document.getElementById('backToTitleFromSettings').addEventListener('click', () => {
             this.backToTitle();
         });
         
+ copilot/fix-6bbc2ef7-3b25-4846-af29-2a450a6bb778
         document.getElementById('resetSettings').addEventListener('click', () => {
             this.resetSettings();
         });
@@ -104,6 +124,8 @@ class BaileyKartGame {
         // Settings change listeners
         this.setupSettingsListeners();
         
+=======
+ main
         // Beta mode event listeners
         document.getElementById('timeTrialMode').addEventListener('click', () => {
             this.showBetaMode('timeTrial');
@@ -171,6 +193,7 @@ class BaileyKartGame {
         document.getElementById('trackSelection').classList.remove('active');
         document.getElementById('storyModeScreen').classList.remove('active');
         document.getElementById('kartCustomizationScreen').classList.remove('active');
+        document.getElementById('settingsScreen').classList.remove('active');
         document.getElementById('titleScreen').classList.add('active');
         
         // Reset track selection title
@@ -208,6 +231,7 @@ class BaileyKartGame {
         document.getElementById('titleScreen').classList.remove('active');
         document.getElementById('settingsScreen').classList.add('active');
         this.loadSettings();
+ copilot/fix-6bbc2ef7-3b25-4846-af29-2a450a6bb778
     }
     
     /**
@@ -407,6 +431,9 @@ class BaileyKartGame {
         if (mode !== 'none') {
             body.classList.add(mode);
         }
+=======
+        this.setupSettingsEventListeners();
+ main
     }
     
     /**
@@ -577,132 +604,6 @@ class BaileyKartGame {
                     <p>After the race, a racer approaches him nervously. "I know who you really are, Stewart. 
                     Please... help us. She's destroying everything we love about racing."</p>
                     <p>The resistance is forming, but Juliette's web of control runs deeper than Stewart imagined.</p>
-                `
-            },
-            4: {
-                title: "Race 4: First Kiss Under City Lights",
-                track: "city",
-                preRaceText: `
-                    <p><strong>City of Love</strong></p>
-                    <p>After their magical sunset confession, Luke and Hadlee have been inseparable. 
-                    Their late-night phone calls last until dawn, filled with laughter, dreams, and whispered sweet nothings.</p>
-                    <p>Tonight's city race takes on special meaning - Hadlee suggested they make it interesting: 
-                    "If you can beat me tonight, I'll let you take me to that fancy rooftop restaurant downtown," she teased, 
-                    her eyes sparkling with mischief.</p>
-                    <p>The city streets are lit up like a romantic movie set, neon lights reflecting off wet pavement. 
-                    Luke's heart pounds not from nerves, but from pure excitement. Win or lose, he knows he's already won her heart.</p>
-                    <p>As they line up at the starting line, Hadlee blows him a kiss. "May the best racer win, handsome," 
-                    she calls out, making Luke blush adorably.</p>
-                `,
-                postRaceText: `
-                    <p>The race was intense - both Luke and Hadlee pushed their karts to the limit, 
-                    trading positions throughout the course. Their competitive spirits only made them more attractive to each other.</p>
-                    <p>As they cross the finish line together in a photo-finish, they can't help but laugh. 
-                    "I guess we both won," Hadlee says breathlessly, pulling off her helmet to reveal tousled hair that makes Luke's heart skip.</p>
-                    <p>Under the city lights, with adrenaline still coursing through their veins, 
-                    Luke finally finds the courage to cup her face gently and lean in for their first kiss. 
-                    Time stops as their lips meet, the cheering crowd fading into background noise.</p>
-                `
-            },
-            5: {
-                title: "Race 5: Desert Heat and Passion",
-                track: "desert",
-                preRaceText: `
-                    <p><strong>Weekend Getaway</strong></p>
-                    <p>Luke and Hadlee have planned a romantic weekend getaway to the desert racing circuit. 
-                    They've been dating for a few weeks now, and the chemistry between them is absolutely electric.</p>
-                    <p>Last night at their cozy desert hotel, they spent hours stargazing from the hot tub, 
-                    Hadlee nestled against Luke's chest as he traced gentle patterns on her bare shoulders. 
-                    "I never knew I could feel this way," she whispered against his neck, sending shivers down his spine.</p>
-                    <p>Today's race is more playful than competitive - they've agreed that whoever loses 
-                    has to give the winner a full body massage tonight. Hadlee's teasing smile as she suggested this 
-                    made Luke's temperature rise even more than the desert sun.</p>
-                    <p>"Ready to lose, handsome?" she purrs, adjusting her racing suit in a way that makes Luke completely forget how to breathe.</p>
-                `,
-                postRaceText: `
-                    <p>The desert race was scorching hot in more ways than one - both racers pushed hard, 
-                    but they kept stealing glances at each other, causing more than one amusing near-miss with cacti.</p>
-                    <p>Afterward, as they cool down with ice-cold drinks, Hadlee slides closer to Luke on their picnic blanket. 
-                    "I may have lost the race," she says with a sultry smile, "but I think we're both about to win tonight."</p>
-                    <p>As the desert sunset paints them in golden light, Luke pulls her close for a passionate kiss. 
-                    The massage oils they packed are definitely going to come in handy...</p>
-                `
-            },
-            6: {
-                title: "Race 6: Forest of Love",
-                track: "forest",
-                preRaceText: `
-                    <p><strong>Into the Enchanted Woods</strong></p>
-                    <p>Luke and Hadlee have been officially dating for two months now, and their relationship has deepened 
-                    into something beautiful and mature. They've started talking about the future, about dreams they want to share.</p>
-                    <p>The forest track holds special meaning - it was here that Luke first realized he was falling in love. 
-                    Today, Hadlee seems extra radiant, with a secret smile that makes Luke's heart flutter with curiosity.</p>
-                    <p>Before the race, she pulls him aside to a secluded grove. "Luke," she says, her voice soft with emotion, 
-                    "racing brought us together, but what we have now... it's so much more than I ever dreamed possible."</p>
-                    <p>She presses a small velvet box into his hands. "I know it's unconventional, but... 
-                    will you accept this promise ring? I want the whole world to know you're mine."</p>
-                `,
-                postRaceText: `
-                    <p>Luke races with tears of joy in his eyes, the promise ring gleaming on his finger. 
-                    Every turn through the dappled forest light feels like a celebration of their love.</p>
-                    <p>After crossing the finish line, he sweeps Hadlee into his arms, spinning her around as she laughs with pure joy. 
-                    "Yes, yes, a thousand times yes!" he whispers against her ear.</p>
-                    <p>As they kiss under the ancient trees, other racers and spectators applaud. 
-                    Their love story has become the talk of the racing circuit - proof that sometimes fairy tales do come true.</p>
-                `
-            },
-            7: {
-                title: "Race 7: The Big Proposal",
-                track: "speedway",
-                preRaceText: `
-                    <p><strong>Championship Dreams</strong></p>
-                    <p>Six months have passed, and Luke and Hadlee have become the golden couple of the racing world. 
-                    Their love story has inspired countless fans, and tonight's championship race feels like destiny.</p>
-                    <p>Luke has been planning something special for weeks. Hidden in his racing suit pocket is a ring - 
-                    not just any ring, but his grandmother's vintage engagement ring, perfectly restored and sparkling.</p>
-                    <p>Hadlee doesn't know, but Luke has arranged for the entire race to be broadcast live. 
-                    If he wins tonight's championship, he plans to propose right there on the track, 
-                    in front of millions of viewers and the woman he adores.</p>
-                    <p>"Whatever happens tonight," Hadlee says, kissing him tenderly before they get in their karts, 
-                    "I just want you to know that you've already made me the happiest woman alive."</p>
-                `,
-                postRaceText: `
-                    <p>Luke's performance is legendary - he races not just with skill, but with the power of true love driving him forward. 
-                    When he crosses the finish line as champion, the crowd erupts in thunderous applause.</p>
-                    <p>Without even removing his helmet, Luke runs to Hadlee's kart. In front of the cheering crowd and rolling cameras, 
-                    he drops to one knee and pulls out the ring.</p>
-                    <p>"Hadlee, my love, my everything," his voice carries across the speedway, "will you marry me?"</p>
-                    <p>Her "YES!" echoes through the stadium as confetti cannons explode and the crowd goes wild. 
-                    Their kiss is captured by every camera, destined to become one of the most romantic moments in sports history.</p>
-                `
-            },
-            8: {
-                title: "Race 8: Honeymoon Grand Prix",
-                track: "twisted",
-                preRaceText: `
-                    <p><strong>Wedding Bells and Racing Thrills</strong></p>
-                    <p>Luke and Hadlee's wedding was a fairytale come true - a beautiful ceremony at sunset 
-                    followed by a reception where half the racing world celebrated their union.</p>
-                    <p>Now, on their honeymoon in Monaco, they couldn't resist entering one last race together - 
-                    the prestigious Monaco Grand Prix for couples. Racing side by side as newlyweds feels like the perfect adventure.</p>
-                    <p>"Ready to show the world what Team Hadlee-Luke can do?" she asks, her new wedding ring catching the Mediterranean sunlight. 
-                    The way she says their combined name makes Luke's heart soar.</p>
-                    <p>The twisted street circuit is challenging, but they've never felt more in sync. 
-                    Their love has made them both better racers, better people, better partners in every sense of the word.</p>
-                    <p>"Win or lose," Luke says, pulling her close for one last pre-race kiss, "I'm already living my dream with you."</p>
-                `,
-                postRaceText: `
-                    <p><strong>EPILOGUE: Happily Ever After</strong></p>
-                    <p>Luke and Hadlee cross the finish line together, hands reaching across the gap between their karts to touch. 
-                    They've both won in the truest sense, not just the race, but life itself.</p>
-                    <p>Years later, they'll be known as the greatest love story in racing history. 
-                    Their racing school for young couples becomes legendary, built on the foundation that love makes everything better.</p>
-                    <p>They have three beautiful children who inherit both their parents' need for speed and their deep capacity for love. 
-                    The racing circuit echoes with laughter as the next generation of their family learns to race.</p>
-                    <p>Luke still writes Hadlee love letters, slipping them under her pillow or into her racing gloves. 
-                    And Hadlee still gets butterflies every time she sees him smile.</p>
-                    <p>Some fairy tales are real, and theirs is just beginning.</p>
-                    <p><strong>THE END ♥</strong></p>
                 `
             }
         };
@@ -1422,6 +1323,168 @@ class BaileyKartGame {
         const secs = Math.floor(seconds % 60);
         const ms = Math.floor((seconds % 1) * 100);
         return `${minutes}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+    }
+    
+    /**
+     * Load settings from localStorage
+     */
+    loadSettings() {
+        const savedSettings = localStorage.getItem('baileyKartSettings');
+        if (savedSettings) {
+            this.settings = { ...this.settings, ...JSON.parse(savedSettings) };
+        }
+        
+        // Apply settings to UI elements
+        document.getElementById('aiDifficultySelect').value = this.settings.aiDifficulty;
+        document.getElementById('windowScaleSelect').value = this.settings.windowScale;
+        document.getElementById('uiScaleSelect').value = this.settings.uiScale;
+        document.getElementById('soundToggle').checked = this.settings.soundEnabled;
+        document.getElementById('showPerformanceToggle').checked = this.settings.showPerformance;
+        
+        // Apply settings
+        this.applySettings();
+    }
+    
+    /**
+     * Save settings to localStorage
+     */
+    saveSettings() {
+        localStorage.setItem('baileyKartSettings', JSON.stringify(this.settings));
+        this.applySettings();
+    }
+    
+    /**
+     * Apply current settings to the game
+     */
+    applySettings() {
+        // Apply window scaling
+        this.applyWindowScale();
+        
+        // Apply UI scaling
+        this.applyUIScale();
+        
+        // Update AI difficulty
+        this.updateAIDifficulty();
+    }
+    
+    /**
+     * Setup event listeners for settings controls
+     */
+    setupSettingsEventListeners() {
+        // AI Difficulty
+        document.getElementById('aiDifficultySelect').addEventListener('change', (e) => {
+            this.settings.aiDifficulty = e.target.value;
+            this.saveSettings();
+        });
+        
+        // Window Scale
+        document.getElementById('windowScaleSelect').addEventListener('change', (e) => {
+            this.settings.windowScale = e.target.value;
+            this.saveSettings();
+        });
+        
+        // UI Scale
+        document.getElementById('uiScaleSelect').addEventListener('change', (e) => {
+            this.settings.uiScale = e.target.value;
+            this.saveSettings();
+        });
+        
+        // Sound Toggle
+        document.getElementById('soundToggle').addEventListener('change', (e) => {
+            this.settings.soundEnabled = e.target.checked;
+            this.saveSettings();
+        });
+        
+        // Performance Toggle
+        document.getElementById('showPerformanceToggle').addEventListener('change', (e) => {
+            this.settings.showPerformance = e.target.checked;
+            this.saveSettings();
+        });
+    }
+    
+    /**
+     * Apply window scaling settings
+     */
+    applyWindowScale() {
+        const canvas = document.getElementById('gameCanvas');
+        const container = document.getElementById('gameContainer');
+        
+        switch (this.settings.windowScale) {
+            case 'small':
+                canvas.style.transform = 'scale(0.75)';
+                canvas.style.transformOrigin = 'center';
+                break;
+            case 'normal':
+                canvas.style.transform = 'scale(1)';
+                canvas.style.transformOrigin = 'center';
+                break;
+            case 'large':
+                canvas.style.transform = 'scale(1.25)';
+                canvas.style.transformOrigin = 'center';
+                break;
+            case 'fullscreen':
+                canvas.style.transform = 'scale(1)';
+                canvas.style.width = '100vw';
+                canvas.style.height = '100vh';
+                canvas.style.maxWidth = '100vw';
+                canvas.style.maxHeight = '100vh';
+                break;
+            case 'auto':
+            default:
+                canvas.style.transform = 'scale(1)';
+                canvas.style.transformOrigin = 'center';
+                canvas.style.width = '';
+                canvas.style.height = '';
+                canvas.style.maxWidth = '95vw';
+                canvas.style.maxHeight = '85vh';
+                break;
+        }
+    }
+    
+    /**
+     * Apply UI scaling settings
+     */
+    applyUIScale() {
+        const ui = document.getElementById('ui');
+        
+        switch (this.settings.uiScale) {
+            case 'small':
+                ui.style.fontSize = '0.85em';
+                break;
+            case 'large':
+                ui.style.fontSize = '1.15em';
+                break;
+            case 'normal':
+            default:
+                ui.style.fontSize = '1em';
+                break;
+        }
+    }
+    
+    /**
+     * Update AI difficulty based on settings
+     */
+    updateAIDifficulty() {
+        if (!this.aiSystem) return;
+        
+        // Modify AI personalities based on difficulty
+        const difficultyMultipliers = {
+            easy: { skill: 0.7, aggression: 0.6, riskTaking: 0.5 },
+            normal: { skill: 1.0, aggression: 1.0, riskTaking: 1.0 },
+            hard: { skill: 1.2, aggression: 1.3, riskTaking: 1.1 },
+            expert: { skill: 1.4, aggression: 1.5, riskTaking: 1.2 }
+        };
+        
+        const multiplier = difficultyMultipliers[this.settings.aiDifficulty] || difficultyMultipliers.normal;
+        
+        // Apply difficulty to existing AI karts
+        this.aiKarts.forEach(kart => {
+            if (kart.aiPersonality) {
+                kart.aiPersonality.skill *= multiplier.skill;
+                kart.aiPersonality.aggression *= multiplier.aggression;
+                kart.aiPersonality.riskTaking *= multiplier.riskTaking;
+            }
+        });
     }
 }
 
