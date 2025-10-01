@@ -11,7 +11,7 @@ class BitcoinClickerGame {
         // Game configuration
         this.config = {
             hashesPerBTC: 1000000, // 1 million hashes = 1 BTC
-            tickRate: 100, // Game updates 10 times per second
+            tickRate: 200, // Game updates 10 times per second
             eventCheckRate: 5000, // Check for events every 5 seconds
             
             // Market fluctuation
@@ -218,7 +218,7 @@ class BitcoinClickerGame {
     createDefaultState() {
         return {
             // Resources
-            bitcoin: 0,
+            bitcoin: 10,
             pendingHashes: 0,
             hashPoints: 0,
             
