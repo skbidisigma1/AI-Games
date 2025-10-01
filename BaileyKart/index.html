@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CrazyKart - Racing Adventure Season 2</title>
+    <title>HadleeKart - Racing Adventure Season 2</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -15,7 +15,7 @@
             <!-- Title Screen -->
             <div id="titleScreen" class="screen active">
                 <div class="title-content">
-                    <h1 class="racing-title">CrazyKart</h1>
+                    <h1 class="racing-title">HadleeKart</h1>
                     <h2 class="subtitle">Season 2 - Racing Adventure</h2>
                     <p class="game-description">
                         Race against 7 AI opponents in thrilling kart racing action!<br>
@@ -26,12 +26,16 @@
                     <div class="controls-info">
                         <p><strong>Controls:</strong></p>
                         <p>W/A/S/D or Arrow Keys to drive</p>
-                        <p>SHIFT to drift • SPACE to use power-up</p>
+                        <p>SHIFT to drift • SPACE to use power-up • G to glide</p>
                     </div>
                     <button id="startRace" class="racing-button">SELECT TRACK!</button>
                     <button id="kartCustomization" class="racing-button" style="margin-top: 15px;">CUSTOMIZE KART</button>
                     <button id="storyMode" class="racing-button" style="margin-top: 15px;">STORY MODE</button>
+ copilot/fix-6bbc2ef7-3b25-4846-af29-2a450a6bb778
+                    <button id="showSettings" class="racing-button" style="margin-top: 15px;">SETTINGS</button>
+=======
                     <button id="settingsMenu" class="racing-button" style="margin-top: 15px;">⚙️ SETTINGS</button>
+ main
                     <div class="beta-modes" style="margin-top: 25px; border-top: 2px solid #ff6b6b; padding-top: 15px;">
                         <h3 style="color: #ff6b6b; margin: 0 0 10px 0;">🚧 BETA MODES 🚧</h3>
                         <button id="timeTrialMode" class="racing-button beta-button" style="margin-top: 10px;">TIME TRIAL [BETA]</button>
@@ -172,6 +176,142 @@
                         </div>
                     </div>
                     <button id="backToTitleFromCustomization" class="racing-button secondary">← BACK TO MENU</button>
+                </div>
+            </div>
+            
+            <!-- Settings Screen -->
+            <div id="settingsScreen" class="screen">
+                <div class="settings-content">
+                    <h1 class="racing-title">Game Settings</h1>
+                    <h2 class="story-subtitle">Customize Your Racing Experience</h2>
+                    
+                    <div class="settings-sections">
+                        <!-- Display Settings -->
+                        <div class="settings-section">
+                            <h3>🖥️ Display Options</h3>
+                            <div class="setting-item">
+                                <label for="screenFit">Screen Fit:</label>
+                                <select id="screenFit" class="setting-select">
+                                    <option value="auto">Auto Fit</option>
+                                    <option value="stretch">Stretch to Fill</option>
+                                    <option value="letterbox">Letterbox (Maintain Aspect)</option>
+                                    <option value="crop">Crop to Fit</option>
+                                </select>
+                            </div>
+                            <div class="setting-item">
+                                <label for="uiScale">UI Scale:</label>
+                                <select id="uiScale" class="setting-select">
+                                    <option value="0.8">Small (80%)</option>
+                                    <option value="1.0" selected>Normal (100%)</option>
+                                    <option value="1.2">Large (120%)</option>
+                                    <option value="1.5">Extra Large (150%)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- AI Settings -->
+                        <div class="settings-section">
+                            <h3>🤖 AI Opponents</h3>
+                            <div class="setting-item">
+                                <label for="aiDifficulty">AI Difficulty:</label>
+                                <input type="range" id="aiDifficulty" min="0.5" max="2.0" step="0.1" value="1.0" class="setting-slider">
+                                <span id="aiDifficultyValue">Normal (1.0x)</span>
+                            </div>
+                            <div class="setting-item">
+                                <label for="aiAggression">AI Aggression:</label>
+                                <select id="aiAggression" class="setting-select">
+                                    <option value="defensive">Defensive - Fair Play</option>
+                                    <option value="normal" selected>Normal - Balanced</option>
+                                    <option value="aggressive">Aggressive - Competitive</option>
+                                    <option value="ruthless">Ruthless - No Mercy</option>
+                                </select>
+                            </div>
+                            <div class="setting-item">
+                                <label for="aiPersonality">AI Personality Mix:</label>
+                                <select id="aiPersonality" class="setting-select">
+                                    <option value="varied" selected>Varied - Different Styles</option>
+                                    <option value="cautious">All Cautious</option>
+                                    <option value="aggressive">All Aggressive</option>
+                                    <option value="skilled">All Skilled</option>
+                                    <option value="reckless">All Reckless</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Gameplay Assistance -->
+                        <div class="settings-section">
+                            <h3>🧭 Racing Assistance</h3>
+                            <div class="setting-item">
+                                <label for="guideMeArrows">Show "Guide Me" Arrows:</label>
+                                <input type="checkbox" id="guideMeArrows" checked class="setting-checkbox">
+                                <span class="checkbox-label">Display directional arrows on complex track sections</span>
+                            </div>
+                            <div class="setting-item">
+                                <label for="racingLine">Show Racing Line:</label>
+                                <input type="checkbox" id="racingLine" class="setting-checkbox">
+                                <span class="checkbox-label">Display optimal racing path (beginner mode)</span>
+                            </div>
+                            <div class="setting-item">
+                                <label for="minimapSize">Minimap Size:</label>
+                                <select id="minimapSize" class="setting-select">
+                                    <option value="small">Small</option>
+                                    <option value="normal" selected>Normal</option>
+                                    <option value="large">Large</option>
+                                    <option value="hidden">Hidden</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Accessibility Settings -->
+                        <div class="settings-section">
+                            <h3>♿ Accessibility</h3>
+                            <div class="setting-item">
+                                <label for="colorblindMode">Colorblind Support:</label>
+                                <select id="colorblindMode" class="setting-select">
+                                    <option value="none" selected>None</option>
+                                    <option value="protanopia">Protanopia (Red-Green)</option>
+                                    <option value="deuteranopia">Deuteranopia (Red-Green)</option>
+                                    <option value="tritanopia">Tritanopia (Blue-Yellow)</option>
+                                    <option value="monochrome">Monochrome</option>
+                                </select>
+                            </div>
+                            <div class="setting-item">
+                                <label for="highContrast">High Contrast Mode:</label>
+                                <input type="checkbox" id="highContrast" class="setting-checkbox">
+                                <span class="checkbox-label">Increase visual contrast for better visibility</span>
+                            </div>
+                            <div class="setting-item">
+                                <label for="reducedMotion">Reduce Motion Effects:</label>
+                                <input type="checkbox" id="reducedMotion" class="setting-checkbox">
+                                <span class="checkbox-label">Minimize particle effects and screen shake</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Audio Settings -->
+                        <div class="settings-section">
+                            <h3>🔊 Audio</h3>
+                            <div class="setting-item">
+                                <label for="masterVolume">Master Volume:</label>
+                                <input type="range" id="masterVolume" min="0" max="100" value="70" class="setting-slider">
+                                <span id="masterVolumeValue">70%</span>
+                            </div>
+                            <div class="setting-item">
+                                <label for="sfxVolume">Sound Effects:</label>
+                                <input type="range" id="sfxVolume" min="0" max="100" value="80" class="setting-slider">
+                                <span id="sfxVolumeValue">80%</span>
+                            </div>
+                            <div class="setting-item">
+                                <label for="musicVolume">Music Volume:</label>
+                                <input type="range" id="musicVolume" min="0" max="100" value="60" class="setting-slider">
+                                <span id="musicVolumeValue">60%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-buttons">
+                        <button id="resetSettings" class="racing-button secondary">Reset to Defaults</button>
+                        <button id="backToTitleFromSettings" class="racing-button">← BACK TO MENU</button>
+                    </div>
                 </div>
             </div>
             

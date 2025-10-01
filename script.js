@@ -38,6 +38,16 @@ class GameBrowser {
         // Game data extracted from the README and directory structure
         this.games = [
             {
+                name: 'BitcoinClicker',
+                displayName: 'Bitcoin Clicker',
+                icon: '₿',
+                genre: 'idle',
+                description: 'A Bitcoin mining empire builder with hash-solving mechanics, power management, and prestige systems',
+                features: ['hash-based clicking', 'progressive mining hardware', 'power management', 'market fluctuations', 'random events', 'prestige system'],
+                path: 'BitcoinClicker',
+                fullDescription: 'Build a Bitcoin mining empire by solving hashes manually and purchasing automated hardware. Balance power consumption with generator capacity. Watch the market fluctuate and respond to random events. Prestige for permanent Hash Point multipliers.'
+            },
+            {
                 name: 'HadleeKart',
                 displayName: 'HadleeKart',
                 icon: '🏎️',
