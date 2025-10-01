@@ -2,22 +2,30 @@
 
 class BitcoinClickerGame {
     constructor() {
-        this.gameState = this.createDefaultState();
+    this.gameState = this.createDefaultState();
         this.lastUpdate = Date.now();
         this.autosaveInterval = null;
         this.gameLoopInterval = null;
         this.eventCheckInterval = null;
+        // Force unlock check every second
+        setInterval(() => {
+            this.checkUnlocks();
+        }, 1000);
         
         // Game configuration
         this.config = {
-            hashesPerBTC: 1000000, // 1 million hashes = 1 BTC
-            tickRate: 200, // Game updates 10 times per second
+            hashesPerBTC: 10000000, // 1 million hashes = 1 BTC
+            tickRate: 100, // Game updates 10 times per second
             eventCheckRate: 5000, // Check for events every 5 seconds
             
             // Market fluctuation
             marketBasePrice: 50000,
-            marketVolatility: 0.02, // 2% max change per tick
+            marketVolatility: 0.005, // 0.5% max change per tick
             marketTrendDuration: 30000, // 30 seconds per trend
+
+            // Bitcoin price limits
+            maxBitcoinPrice: 10000000, // Example value, adjust as needed
+            lowBitcoinPrice: 90000, // Example value, adjust as needed
             
             // Event probabilities (per check)
             eventChances: {
@@ -30,13 +38,13 @@ class BitcoinClickerGame {
             }
         };
         
-        // Mining hardware definitions
+        // Mining hardware definitions (real-world USD prices)
         this.hardwareTypes = [
             {
                 id: 'cpu',
                 name: 'CPU Miner',
                 description: 'Your trusty CPU. Slow but reliable.',
-                baseCost: 10,
+                baseCost: 100,
                 baseHashrate: 10,
                 basePower: 50,
                 costMultiplier: 1.15,
@@ -46,7 +54,7 @@ class BitcoinClickerGame {
                 id: 'gpu',
                 name: 'GPU Rig',
                 description: 'Graphics card mining. Much faster.',
-                baseCost: 100,
+                baseCost: 400,
                 baseHashrate: 100,
                 basePower: 150,
                 costMultiplier: 1.15,
@@ -56,7 +64,7 @@ class BitcoinClickerGame {
                 id: 'asic_early',
                 name: 'Early ASIC',
                 description: 'First generation ASIC miner. Game changer.',
-                baseCost: 1000,
+                baseCost: 2000,
                 baseHashrate: 1000,
                 basePower: 500,
                 costMultiplier: 1.18,
@@ -66,44 +74,131 @@ class BitcoinClickerGame {
                 id: 'asic_mid',
                 name: 'Mid-Gen ASIC',
                 description: 'Improved efficiency and hashrate.',
-                baseCost: 10000,
+                baseCost: 6000,
                 baseHashrate: 8000,
                 basePower: 1200,
                 costMultiplier: 1.20,
                 unlocked: false,
-                requirement: { totalBTC: 10 }
+                requirement: { totalBTC: 1, hashPoints: 0 }
             },
             {
                 id: 'asic_modern',
                 name: 'Modern ASIC',
                 description: 'State-of-the-art mining hardware.',
-                baseCost: 100000,
+                baseCost: 20000,
                 baseHashrate: 100000,
                 basePower: 3000,
                 costMultiplier: 1.22,
                 unlocked: false,
-                requirement: { totalBTC: 100 }
+                requirement: { totalBTC: 50, hashPoints: 0 }
             },
             {
                 id: 'quantum',
                 name: 'Quantum Miner',
                 description: 'Experimental quantum computing miner.',
-                baseCost: 1000000,
+                baseCost: 100000,
                 baseHashrate: 1000000,
                 basePower: 10000,
                 costMultiplier: 1.25,
                 unlocked: false,
                 requirement: { totalBTC: 1000, hashPoints: 50 }
+            },
+            // Research-unlockable hardware
+            {
+                id: 'fpga',
+                name: 'FPGA Miner',
+                description: 'Field-Programmable Gate Array. Flexible and efficient.',
+                baseCost: 4000,
+                baseHashrate: 5000,
+                basePower: 800,
+                costMultiplier: 1.19,
+                unlocked: false,
+                requirement: { researchNode: 'unlock_fpga' }
+            },
+            {
+                id: 'asic_pro',
+                name: 'Professional ASIC',
+                description: 'High-end commercial mining hardware.',
+                baseCost: 35000,
+                baseHashrate: 200000,
+                basePower: 2500,
+                costMultiplier: 1.21,
+                unlocked: false,
+                requirement: { researchNode: 'unlock_asic_pro' }
+            },
+            {
+                id: 'immersion_asic',
+                name: 'Immersion-Cooled ASIC',
+                description: 'ASICs cooled in dielectric fluid for maximum efficiency.',
+                baseCost: 50000,
+                baseHashrate: 350000,
+                basePower: 2000,
+                costMultiplier: 1.22,
+                unlocked: false,
+                requirement: { researchNode: 'unlock_immersion' }
+            },
+            {
+                id: 'photonic',
+                name: 'Photonic Quantum Miner',
+                description: 'Uses light-based quantum computing for incredible speeds.',
+                baseCost: 250000,
+                baseHashrate: 2500000,
+                basePower: 8000,
+                costMultiplier: 1.24,
+                unlocked: false,
+                requirement: { researchNode: 'unlock_photonic' }
+            },
+            {
+                id: 'nano_miner',
+                name: 'Nanoscale Miner',
+                description: 'Molecular-level mining technology.',
+                baseCost: 500000,
+                baseHashrate: 5000000,
+                basePower: 6000,
+                costMultiplier: 1.26,
+                unlocked: false,
+                requirement: { researchNode: 'unlock_nano' }
+            },
+            {
+                id: 'dimensional',
+                name: 'Dimensional Rift Miner',
+                description: 'Harnesses computing power from parallel dimensions.',
+                baseCost: 2000000,
+                baseHashrate: 25000000,
+                basePower: 15000,
+                costMultiplier: 1.28,
+                unlocked: false,
+                requirement: { researchNode: 'unlock_dimensional' }
+            },
+            {
+                id: 'reality_proc',
+                name: 'Reality-Bending Processor',
+                description: 'Manipulates the fabric of reality itself to mine.',
+                baseCost: 10000000,
+                baseHashrate: 150000000,
+                basePower: 25000,
+                costMultiplier: 1.30,
+                unlocked: false,
+                requirement: { researchNode: 'unlock_reality' }
             }
         ];
         
-        // Power generator definitions
+        // Power generator definitions (real-world USD prices)
         this.generatorTypes = [
+                        {
+                id: 'city',
+                name: 'City Power Grid',
+                description: 'Harness the power of the city.',
+                baseCost: 35,
+                baseCapacity: 50,
+                costMultiplier: 1.10,
+                unlocked: true
+            },
             {
                 id: 'solar',
                 name: 'Solar Panel Array',
                 description: 'Clean renewable energy from the sun.',
-                baseCost: 50,
+                baseCost: 500,
                 baseCapacity: 500,
                 costMultiplier: 1.15,
                 unlocked: true
@@ -112,7 +207,7 @@ class BitcoinClickerGame {
                 id: 'diesel',
                 name: 'Diesel Generator',
                 description: 'Reliable backup power.',
-                baseCost: 200,
+                baseCost: 2000,
                 baseCapacity: 2000,
                 costMultiplier: 1.18,
                 unlocked: true
@@ -121,7 +216,7 @@ class BitcoinClickerGame {
                 id: 'hydro',
                 name: 'Hydro Turbine',
                 description: 'Harness the power of water.',
-                baseCost: 2000,
+                baseCost: 10000,
                 baseCapacity: 15000,
                 costMultiplier: 1.20,
                 unlocked: false,
@@ -131,7 +226,7 @@ class BitcoinClickerGame {
                 id: 'nuclear',
                 name: 'Nuclear Hookup',
                 description: 'Massive power from nuclear plants.',
-                baseCost: 50000,
+                baseCost: 100000,
                 baseCapacity: 200000,
                 costMultiplier: 1.25,
                 unlocked: false,
@@ -149,13 +244,13 @@ class BitcoinClickerGame {
             }
         ];
         
-        // Upgrade definitions
+        // Upgrade definitions (real-world USD prices)
         this.upgradeTypes = [
             {
                 id: 'click_power1',
                 name: 'Better Mouse',
                 description: 'Click faster with an ergonomic mouse.',
-                cost: 500,
+                cost: 50,
                 effect: { clickMultiplier: 2 },
                 maxPurchases: 1,
                 unlocked: true
@@ -164,7 +259,7 @@ class BitcoinClickerGame {
                 id: 'click_power2',
                 name: 'Mechanical Keyboard',
                 description: 'Smash those hashes harder.',
-                cost: 5000,
+                cost: 100,
                 effect: { clickMultiplier: 3 },
                 maxPurchases: 1,
                 requirement: { totalBTC: 10 },
@@ -174,7 +269,7 @@ class BitcoinClickerGame {
                 id: 'hash_efficiency',
                 name: 'Hash Optimization',
                 description: '+10% hashrate to all hardware.',
-                cost: 1000,
+                cost: 200,
                 effect: { hashrateMultiplier: 1.1 },
                 maxPurchases: 10,
                 costMultiplier: 2,
@@ -184,7 +279,7 @@ class BitcoinClickerGame {
                 id: 'power_efficiency',
                 name: 'Power Optimization',
                 description: '-10% power consumption for all hardware.',
-                cost: 2000,
+                cost: 500,
                 effect: { powerReduction: 0.9 },
                 maxPurchases: 5,
                 costMultiplier: 2.5,
@@ -195,7 +290,7 @@ class BitcoinClickerGame {
                 id: 'conversion_boost',
                 name: 'Hash Converter Upgrade',
                 description: 'Reduce hashes needed per BTC by 10%.',
-                cost: 10000,
+                cost: 1000,
                 effect: { conversionBonus: 0.9 },
                 maxPurchases: 5,
                 costMultiplier: 3,
@@ -206,11 +301,251 @@ class BitcoinClickerGame {
                 id: 'auto_clicker',
                 name: 'Auto-Clicker',
                 description: 'Automatically clicks 1 time per second.',
-                cost: 25000,
+                cost: 5000,
                 effect: { autoClick: 1 },
                 maxPurchases: 1,
                 requirement: { totalBTC: 50 },
                 unlocked: false
+            }
+        ];
+        
+        // Research Tree definitions - Reorganized with better spacing
+        this.researchNodes = [
+            // Tier 1 - Starting nodes (Row 1)
+            {
+                id: 'efficient_mining',
+                name: 'Efficient Mining',
+                description: 'Permanent +5% hashrate to all hardware.',
+                cost: 5,
+                tier: 1,
+                effect: { hashrateBonus: 1.05 },
+                requires: [],
+                x: 10,
+                y: 25
+            },
+            {
+                id: 'power_savings',
+                name: 'Power Savings',
+                description: 'Permanent -5% power consumption.',
+                cost: 5,
+                tier: 1,
+                effect: { powerReduction: 0.95 },
+                requires: [],
+                x: 10,
+                y: 50
+            },
+            {
+                id: 'click_training',
+                name: 'Click Training',
+                description: 'Permanent +8% click power.',
+                cost: 5,
+                tier: 1,
+                effect: { clickBonus: 1.08 },
+                requires: [],
+                x: 10,
+                y: 75
+            },
+            // Tier 2 (Row 2)
+            {
+                id: 'advanced_mining',
+                name: 'Advanced Mining',
+                description: 'Permanent +10% hashrate to all hardware.',
+                cost: 10,
+                tier: 2,
+                effect: { hashrateBonus: 1.10 },
+                requires: ['efficient_mining'],
+                x: 28,
+                y: 18
+            },
+            {
+                id: 'overclocking',
+                name: 'Overclocking',
+                description: 'Permanent +15% hashrate but +5% power use.',
+                cost: 15,
+                tier: 2,
+                effect: { hashrateBonus: 1.15, powerIncrease: 1.05 },
+                requires: ['efficient_mining'],
+                x: 28,
+                y: 32
+            },
+            {
+                id: 'renewable_energy',
+                name: 'Renewable Energy',
+                description: 'Permanent -10% power consumption.',
+                cost: 10,
+                tier: 2,
+                effect: { powerReduction: 0.90 },
+                requires: ['power_savings'],
+                x: 28,
+                y: 50
+            },
+            {
+                id: 'unlock_fpga',
+                name: 'FPGA Technology',
+                description: 'Unlocks FPGA Miners for purchase.',
+                cost: 12,
+                tier: 2,
+                effect: { unlockHardware: 'fpga' },
+                requires: ['power_savings'],
+                x: 28,
+                y: 64
+            },
+            {
+                id: 'enhanced_clicking',
+                name: 'Enhanced Clicking',
+                description: 'Permanent +12% click power.',
+                cost: 10,
+                tier: 2,
+                effect: { clickBonus: 1.12 },
+                requires: ['click_training'],
+                x: 28,
+                y: 78
+            },
+            // Tier 3 (Row 3)
+            {
+                id: 'hash_compression',
+                name: 'Hash Compression',
+                description: 'Reduce hashes needed per BTC by 15%.',
+                cost: 20,
+                tier: 3,
+                effect: { conversionBonus: 0.85 },
+                requires: ['advanced_mining'],
+                x: 46,
+                y: 12
+            },
+            {
+                id: 'quantum_optimization',
+                name: 'Quantum Optimization',
+                description: 'Permanent +20% hashrate to all hardware.',
+                cost: 25,
+                tier: 3,
+                effect: { hashrateBonus: 1.20 },
+                requires: ['advanced_mining', 'overclocking'],
+                x: 46,
+                y: 25
+            },
+            {
+                id: 'unlock_asic_pro',
+                name: 'Pro ASIC Design',
+                description: 'Unlocks Professional ASIC Miners.',
+                cost: 25,
+                tier: 3,
+                effect: { unlockHardware: 'asic_pro' },
+                requires: ['overclocking'],
+                x: 46,
+                y: 38
+            },
+            {
+                id: 'fusion_power',
+                name: 'Fusion Power',
+                description: 'Permanent -20% power consumption.',
+                cost: 20,
+                tier: 3,
+                effect: { powerReduction: 0.80 },
+                requires: ['renewable_energy'],
+                x: 46,
+                y: 50
+            },
+            {
+                id: 'unlock_immersion',
+                name: 'Immersion Cooling',
+                description: 'Unlocks Immersion-Cooled ASICs.',
+                cost: 22,
+                tier: 3,
+                effect: { unlockHardware: 'immersion_asic' },
+                requires: ['renewable_energy', 'unlock_fpga'],
+                x: 46,
+                y: 63
+            },
+            {
+                id: 'master_clicker',
+                name: 'Master Clicker',
+                description: 'Permanent +20% click power.',
+                cost: 18,
+                tier: 3,
+                effect: { clickBonus: 1.20 },
+                requires: ['enhanced_clicking'],
+                x: 46,
+                y: 76
+            },
+            // Tier 4 (Row 4)
+            {
+                id: 'neural_mining',
+                name: 'Neural Mining',
+                description: 'Permanent +30% hashrate and +10% click power.',
+                cost: 40,
+                tier: 4,
+                effect: { hashrateBonus: 1.30, clickBonus: 1.10 },
+                requires: ['quantum_optimization', 'hash_compression'],
+                x: 64,
+                y: 18
+            },
+            {
+                id: 'unlock_photonic',
+                name: 'Photonic Chips',
+                description: 'Unlocks Photonic Quantum Miners.',
+                cost: 45,
+                tier: 4,
+                effect: { unlockHardware: 'photonic' },
+                requires: ['quantum_optimization', 'unlock_asic_pro'],
+                x: 64,
+                y: 32
+            },
+            {
+                id: 'perfect_efficiency',
+                name: 'Perfect Efficiency',
+                description: 'Power efficiency penalty removed entirely.',
+                cost: 50,
+                tier: 4,
+                effect: { perfectEfficiency: true },
+                requires: ['fusion_power', 'unlock_immersion'],
+                x: 64,
+                y: 50
+            },
+            {
+                id: 'unlock_nano',
+                name: 'Nanotech Mining',
+                description: 'Unlocks Nanoscale Miners.',
+                cost: 48,
+                tier: 4,
+                effect: { unlockHardware: 'nano_miner' },
+                requires: ['unlock_immersion', 'master_clicker'],
+                x: 64,
+                y: 68
+            },
+            // Tier 5 - Ultimate (Row 5)
+            {
+                id: 'unlock_dimensional',
+                name: 'Dimensional Mining',
+                description: 'Unlocks Dimensional Rift Miners.',
+                cost: 75,
+                tier: 5,
+                effect: { unlockHardware: 'dimensional' },
+                requires: ['neural_mining', 'unlock_photonic'],
+                x: 82,
+                y: 25
+            },
+            {
+                id: 'singularity',
+                name: 'Singularity',
+                description: 'Ultimate upgrade: +50% to everything.',
+                cost: 100,
+                tier: 5,
+                effect: { hashrateBonus: 1.50, clickBonus: 1.50, conversionBonus: 0.70, powerReduction: 0.70 },
+                requires: ['neural_mining', 'perfect_efficiency', 'unlock_photonic'],
+                x: 82,
+                y: 42
+            },
+            {
+                id: 'unlock_reality',
+                name: 'Reality Manipulation',
+                description: 'Unlocks Reality-Bending Processors.',
+                cost: 90,
+                tier: 5,
+                effect: { unlockHardware: 'reality_proc' },
+                requires: ['perfect_efficiency', 'unlock_nano'],
+                x: 82,
+                y: 59
             }
         ];
     }
@@ -218,7 +553,8 @@ class BitcoinClickerGame {
     createDefaultState() {
         return {
             // Resources
-            bitcoin: 10,
+            bitcoin: 0,
+            money: 0,
             pendingHashes: 0,
             hashPoints: 0,
             
@@ -240,8 +576,11 @@ class BitcoinClickerGame {
             
             // Unlocks
             unlockedHardware: ['cpu', 'gpu', 'asic_early'],
-            unlockedGenerators: ['solar', 'diesel'],
+            unlockedGenerators: ['city', 'solar', 'diesel'],
             unlockedUpgrades: ['click_power1', 'hash_efficiency'],
+            
+            // Research Tree
+            researchPurchased: [],
             
             // Stats
             stats: {
@@ -255,7 +594,7 @@ class BitcoinClickerGame {
             
             // Settings
             lastUpdate: Date.now(),
-            version: '1.0.0'
+            version: '1.1.0'
         };
     }
 
@@ -290,18 +629,49 @@ class BitcoinClickerGame {
         document.getElementById('mine-button').addEventListener('click', (e) => {
             this.handleClick(e);
         });
-        
+        // Convert BTC to Money button
+        document.getElementById('convert-btc-money').addEventListener('click', () => {
+            this.convertBitcoinToMoney();
+        });
         // Tab navigation
         document.querySelectorAll('.tab-button').forEach(btn => {
             btn.addEventListener('click', () => {
                 this.switchTab(btn.dataset.tab);
             });
         });
-        
         // Prestige button
         document.getElementById('prestige-button').addEventListener('click', () => {
             this.prestige();
         });
+        
+        const prestigePanel = document.getElementById('prestige-panel');
+        const prestigeInfo = prestigePanel.querySelector('.prestige-info');
+        
+        // Research Tree button
+        const researchBtn = document.createElement('button');
+        researchBtn.id = 'research-tree-button';
+        researchBtn.className = 'prestige-btn';
+        researchBtn.textContent = '🔬 Research Tree';
+        researchBtn.style.marginTop = '16px';
+        researchBtn.onclick = () => {
+            this.showResearchTree();
+        };
+        prestigeInfo.appendChild(researchBtn);
+        
+        // Add reset progress button
+        if (!document.getElementById('reset-progress-btn')) {
+            const resetBtn = document.createElement('button');
+            resetBtn.id = 'reset-progress-btn';
+            resetBtn.className = 'prestige-btn danger';
+            resetBtn.textContent = 'RESET PROGRESS (Hard Reset)';
+            resetBtn.style.marginTop = '16px';
+            resetBtn.onclick = () => {
+                if (confirm('Are you sure you want to hard reset all progress? This cannot be undone!')) {
+                    this.hardReset();
+                }
+            };
+            prestigePanel.appendChild(resetBtn);
+        }
         
         // Build shop items
         this.buildHardwareShop();
@@ -309,25 +679,337 @@ class BitcoinClickerGame {
         this.buildUpgradesShop();
     }
 
-    handleClick(event) {
-        const clickPower = this.getClickPower();
-        this.gameState.pendingHashes += clickPower;
-        this.gameState.totalClicks++;
-        this.gameState.stats.totalClicks++;
-        
-        // Create click effect
-        const button = event.currentTarget;
-        const rect = button.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        
-        Utils.createClickEffect(x, y, '+' + Utils.formatNumber(clickPower));
-        
-        // Convert hashes to BTC
-        this.convertHashes();
-        
-        // Update UI
+    hardReset() {
+        this.gameState = this.createDefaultState();
+        Storage.save(this.gameState);
         this.updateUI();
+        this.checkUnlocks();
+        Utils.createNotification('Progress Reset', 'All progress has been reset.', 'danger');
+    }
+
+    showResearchTree() {
+        // Create or show research tree modal
+        let modal = document.getElementById('research-tree-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'research-tree-modal';
+            modal.innerHTML = `
+                <div class="research-modal-content">
+                    <div class="research-header">
+                        <h2>🔬 Research Tree</h2>
+                        <div class="research-hp-display">
+                            <span>Available Hash Points: <strong id="research-hp-count">${this.gameState.hashPoints}</strong></span>
+                        </div>
+                        <button class="close-research" id="close-research">✕</button>
+                    </div>
+                    <div class="research-legend">
+                        <div class="legend-item"><span class="legend-icon">⚙️</span> Hardware Unlock</div>
+                        <div class="legend-item"><span class="legend-icon">⛏️</span> Hashrate Boost</div>
+                        <div class="legend-item"><span class="legend-icon">⚡</span> Power Efficiency</div>
+                        <div class="legend-item"><span class="legend-icon">👆</span> Click Power</div>
+                        <div class="legend-item"><span class="legend-icon">🔄</span> Conversion Bonus</div>
+                        <div class="legend-item"><span class="legend-icon">💎</span> Special Effect</div>
+                    </div>
+                    <div class="research-tree-container" id="research-tree-container">
+                        <svg id="research-connections" class="research-connections"></svg>
+                        <div id="research-nodes" class="research-nodes"></div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            document.getElementById('close-research').onclick = () => {
+                modal.style.display = 'none';
+            };
+        }
+        this.buildResearchTree();
+        modal.style.display = 'flex';
+    }
+
+    buildResearchTree() {
+        const nodesContainer = document.getElementById('research-nodes');
+        const svg = document.getElementById('research-connections');
+        nodesContainer.innerHTML = '';
+        svg.innerHTML = '';
+        
+        // Update HP display
+        document.getElementById('research-hp-count').textContent = this.gameState.hashPoints;
+        
+        // Draw connection lines first
+        for (const node of this.researchNodes) {
+            if (node.requires && node.requires.length > 0) {
+                for (const reqId of node.requires) {
+                    const reqNode = this.researchNodes.find(n => n.id === reqId);
+                    if (reqNode) {
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', `${reqNode.x}%`);
+                        line.setAttribute('y1', `${reqNode.y}%`);
+                        line.setAttribute('x2', `${node.x}%`);
+                        line.setAttribute('y2', `${node.y}%`);
+                        line.classList.add('research-line');
+                        if (this.gameState.researchPurchased.includes(reqId) && this.gameState.researchPurchased.includes(node.id)) {
+                            line.classList.add('purchased');
+                        }
+                        svg.appendChild(line);
+                    }
+                }
+            }
+        }
+        
+        // Draw nodes
+        for (const node of this.researchNodes) {
+            const isPurchased = this.gameState.researchPurchased.includes(node.id);
+            const canAfford = this.gameState.hashPoints >= node.cost;
+            const requirementsMet = node.requires.every(reqId => this.gameState.researchPurchased.includes(reqId));
+            const canPurchase = !isPurchased && canAfford && requirementsMet;
+            
+            // Determine node icon based on type
+            let nodeIcon = '🔒';
+            if (isPurchased) {
+                nodeIcon = '✓';
+            } else if (node.effect && node.effect.unlockHardware) {
+                nodeIcon = '⚙️';
+            } else if (node.effect && node.effect.hashrateBonus) {
+                nodeIcon = '⛏️';
+            } else if (node.effect && node.effect.powerReduction) {
+                nodeIcon = '⚡';
+            } else if (node.effect && node.effect.clickBonus) {
+                nodeIcon = '👆';
+            } else if (node.effect && node.effect.conversionBonus) {
+                nodeIcon = '🔄';
+            } else if (node.effect && node.effect.perfectEfficiency) {
+                nodeIcon = '💎';
+            }
+            
+            const nodeEl = document.createElement('div');
+            nodeEl.className = `research-node ${isPurchased ? 'purchased' : ''} ${canPurchase ? 'available' : ''} ${!requirementsMet ? 'locked' : ''}`;
+            nodeEl.style.left = `${node.x}%`;
+            nodeEl.style.top = `${node.y}%`;
+            nodeEl.innerHTML = `
+                <div class="node-icon">${nodeIcon}</div>
+                <div class="node-name">${node.name}</div>
+                <div class="node-cost">Cost: ${node.cost} HP</div>
+                <div class="node-tier">Tier ${node.tier}</div>
+            `;
+            
+            nodeEl.onclick = () => {
+                this.showResearchDetails(node);
+            };
+            
+            nodesContainer.appendChild(nodeEl);
+        }
+    }
+
+    showResearchDetails(node) {
+        const isPurchased = this.gameState.researchPurchased.includes(node.id);
+        const canAfford = this.gameState.hashPoints >= node.cost;
+        const requirementsMet = node.requires.every(reqId => this.gameState.researchPurchased.includes(reqId));
+        const canPurchase = !isPurchased && canAfford && requirementsMet;
+        
+        let requirementsText = 'None';
+        if (node.requires.length > 0) {
+            requirementsText = node.requires.map(reqId => {
+                const reqNode = this.researchNodes.find(n => n.id === reqId);
+                const owned = this.gameState.researchPurchased.includes(reqId);
+                return `<span style="color: ${owned ? '#00ff88' : '#ff4444'}">${reqNode.name}${owned ? ' ✓' : ' ✗'}</span>`;
+            }).join(', ');
+        }
+        
+        // Build effects description
+        let effectsText = '';
+        if (node.effect) {
+            const effects = [];
+            if (node.effect.hashrateBonus) {
+                const bonus = ((node.effect.hashrateBonus - 1) * 100).toFixed(0);
+                effects.push(`+${bonus}% Hashrate`);
+            }
+            if (node.effect.clickBonus) {
+                const bonus = ((node.effect.clickBonus - 1) * 100).toFixed(0);
+                effects.push(`+${bonus}% Click Power`);
+            }
+            if (node.effect.conversionBonus) {
+                const reduction = ((1 - node.effect.conversionBonus) * 100).toFixed(0);
+                effects.push(`-${reduction}% Hashes per BTC`);
+            }
+            if (node.effect.powerReduction) {
+                const reduction = ((1 - node.effect.powerReduction) * 100).toFixed(0);
+                effects.push(`-${reduction}% Power Consumption`);
+            }
+            if (node.effect.powerIncrease) {
+                const increase = ((node.effect.powerIncrease - 1) * 100).toFixed(0);
+                effects.push(`+${increase}% Power Consumption`);
+            }
+            if (node.effect.perfectEfficiency) {
+                effects.push('Removes Power Penalty');
+            }
+            if (node.effect.unlockHardware) {
+                const hardware = this.hardwareTypes.find(h => h.id === node.effect.unlockHardware);
+                if (hardware) {
+                    effects.push(`<strong style="color: #00ff88;">⚙️ Unlocks ${hardware.name}</strong>`);
+                }
+            }
+            effectsText = effects.join('<br>');
+        }
+        
+        const modal = document.createElement('div');
+        modal.className = 'research-detail-modal';
+        modal.innerHTML = `
+            <div class="research-detail-content">
+                <h3>${node.name}</h3>
+                <p class="detail-description">${node.description}</p>
+                ${effectsText ? `<div class="detail-effects">${effectsText}</div>` : ''}
+                <div class="detail-info">
+                    <div><strong>Cost:</strong> ${node.cost} Hash Points</div>
+                    <div><strong>Tier:</strong> ${node.tier}</div>
+                    <div><strong>Requirements:</strong> ${requirementsText}</div>
+                    <div><strong>Status:</strong> ${isPurchased ? '<span style="color: #00ff88">Purchased ✓</span>' : '<span style="color: #ffcc00">Not Purchased</span>'}</div>
+                </div>
+                <div class="detail-buttons">
+                    ${canPurchase ? `<button class="buy-research-btn" id="buy-research-${node.id}">Purchase for ${node.cost} HP</button>` : ''}
+                    <button class="close-detail-btn" id="close-detail">Close</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        if (canPurchase) {
+            document.getElementById(`buy-research-${node.id}`).onclick = () => {
+                this.purchaseResearch(node.id);
+                document.body.removeChild(modal);
+            };
+        }
+        
+        document.getElementById('close-detail').onclick = () => {
+            document.body.removeChild(modal);
+        };
+    }
+
+    purchaseResearch(nodeId) {
+        const node = this.researchNodes.find(n => n.id === nodeId);
+        if (!node) return;
+        
+        const isPurchased = this.gameState.researchPurchased.includes(node.id);
+        const canAfford = this.gameState.hashPoints >= node.cost;
+        const requirementsMet = node.requires.every(reqId => this.gameState.researchPurchased.includes(reqId));
+        
+        if (isPurchased || !canAfford || !requirementsMet) {
+            Utils.createNotification('Cannot Purchase', 'Requirements not met or already purchased.', 'warning');
+            return;
+        }
+        
+        // Deduct hash points
+        this.gameState.hashPoints -= node.cost;
+        this.gameState.researchPurchased.push(node.id);
+        
+        // Handle hardware unlocks
+        if (node.effect && node.effect.unlockHardware) {
+            const hardwareId = node.effect.unlockHardware;
+            if (!this.gameState.unlockedHardware.includes(hardwareId)) {
+                this.gameState.unlockedHardware.push(hardwareId);
+                Utils.createNotification('Hardware Unlocked!', `${node.name} unlocked new mining hardware!`, 'success');
+                this.buildHardwareShop();
+            }
+        }
+        
+        Utils.createNotification('Research Complete!', `${node.name} has been unlocked!`, 'success');
+        this.buildResearchTree();
+        this.updateUI();
+        this.checkUnlocks();
+    }
+
+    getResearchMultipliers() {
+        let hashrateBonus = 1;
+        let clickBonus = 1;
+        let conversionBonus = 1;
+        let powerReduction = 1;
+        let powerIncrease = 1;
+        let perfectEfficiency = false;
+        
+        for (const nodeId of this.gameState.researchPurchased) {
+            const node = this.researchNodes.find(n => n.id === nodeId);
+            if (node && node.effect) {
+                if (node.effect.hashrateBonus) hashrateBonus *= node.effect.hashrateBonus;
+                if (node.effect.clickBonus) clickBonus *= node.effect.clickBonus;
+                if (node.effect.conversionBonus) conversionBonus *= node.effect.conversionBonus;
+                if (node.effect.powerReduction) powerReduction *= node.effect.powerReduction;
+                if (node.effect.powerIncrease) powerIncrease *= node.effect.powerIncrease;
+                if (node.effect.perfectEfficiency) perfectEfficiency = true;
+            }
+        }
+        
+        return { hashrateBonus, clickBonus, conversionBonus, powerReduction, powerIncrease, perfectEfficiency };
+    }
+
+    handleClick(event) {
+        // Show math challenge popup for manual clicks
+        this.showMathChallenge().then((correct) => {
+            if (!correct) {
+                Utils.createNotification('Incorrect!', 'Wrong answer. Try again!', 'danger');
+                return;
+            }
+            Utils.createNotification('Correct!', 'Hash solved!', 'success');
+            const clickPower = this.getClickPower();
+            this.gameState.pendingHashes += clickPower;
+            this.gameState.totalClicks++;
+            this.gameState.stats.totalClicks++;
+            // Create click effect
+            const button = event.currentTarget;
+            const rect = button.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            Utils.createClickEffect(x, y, '+' + Utils.formatNumber(clickPower));
+            // Convert hashes to BTC
+            this.convertHashes();
+            // Update UI
+            this.updateUI();
+        });
+    }
+
+    showMathChallenge() {
+        return new Promise((resolve) => {
+            // Generate two random numbers for a simple addition
+            const a = Utils.randomInt(1, 20);
+            const b = Utils.randomInt(1, 20);
+            // Create modal
+            let modal = document.getElementById('math-challenge-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'math-challenge-modal';
+                document.body.appendChild(modal);
+            }
+            modal.innerHTML = `
+                <div style="font-size:1.2em;margin-bottom:12px;">Solve: <b>${a} + ${b}</b></div>
+                <input id="math-answer" type="number" style="font-size:1.2em;padding:4px 8px;width:80px;" autofocus />
+                <button id="math-submit" style="font-size:1.1em;margin-left:12px;">Submit</button>
+                <div class="math-feedback" id="math-feedback"></div>
+            `;
+            modal.style.display = 'block';
+            const submitBtn = document.getElementById('math-submit');
+            const answerInput = document.getElementById('math-answer');
+            const feedback = document.getElementById('math-feedback');
+            submitBtn.onclick = () => {
+                const val = parseInt(answerInput.value, 10);
+                if (val === a + b) {
+                    feedback.textContent = '✅ Correct!';
+                    feedback.style.color = '#00ff88';
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                        resolve(true);
+                    }, 500);
+                } else {
+                    feedback.textContent = '❌ Incorrect!';
+                    feedback.style.color = '#ff4444';
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                        resolve(false);
+                    }, 700);
+                }
+            };
+            answerInput.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    submitBtn.click();
+                }
+            };
+        });
     }
 
     getClickPower() {
@@ -344,6 +1026,10 @@ class BitcoinClickerGame {
         // Apply hash point multiplier
         power *= this.getHashPointMultiplier();
         
+        // Apply research bonuses
+        const research = this.getResearchMultipliers();
+        power *= research.clickBonus;
+        
         return Math.floor(power);
     }
 
@@ -354,7 +1040,6 @@ class BitcoinClickerGame {
 
     convertHashes() {
         let hashesPerBTC = this.config.hashesPerBTC;
-        
         // Apply conversion upgrades
         for (const [id, count] of Object.entries(this.gameState.upgrades)) {
             const upgrade = this.upgradeTypes.find(u => u.id === id);
@@ -362,15 +1047,28 @@ class BitcoinClickerGame {
                 hashesPerBTC *= Math.pow(upgrade.effect.conversionBonus, count);
             }
         }
-        
+        // Apply research bonuses
+        const research = this.getResearchMultipliers();
+        hashesPerBTC *= research.conversionBonus;
         const btcEarned = this.gameState.pendingHashes / hashesPerBTC;
         if (btcEarned > 0) {
             this.gameState.bitcoin += btcEarned;
             this.gameState.totalBTCThisRun += btcEarned;
             this.gameState.totalBTCAllTime += btcEarned;
             this.gameState.stats.totalBTCEarned += btcEarned;
-            this.gameState.stats.totalMoneyEarned += btcEarned * this.gameState.marketPrice;
             this.gameState.pendingHashes = 0;
+        }
+    }
+
+    convertBitcoinToMoney() {
+        if (this.gameState.bitcoin > 0) {
+            const btc = this.gameState.bitcoin;
+            const usd = btc * this.gameState.marketPrice;
+            this.gameState.money += usd;
+            this.gameState.stats.totalMoneyEarned += usd;
+            this.gameState.bitcoin = 0;
+            Utils.createNotification('Converted!', `Converted ${Utils.formatBTC(btc)} to ${Utils.formatUSD(usd)}!`, 'success');
+            this.updateUI();
         }
     }
 
@@ -420,6 +1118,10 @@ class BitcoinClickerGame {
         // Apply hash point multiplier
         hashrateMultiplier *= this.getHashPointMultiplier();
         
+        // Apply research bonuses
+        const research = this.getResearchMultipliers();
+        hashrateMultiplier *= research.hashrateBonus;
+        
         // Calculate total hashrate from all hardware
         for (const [id, count] of Object.entries(this.gameState.hardware)) {
             const hardware = this.hardwareTypes.find(h => h.id === id);
@@ -449,6 +1151,10 @@ class BitcoinClickerGame {
     }
 
     getPowerEfficiency() {
+        const research = this.getResearchMultipliers();
+        if (research.perfectEfficiency) {
+            return 1.0; // No penalty
+        }
         const powerUsed = this.getTotalPowerUsed();
         const powerCapacity = this.getTotalPowerCapacity();
         return Utils.calculatePowerEfficiency(powerUsed, powerCapacity);
@@ -465,6 +1171,11 @@ class BitcoinClickerGame {
                 powerReduction *= Math.pow(upgrade.effect.powerReduction, count);
             }
         }
+        
+        // Apply research bonuses
+        const research = this.getResearchMultipliers();
+        powerReduction *= research.powerReduction;
+        powerReduction *= research.powerIncrease;
         
         for (const [id, count] of Object.entries(this.gameState.hardware)) {
             const hardware = this.hardwareTypes.find(h => h.id === id);
@@ -509,8 +1220,8 @@ class BitcoinClickerGame {
         
         this.gameState.marketPrice *= (1 + change);
         this.gameState.marketPrice = Utils.clamp(this.gameState.marketPrice, 
-            this.config.marketBasePrice * 0.5, 
-            this.config.marketBasePrice * 2);
+            this.config.lowBitcoinPrice,
+            this.config.maxBitcoinPrice);
     }
 
     startEventLoop() {
@@ -579,13 +1290,10 @@ class BitcoinClickerGame {
     buyHardware(hardwareId) {
         const hardware = this.hardwareTypes.find(h => h.id === hardwareId);
         if (!hardware) return;
-        
         const cost = this.getHardwareCost(hardwareId);
-        if (this.gameState.bitcoin < cost) return;
-        
-        this.gameState.bitcoin -= cost;
+        if (this.gameState.money < cost) return;
+        this.gameState.money -= cost;
         this.gameState.hardware[hardwareId] = (this.gameState.hardware[hardwareId] || 0) + 1;
-        
         this.updateUI();
         this.checkUnlocks();
     }
@@ -593,7 +1301,6 @@ class BitcoinClickerGame {
     getHardwareCost(hardwareId) {
         const hardware = this.hardwareTypes.find(h => h.id === hardwareId);
         if (!hardware) return Infinity;
-        
         const owned = this.gameState.hardware[hardwareId] || 0;
         return hardware.baseCost * Math.pow(hardware.costMultiplier, owned);
     }
@@ -601,13 +1308,10 @@ class BitcoinClickerGame {
     buyGenerator(generatorId) {
         const generator = this.generatorTypes.find(g => g.id === generatorId);
         if (!generator) return;
-        
         const cost = this.getGeneratorCost(generatorId);
-        if (this.gameState.bitcoin < cost) return;
-        
-        this.gameState.bitcoin -= cost;
+        if (this.gameState.money < cost) return;
+        this.gameState.money -= cost;
         this.gameState.generators[generatorId] = (this.gameState.generators[generatorId] || 0) + 1;
-        
         this.updateUI();
         this.checkUnlocks();
     }
@@ -615,7 +1319,6 @@ class BitcoinClickerGame {
     getGeneratorCost(generatorId) {
         const generator = this.generatorTypes.find(g => g.id === generatorId);
         if (!generator) return Infinity;
-        
         const owned = this.gameState.generators[generatorId] || 0;
         return generator.baseCost * Math.pow(generator.costMultiplier, owned);
     }
@@ -623,16 +1326,12 @@ class BitcoinClickerGame {
     buyUpgrade(upgradeId) {
         const upgrade = this.upgradeTypes.find(u => u.id === upgradeId);
         if (!upgrade) return;
-        
         const owned = this.gameState.upgrades[upgradeId] || 0;
         if (upgrade.maxPurchases && owned >= upgrade.maxPurchases) return;
-        
         const cost = this.getUpgradeCost(upgradeId);
-        if (this.gameState.bitcoin < cost) return;
-        
-        this.gameState.bitcoin -= cost;
+        if (this.gameState.money < cost) return;
+        this.gameState.money -= cost;
         this.gameState.upgrades[upgradeId] = owned + 1;
-        
         this.updateUI();
         this.checkUnlocks();
     }
@@ -640,7 +1339,6 @@ class BitcoinClickerGame {
     getUpgradeCost(upgradeId) {
         const upgrade = this.upgradeTypes.find(u => u.id === upgradeId);
         if (!upgrade) return Infinity;
-        
         const owned = this.gameState.upgrades[upgradeId] || 0;
         if (upgrade.costMultiplier) {
             return upgrade.cost * Math.pow(upgrade.costMultiplier, owned);
@@ -651,40 +1349,28 @@ class BitcoinClickerGame {
     checkUnlocks() {
         // Check hardware unlocks
         for (const hardware of this.hardwareTypes) {
-            if (!hardware.unlocked || this.gameState.unlockedHardware.includes(hardware.id)) {
-                continue;
-            }
-            
-            if (this.meetsRequirement(hardware.requirement)) {
+            if (this.gameState.unlockedHardware.includes(hardware.id)) continue;
+            if (!hardware.unlocked && this.meetsRequirement(hardware.requirement)) {
                 this.gameState.unlockedHardware.push(hardware.id);
                 Utils.createNotification('New Hardware!', `${hardware.name} is now available!`, 'success');
             }
         }
-        
         // Check generator unlocks
         for (const generator of this.generatorTypes) {
-            if (!generator.unlocked || this.gameState.unlockedGenerators.includes(generator.id)) {
-                continue;
-            }
-            
-            if (this.meetsRequirement(generator.requirement)) {
+            if (this.gameState.unlockedGenerators.includes(generator.id)) continue;
+            if (!generator.unlocked && this.meetsRequirement(generator.requirement)) {
                 this.gameState.unlockedGenerators.push(generator.id);
                 Utils.createNotification('New Generator!', `${generator.name} is now available!`, 'success');
             }
         }
-        
         // Check upgrade unlocks
         for (const upgrade of this.upgradeTypes) {
-            if (!upgrade.unlocked || this.gameState.unlockedUpgrades.includes(upgrade.id)) {
-                continue;
-            }
-            
-            if (this.meetsRequirement(upgrade.requirement)) {
+            if (this.gameState.unlockedUpgrades.includes(upgrade.id)) continue;
+            if (!upgrade.unlocked && this.meetsRequirement(upgrade.requirement)) {
                 this.gameState.unlockedUpgrades.push(upgrade.id);
                 Utils.createNotification('New Upgrade!', `${upgrade.name} is now available!`, 'success');
             }
         }
-        
         // Rebuild shops if unlocks changed
         this.buildHardwareShop();
         this.buildPowerShop();
@@ -702,46 +1388,47 @@ class BitcoinClickerGame {
             return false;
         }
         
+        // Check for research node requirement
+        if (requirement.researchNode) {
+            if (!this.gameState.researchPurchased.includes(requirement.researchNode)) {
+                return false;
+            }
+        }
+        
         return true;
     }
 
     calculateHashPointsOnPrestige() {
         // HP = √(Total BTC mined this run ÷ 1,000)
-        const hp = Math.floor(Math.sqrt(this.gameState.totalBTCThisRun / 1000));
+        const hp = Math.floor(Math.sqrt(this.gameState.totalBTCThisRun / 10));
         return Math.max(0, hp);
     }
 
     prestige() {
         const hpGain = this.calculateHashPointsOnPrestige();
-        
-        if (hpGain === 0) {
-            Utils.createNotification('Cannot Prestige', 'You need to mine more BTC to gain Hash Points.', 'warning');
+        if (hpGain <= 0 || this.gameState.totalBTCThisRun < 1) {
+            Utils.createNotification('Cannot Prestige', 'You need to mine at least 1 BTC this run to gain Hash Points.', 'warning');
             return;
         }
-        
         if (!confirm(`Prestige now and gain ${hpGain} Hash Points? This will reset your progress.`)) {
             return;
         }
-        
         // Award hash points
         this.gameState.hashPoints += hpGain;
         this.gameState.totalPrestiges++;
-        
         // Reset run-specific stats
         this.gameState.bitcoin = 0;
+        this.gameState.money = 0;
         this.gameState.pendingHashes = 0;
         this.gameState.totalBTCThisRun = 0;
         this.gameState.hardware = {};
         this.gameState.generators = {};
         this.gameState.upgrades = {};
-        
         // Reset unlocks to base
         this.gameState.unlockedHardware = ['cpu', 'gpu', 'asic_early'];
         this.gameState.unlockedGenerators = ['solar', 'diesel'];
         this.gameState.unlockedUpgrades = ['click_power1', 'hash_efficiency'];
-        
         Utils.createNotification('Prestige!', `Gained ${hpGain} Hash Points! Total: ${this.gameState.hashPoints}`, 'success');
-        
         this.updateUI();
         this.checkUnlocks();
     }
@@ -749,41 +1436,44 @@ class BitcoinClickerGame {
     processOfflineProgress(offlineTime) {
         // Calculate offline production (at reduced rate)
         const offlineMultiplier = 0.5; // 50% production while offline
-        
         // Simulate production
         const iterations = Math.min(Math.floor(offlineTime), 3600); // Cap at 1 hour of iterations
         const timePerIteration = offlineTime / iterations;
-        
         for (let i = 0; i < iterations; i++) {
             this.generateHashes(timePerIteration * offlineMultiplier);
             this.convertHashes();
         }
-        
+        // --- Offline earnings: sqrt of money per minute offline ---
+        const minutesOffline = Math.floor(offlineTime / 60);
+        const moneyAtLogout = this.gameState.money;
+        let offlineMoney = 0;
+        if (minutesOffline > 0 && moneyAtLogout > 0) {
+            offlineMoney = Math.floor(minutesOffline * Math.sqrt(moneyAtLogout));
+            this.gameState.money += offlineMoney;
+        }
         const btcEarned = this.gameState.totalBTCThisRun;
-        
+        let msg = '';
         if (btcEarned > 0) {
-            Utils.createNotification(
-                'Welcome Back!',
-                `You earned ${Utils.formatBTC(btcEarned)} while offline (${Utils.formatTime(offlineTime)})`,
-                'success'
-            );
+            msg += `You earned ${Utils.formatBTC(btcEarned)} BTC while offline (${Utils.formatTime(offlineTime)}).\n`;
+        }
+        if (offlineMoney > 0) {
+            msg += `Offline bonus: $${offlineMoney.toLocaleString()} (sqrt of money per min)`;
+        }
+        if (msg) {
+            Utils.createNotification('Welcome Back!', msg, 'success');
         }
     }
 
     buildHardwareShop() {
         const container = document.getElementById('hardware-list');
         container.innerHTML = '';
-        
         for (const hardware of this.hardwareTypes) {
             if (!this.gameState.unlockedHardware.includes(hardware.id)) continue;
-            
             const owned = this.gameState.hardware[hardware.id] || 0;
             const cost = this.getHardwareCost(hardware.id);
-            const canAfford = this.gameState.bitcoin >= cost;
-            
+            const canAfford = this.gameState.money >= cost;
             const item = document.createElement('div');
             item.className = `shop-item ${canAfford ? 'affordable' : ''}`;
-            
             item.innerHTML = `
                 <div class="item-header">
                     <span class="item-name">${hardware.name}</span>
@@ -802,14 +1492,12 @@ class BitcoinClickerGame {
                 </div>
                 <div class="item-footer">
                     <button class="buy-button" ${!canAfford ? 'disabled' : ''}>
-                        Buy for ${Utils.formatBTC(cost)}
+                        Buy for ${Utils.formatUSD(cost)}
                     </button>
                 </div>
             `;
-            
             const buyBtn = item.querySelector('.buy-button');
             buyBtn.addEventListener('click', () => this.buyHardware(hardware.id));
-            
             container.appendChild(item);
         }
     }
@@ -817,17 +1505,13 @@ class BitcoinClickerGame {
     buildPowerShop() {
         const container = document.getElementById('power-list');
         container.innerHTML = '';
-        
         for (const generator of this.generatorTypes) {
             if (!this.gameState.unlockedGenerators.includes(generator.id)) continue;
-            
             const owned = this.gameState.generators[generator.id] || 0;
             const cost = this.getGeneratorCost(generator.id);
-            const canAfford = this.gameState.bitcoin >= cost;
-            
+            const canAfford = this.gameState.money >= cost;
             const item = document.createElement('div');
             item.className = `shop-item ${canAfford ? 'affordable' : ''}`;
-            
             item.innerHTML = `
                 <div class="item-header">
                     <span class="item-name">${generator.name}</span>
@@ -842,14 +1526,12 @@ class BitcoinClickerGame {
                 </div>
                 <div class="item-footer">
                     <button class="buy-button" ${!canAfford ? 'disabled' : ''}>
-                        Buy for ${Utils.formatBTC(cost)}
+                        Buy for ${Utils.formatUSD(cost)}
                     </button>
                 </div>
             `;
-            
             const buyBtn = item.querySelector('.buy-button');
             buyBtn.addEventListener('click', () => this.buyGenerator(generator.id));
-            
             container.appendChild(item);
         }
     }
@@ -857,18 +1539,14 @@ class BitcoinClickerGame {
     buildUpgradesShop() {
         const container = document.getElementById('upgrades-list');
         container.innerHTML = '';
-        
         for (const upgrade of this.upgradeTypes) {
             if (!this.gameState.unlockedUpgrades.includes(upgrade.id)) continue;
-            
             const owned = this.gameState.upgrades[upgrade.id] || 0;
             const maxed = upgrade.maxPurchases && owned >= upgrade.maxPurchases;
             const cost = this.getUpgradeCost(upgrade.id);
-            const canAfford = this.gameState.bitcoin >= cost && !maxed;
-            
+            const canAfford = this.gameState.money >= cost && !maxed;
             const item = document.createElement('div');
             item.className = `shop-item ${canAfford ? 'affordable' : ''} ${maxed ? 'locked' : ''}`;
-            
             let statusText = '';
             if (maxed) {
                 statusText = 'MAX';
@@ -877,7 +1555,6 @@ class BitcoinClickerGame {
             } else {
                 statusText = `Owned: ${owned}`;
             }
-            
             item.innerHTML = `
                 <div class="item-header">
                     <span class="item-name">${upgrade.name}</span>
@@ -886,14 +1563,12 @@ class BitcoinClickerGame {
                 <div class="item-description">${upgrade.description}</div>
                 <div class="item-footer">
                     <button class="buy-button" ${!canAfford ? 'disabled' : ''}>
-                        ${maxed ? 'MAXED' : 'Buy for ' + Utils.formatBTC(cost)}
+                        ${maxed ? 'MAXED' : 'Buy for ' + Utils.formatUSD(cost)}
                     </button>
                 </div>
             `;
-            
             const buyBtn = item.querySelector('.buy-button');
             buyBtn.addEventListener('click', () => this.buyUpgrade(upgrade.id));
-            
             container.appendChild(item);
         }
     }
@@ -937,14 +1612,14 @@ class BitcoinClickerGame {
             { label: 'Total Clicks', value: Utils.formatNumber(this.gameState.stats.totalClicks) },
             { label: 'Total Hashes Solved', value: Utils.formatNumber(this.gameState.stats.totalHashesSolved) },
             { label: 'Total BTC Earned', value: Utils.formatBTC(this.gameState.stats.totalBTCEarned) },
-            { label: 'Total Money Value', value: Utils.formatUSD(this.gameState.stats.totalMoneyEarned) },
+            { label: 'Total Money Earned', value: Utils.formatUSD(this.gameState.stats.totalMoneyEarned) },
+            { label: 'Current Money', value: Utils.formatUSD(this.gameState.money) },
             { label: 'Playtime', value: Utils.formatTime(this.gameState.stats.playtime) },
             { label: 'Events Triggered', value: this.gameState.stats.eventsTriggered },
             { label: 'Total Prestiges', value: this.gameState.totalPrestiges },
             { label: 'Hash Points', value: this.gameState.hashPoints },
             { label: 'HP Multiplier', value: this.getHashPointMultiplier().toFixed(2) + 'x' }
         ];
-        
         container.innerHTML = stats.map(stat => `
             <div class="stat-row">
                 <span class="label">${stat.label}:</span>
@@ -956,13 +1631,12 @@ class BitcoinClickerGame {
     updateUI() {
         // Update header stats
         document.getElementById('btc-display').textContent = Utils.formatBTC(this.gameState.bitcoin);
+        document.getElementById('money-display').textContent = Utils.formatUSD(this.gameState.money);
         document.getElementById('hp-display').textContent = this.gameState.hashPoints;
-        
         // Calculate rates
         const powerEfficiency = this.getPowerEfficiency();
         let totalHashrate = 0;
         let hashrateMultiplier = 1;
-        
         for (const [id, count] of Object.entries(this.gameState.upgrades)) {
             const upgrade = this.upgradeTypes.find(u => u.id === id);
             if (upgrade && upgrade.effect.hashrateMultiplier) {
@@ -970,7 +1644,6 @@ class BitcoinClickerGame {
             }
         }
         hashrateMultiplier *= this.getHashPointMultiplier();
-        
         for (const [id, count] of Object.entries(this.gameState.hardware)) {
             const hardware = this.hardwareTypes.find(h => h.id === id);
             if (hardware) {
@@ -978,9 +1651,7 @@ class BitcoinClickerGame {
             }
         }
         totalHashrate *= powerEfficiency;
-        
         document.getElementById('hashrate-display').textContent = Utils.formatNumber(totalHashrate);
-        
         let hashesPerBTC = this.config.hashesPerBTC;
         for (const [id, count] of Object.entries(this.gameState.upgrades)) {
             const upgrade = this.upgradeTypes.find(u => u.id === id);
@@ -990,23 +1661,19 @@ class BitcoinClickerGame {
         }
         const btcRate = totalHashrate / hashesPerBTC;
         document.getElementById('btcrate-display').textContent = Utils.formatBTC(btcRate);
-        
         // Update power meter
         const powerUsed = this.getTotalPowerUsed();
         const powerCapacity = this.getTotalPowerCapacity();
         document.getElementById('power-used').textContent = Utils.formatNumber(powerUsed);
         document.getElementById('power-capacity').textContent = Utils.formatNumber(powerCapacity);
-        
         const powerFill = document.getElementById('power-fill');
         const powerPercent = powerCapacity > 0 ? (powerUsed / powerCapacity) * 100 : 0;
         powerFill.style.width = Math.min(powerPercent, 100) + '%';
-        
         if (powerPercent > 100) {
             powerFill.classList.add('overpowered');
         } else {
             powerFill.classList.remove('overpowered');
         }
-        
         // Update market
         document.getElementById('market-rate').textContent = Utils.formatUSD(this.gameState.marketPrice);
         const trendEl = document.getElementById('market-trend');
@@ -1018,25 +1685,20 @@ class BitcoinClickerGame {
         } else {
             trendEl.textContent = '─';
         }
-        
         // Update click power display
         document.getElementById('click-power-display').textContent = '+' + Utils.formatNumber(this.getClickPower()) + ' hash/click';
-        
         // Update pending hashes
         document.getElementById('pending-hashes').textContent = Utils.formatNumber(this.gameState.pendingHashes);
-        
         // Update prestige panel
         document.getElementById('total-btc-run').textContent = Utils.formatBTC(this.gameState.totalBTCThisRun);
         document.getElementById('hp-on-prestige').textContent = this.calculateHashPointsOnPrestige();
         document.getElementById('hp-multiplier').textContent = this.getHashPointMultiplier().toFixed(2) + 'x';
-        
         const prestigeBtn = document.getElementById('prestige-button');
         if (this.calculateHashPointsOnPrestige() === 0) {
             prestigeBtn.disabled = true;
         } else {
             prestigeBtn.disabled = false;
         }
-        
         // Update shop affordability
         this.updateShopAffordability();
     }
@@ -1047,61 +1709,50 @@ class BitcoinClickerGame {
             const hardware = this.hardwareTypes.filter(h => 
                 this.gameState.unlockedHardware.includes(h.id)
             )[index];
-            
             if (hardware) {
                 const cost = this.getHardwareCost(hardware.id);
-                const canAfford = this.gameState.bitcoin >= cost;
-                
+                const canAfford = this.gameState.money >= cost;
                 if (canAfford) {
                     item.classList.add('affordable');
                 } else {
                     item.classList.remove('affordable');
                 }
-                
                 const btn = item.querySelector('.buy-button');
                 btn.disabled = !canAfford;
             }
         });
-        
         // Update generator shop
         document.querySelectorAll('#power-list .shop-item').forEach((item, index) => {
             const generator = this.generatorTypes.filter(g => 
                 this.gameState.unlockedGenerators.includes(g.id)
             )[index];
-            
             if (generator) {
                 const cost = this.getGeneratorCost(generator.id);
-                const canAfford = this.gameState.bitcoin >= cost;
-                
+                const canAfford = this.gameState.money >= cost;
                 if (canAfford) {
                     item.classList.add('affordable');
                 } else {
                     item.classList.remove('affordable');
                 }
-                
                 const btn = item.querySelector('.buy-button');
                 btn.disabled = !canAfford;
             }
         });
-        
         // Update upgrades shop
         document.querySelectorAll('#upgrades-list .shop-item').forEach((item, index) => {
             const upgrade = this.upgradeTypes.filter(u => 
                 this.gameState.unlockedUpgrades.includes(u.id)
             )[index];
-            
             if (upgrade) {
                 const owned = this.gameState.upgrades[upgrade.id] || 0;
                 const maxed = upgrade.maxPurchases && owned >= upgrade.maxPurchases;
                 const cost = this.getUpgradeCost(upgrade.id);
-                const canAfford = this.gameState.bitcoin >= cost && !maxed;
-                
+                const canAfford = this.gameState.money >= cost && !maxed;
                 if (canAfford) {
                     item.classList.add('affordable');
                 } else {
                     item.classList.remove('affordable');
                 }
-                
                 const btn = item.querySelector('.buy-button');
                 btn.disabled = !canAfford;
             }
@@ -1120,13 +1771,142 @@ class BitcoinClickerGame {
 document.addEventListener('DOMContentLoaded', () => {
     const game = new BitcoinClickerGame();
     game.init();
-    
-    // Make game globally accessible for debugging
     window.game = game;
-    
+    window.blackjack = new Blackjack(game);
+    // Secret gambling menu toggle
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'g' && !e.repeat) {
+            const menu = document.getElementById('gambler-menu');
+            menu.classList.toggle('active');
+            window.blackjack.resetUI();
+        }
+    });
     // Save on page unload
     window.addEventListener('beforeunload', () => {
         game.gameState.lastUpdate = Date.now();
         Storage.save(game.gameState);
     });
 });
+
+// Blackjack logic
+class Blackjack {
+    constructor(game) {
+        this.game = game;
+        this.playerCards = [];
+        this.dealerCards = [];
+        this.bet = 0;
+        this.inProgress = false;
+        this.playerStands = false;
+        this.setupUI();
+    }
+    setupUI() {
+        this.statusEl = document.getElementById('blackjack-status');
+        this.playerEl = document.getElementById('blackjack-player-cards');
+        this.dealerEl = document.getElementById('blackjack-dealer-cards');
+        this.betEl = document.getElementById('blackjack-bet');
+        this.dealBtn = document.getElementById('blackjack-deal');
+        this.hitBtn = document.getElementById('blackjack-hit');
+        this.standBtn = document.getElementById('blackjack-stand');
+        this.dealBtn.onclick = () => this.startGame();
+        this.hitBtn.onclick = () => this.hit();
+        this.standBtn.onclick = () => this.stand();
+    }
+    resetUI() {
+        this.statusEl.textContent = 'Press Deal to start!';
+        this.playerEl.textContent = '';
+        this.dealerEl.textContent = '';
+        this.hitBtn.disabled = true;
+        this.standBtn.disabled = true;
+        this.inProgress = false;
+        this.playerStands = false;
+    }
+    startGame() {
+        this.bet = Math.max(1, Math.floor(Number(this.betEl.value)));
+        if (this.bet > this.game.gameState.money) {
+            this.statusEl.textContent = 'Not enough cash!';
+            return;
+        }
+        this.game.gameState.money -= this.bet;
+        this.inProgress = true;
+        this.playerStands = false;
+        this.playerCards = [this.drawCard(), this.drawCard()];
+        this.dealerCards = [this.drawCard(), this.drawCard()];
+        this.updateUI();
+        this.hitBtn.disabled = false;
+        this.standBtn.disabled = false;
+        this.statusEl.textContent = 'Hit or Stand?';
+    }
+    drawCard() {
+        const ranks = [2,3,4,5,6,7,8,9,10,'J','Q','K','A'];
+        const suits = ['♠','♥','♦','♣'];
+        const rank = ranks[Math.floor(Math.random()*ranks.length)];
+        const suit = suits[Math.floor(Math.random()*suits.length)];
+        return {rank,suit};
+    }
+    handValue(cards) {
+        let value = 0, aces = 0;
+        for (const card of cards) {
+            if (typeof card.rank === 'number') value += card.rank;
+            else if (card.rank === 'A') { value += 11; aces++; }
+            else value += 10;
+        }
+        while (value > 21 && aces > 0) { value -= 10; aces--; }
+        return value;
+    }
+    updateUI() {
+        this.playerEl.textContent = this.playerCards.map(c=>c.rank+c.suit).join(' ')+` (${this.handValue(this.playerCards)})`;
+        if (this.playerStands)
+            this.dealerEl.textContent = this.dealerCards.map(c=>c.rank+c.suit).join(' ')+` (${this.handValue(this.dealerCards)})`;
+        else
+            this.dealerEl.textContent = this.dealerCards[0].rank+this.dealerCards[0].suit+' ??';
+    }
+    hit() {
+        if (!this.inProgress) return;
+        this.playerCards.push(this.drawCard());
+        this.updateUI();
+        const val = this.handValue(this.playerCards);
+        if (val > 21) {
+            this.endGame('Bust! You lose.');
+        }
+    }
+    stand() {
+        if (!this.inProgress) return;
+        this.playerStands = true;
+        this.hitBtn.disabled = true;
+        this.standBtn.disabled = true;
+        this.dealerTurn();
+    }
+    dealerTurn() {
+        while (this.handValue(this.dealerCards) < 17) {
+            this.dealerCards.push(this.drawCard());
+        }
+        this.updateUI();
+        this.resolveGame();
+    }
+    resolveGame() {
+        const playerVal = this.handValue(this.playerCards);
+        const dealerVal = this.handValue(this.dealerCards);
+        let result = '';
+        if (dealerVal > 21 || playerVal > dealerVal) {
+            result = `You win! +$${this.bet*2}`;
+            this.game.gameState.money += this.bet*2;
+        } else if (playerVal === dealerVal) {
+            result = 'Push! Bet returned.';
+            this.game.gameState.money += this.bet;
+        } else {
+            result = 'Dealer wins! You lose.';
+        }
+        this.endGame(result);
+    }
+    endGame(msg) {
+        this.statusEl.textContent = msg;
+        this.hitBtn.disabled = true;
+        this.standBtn.disabled = true;
+        this.inProgress = false;
+        this.updateUI();
+        // Update main money display
+        if (document.getElementById('money-display')) {
+            document.getElementById('money-display').textContent = `$${this.game.gameState.money.toLocaleString()}`;
+        }
+    }
+}

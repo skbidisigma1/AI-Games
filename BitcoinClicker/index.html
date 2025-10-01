@@ -19,6 +19,10 @@
                             <span class="stat-value" id="btc-display">0.00000000</span>
                         </div>
                         <div class="stat-item">
+                            <span class="stat-label">Money</span>
+                            <span class="stat-value" id="money-display">$0</span>
+                        </div>
+                        <div class="stat-item">
                             <span class="stat-label">Hash Points</span>
                             <span class="stat-value" id="hp-display">0</span>
                         </div>
@@ -61,6 +65,7 @@
                         <span class="btn-text">SOLVE HASH</span>
                         <span class="btn-subtitle" id="click-power-display">+1 hash/click</span>
                     </button>
+                    <button id="convert-btc-money" class="convert-btn">Convert All Bitcoin to Money</button>
                     <div id="hash-counter">
                         <span class="hash-label">Pending Hashes:</span>
                         <span id="pending-hashes">0</span>
@@ -136,6 +141,23 @@
 
         <!-- Event Notifications -->
         <div id="notifications"></div>
+
+        <!-- Secret Gambling Menu -->
+        <div id="gambler-menu">
+            <button class="close-btn" onclick="document.getElementById('gambler-menu').classList.remove('active')">✖</button>
+            <h2>Blackjack</h2>
+            <div class="blackjack-status" id="blackjack-status">Press Deal to start!</div>
+            <div class="blackjack-cards">
+                <div>Player: <span id="blackjack-player-cards"></span></div>
+                <div>Dealer: <span id="blackjack-dealer-cards"></span></div>
+            </div>
+            <div class="blackjack-controls">
+                <input type="number" id="blackjack-bet" min="1" value="10" />
+                <button id="blackjack-deal">Deal</button>
+                <button id="blackjack-hit" disabled>Hit</button>
+                <button id="blackjack-stand" disabled>Stand</button>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts -->
