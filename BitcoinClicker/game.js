@@ -320,8 +320,8 @@ class BitcoinClickerGame {
                 tier: 1,
                 effect: { hashrateBonus: 1.05 },
                 requires: [],
-                x: 10,
-                y: 25
+                x: 8,
+                y: 20
             },
             {
                 id: 'power_savings',
@@ -331,7 +331,7 @@ class BitcoinClickerGame {
                 tier: 1,
                 effect: { powerReduction: 0.95 },
                 requires: [],
-                x: 10,
+                x: 8,
                 y: 50
             },
             {
@@ -342,8 +342,8 @@ class BitcoinClickerGame {
                 tier: 1,
                 effect: { clickBonus: 1.08 },
                 requires: [],
-                x: 10,
-                y: 75
+                x: 8,
+                y: 80
             },
             // Tier 2 (Row 2)
             {
@@ -355,7 +355,7 @@ class BitcoinClickerGame {
                 effect: { hashrateBonus: 1.10 },
                 requires: ['efficient_mining'],
                 x: 28,
-                y: 18
+                y: 10
             },
             {
                 id: 'overclocking',
@@ -366,7 +366,7 @@ class BitcoinClickerGame {
                 effect: { hashrateBonus: 1.15, powerIncrease: 1.05 },
                 requires: ['efficient_mining'],
                 x: 28,
-                y: 32
+                y: 30
             },
             {
                 id: 'renewable_energy',
@@ -388,7 +388,7 @@ class BitcoinClickerGame {
                 effect: { unlockHardware: 'fpga' },
                 requires: ['power_savings'],
                 x: 28,
-                y: 64
+                y: 70
             },
             {
                 id: 'enhanced_clicking',
@@ -399,7 +399,7 @@ class BitcoinClickerGame {
                 effect: { clickBonus: 1.12 },
                 requires: ['click_training'],
                 x: 28,
-                y: 78
+                y: 90
             },
             // Tier 3 (Row 3)
             {
@@ -410,8 +410,8 @@ class BitcoinClickerGame {
                 tier: 3,
                 effect: { conversionBonus: 0.85 },
                 requires: ['advanced_mining'],
-                x: 46,
-                y: 12
+                x: 48,
+                y: 5
             },
             {
                 id: 'quantum_optimization',
@@ -421,7 +421,7 @@ class BitcoinClickerGame {
                 tier: 3,
                 effect: { hashrateBonus: 1.20 },
                 requires: ['advanced_mining', 'overclocking'],
-                x: 46,
+                x: 48,
                 y: 25
             },
             {
@@ -432,8 +432,8 @@ class BitcoinClickerGame {
                 tier: 3,
                 effect: { unlockHardware: 'asic_pro' },
                 requires: ['overclocking'],
-                x: 46,
-                y: 38
+                x: 48,
+                y: 45
             },
             {
                 id: 'fusion_power',
@@ -443,8 +443,8 @@ class BitcoinClickerGame {
                 tier: 3,
                 effect: { powerReduction: 0.80 },
                 requires: ['renewable_energy'],
-                x: 46,
-                y: 50
+                x: 48,
+                y: 65
             },
             {
                 id: 'unlock_immersion',
@@ -952,11 +952,13 @@ class BitcoinClickerGame {
             this.gameState.totalClicks++;
             this.gameState.stats.totalClicks++;
             // Create click effect
-            const button = event.currentTarget;
-            const rect = button.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
-            Utils.createClickEffect(x, y, '+' + Utils.formatNumber(clickPower));
+            if (event && event.currentTarget) {
+                const button = event.currentTarget;
+                const rect = button.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                Utils.createClickEffect(x, y, '+' + Utils.formatNumber(clickPower));
+            }
             // Convert hashes to BTC
             this.convertHashes();
             // Update UI
@@ -976,13 +978,30 @@ class BitcoinClickerGame {
                 modal.id = 'math-challenge-modal';
                 document.body.appendChild(modal);
             }
+            // Always ensure modal is styled and visible
+            modal.style.position = 'fixed';
+            modal.style.left = '50%';
+            modal.style.top = '50%';
+            modal.style.transform = 'translate(-50%, -50%)';
+            modal.style.zIndex = '99999';
+            modal.style.background = '#222';
+            modal.style.color = '#fff';
+            modal.style.padding = '24px 32px';
+            modal.style.borderRadius = '12px';
+            modal.style.boxShadow = '0 4px 24px #0008';
+            modal.style.setProperty('display', 'block', 'important');
+            modal.style.visibility = 'visible';
             modal.innerHTML = `
                 <div style="font-size:1.2em;margin-bottom:12px;">Solve: <b>${a} + ${b}</b></div>
                 <input id="math-answer" type="number" style="font-size:1.2em;padding:4px 8px;width:80px;" autofocus />
                 <button id="math-submit" style="font-size:1.1em;margin-left:12px;">Submit</button>
                 <div class="math-feedback" id="math-feedback"></div>
             `;
-            modal.style.display = 'block';
+            setTimeout(() => {
+                const answerInput = document.getElementById('math-answer');
+                if (answerInput) answerInput.focus();
+            }, 50);
+            console.log('Math challenge modal should be visible now.');
             const submitBtn = document.getElementById('math-submit');
             const answerInput = document.getElementById('math-answer');
             const feedback = document.getElementById('math-feedback');
@@ -992,14 +1011,16 @@ class BitcoinClickerGame {
                     feedback.textContent = '✅ Correct!';
                     feedback.style.color = '#00ff88';
                     setTimeout(() => {
-                        modal.style.display = 'none';
+                        modal.style.setProperty('display', 'none', 'important');
+                        modal.style.visibility = 'hidden';
                         resolve(true);
                     }, 500);
                 } else {
                     feedback.textContent = '❌ Incorrect!';
                     feedback.style.color = '#ff4444';
                     setTimeout(() => {
-                        modal.style.display = 'none';
+                        modal.style.setProperty('display', 'none', 'important');
+                        modal.style.visibility = 'hidden';
                         resolve(false);
                     }, 700);
                 }
