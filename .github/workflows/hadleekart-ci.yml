@@ -1,0 +1,41 @@
+name: HadleeKart CI
+
+on:
+  push:
+    paths:
+      - 'HadleeKart/**'
+  pull_request:
+    paths:
+      - 'HadleeKart/**'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: HadleeKart/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./HadleeKart
+        run: npm ci
+      
+      - name: Build
+        working-directory: ./HadleeKart
+        run: npm run build
+      
+      - name: Run tests
+        working-directory: ./HadleeKart
+        run: npm test
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: hadleekart-dist
+          path: HadleeKart/dist/
