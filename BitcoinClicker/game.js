@@ -44,6 +44,7 @@ class BitcoinClickerGame {
                 id: 'cpu',
                 name: 'CPU Miner',
                 description: 'Your trusty CPU. Slow but reliable.',
+                subcategory: 'CPU',
                 baseCost: 100,
                 baseHashrate: 10,
                 basePower: 50,
@@ -54,6 +55,7 @@ class BitcoinClickerGame {
                 id: 'gpu',
                 name: 'GPU Rig',
                 description: 'Graphics card mining. Much faster.',
+                subcategory: 'GPU',
                 baseCost: 400,
                 baseHashrate: 100,
                 basePower: 150,
@@ -64,6 +66,7 @@ class BitcoinClickerGame {
                 id: 'asic_early',
                 name: 'Early ASIC',
                 description: 'First generation ASIC miner. Game changer.',
+                subcategory: 'ASIC',
                 baseCost: 2000,
                 baseHashrate: 1000,
                 basePower: 500,
@@ -74,6 +77,7 @@ class BitcoinClickerGame {
                 id: 'asic_mid',
                 name: 'Mid-Gen ASIC',
                 description: 'Improved efficiency and hashrate.',
+                subcategory: 'ASIC',
                 baseCost: 6000,
                 baseHashrate: 8000,
                 basePower: 1200,
@@ -85,6 +89,7 @@ class BitcoinClickerGame {
                 id: 'asic_modern',
                 name: 'Modern ASIC',
                 description: 'State-of-the-art mining hardware.',
+                subcategory: 'ASIC',
                 baseCost: 20000,
                 baseHashrate: 100000,
                 basePower: 3000,
@@ -96,6 +101,7 @@ class BitcoinClickerGame {
                 id: 'quantum',
                 name: 'Quantum Miner',
                 description: 'Experimental quantum computing miner.',
+                subcategory: 'Other',
                 baseCost: 100000,
                 baseHashrate: 1000000,
                 basePower: 10000,
@@ -108,6 +114,7 @@ class BitcoinClickerGame {
                 id: 'fpga',
                 name: 'FPGA Miner',
                 description: 'Field-Programmable Gate Array. Flexible and efficient.',
+                subcategory: 'Other',
                 baseCost: 4000,
                 baseHashrate: 5000,
                 basePower: 800,
@@ -119,6 +126,7 @@ class BitcoinClickerGame {
                 id: 'asic_pro',
                 name: 'Professional ASIC',
                 description: 'High-end commercial mining hardware.',
+                subcategory: 'ASIC',
                 baseCost: 35000,
                 baseHashrate: 200000,
                 basePower: 2500,
@@ -130,6 +138,7 @@ class BitcoinClickerGame {
                 id: 'immersion_asic',
                 name: 'Immersion-Cooled ASIC',
                 description: 'ASICs cooled in dielectric fluid for maximum efficiency.',
+                subcategory: 'ASIC',
                 baseCost: 50000,
                 baseHashrate: 350000,
                 basePower: 2000,
@@ -141,6 +150,7 @@ class BitcoinClickerGame {
                 id: 'photonic',
                 name: 'Photonic Quantum Miner',
                 description: 'Uses light-based quantum computing for incredible speeds.',
+                subcategory: 'Other',
                 baseCost: 250000,
                 baseHashrate: 2500000,
                 basePower: 8000,
@@ -152,6 +162,7 @@ class BitcoinClickerGame {
                 id: 'nano_miner',
                 name: 'Nanoscale Miner',
                 description: 'Molecular-level mining technology.',
+                subcategory: 'Other',
                 baseCost: 500000,
                 baseHashrate: 5000000,
                 basePower: 6000,
@@ -163,6 +174,7 @@ class BitcoinClickerGame {
                 id: 'dimensional',
                 name: 'Dimensional Rift Miner',
                 description: 'Harnesses computing power from parallel dimensions.',
+                subcategory: 'Other',
                 baseCost: 2000000,
                 baseHashrate: 25000000,
                 basePower: 15000,
@@ -174,6 +186,7 @@ class BitcoinClickerGame {
                 id: 'reality_proc',
                 name: 'Reality-Bending Processor',
                 description: 'Manipulates the fabric of reality itself to mine.',
+                subcategory: 'Other',
                 baseCost: 10000000,
                 baseHashrate: 150000000,
                 basePower: 25000,
@@ -189,6 +202,7 @@ class BitcoinClickerGame {
                 id: 'city',
                 name: 'City Power Grid',
                 description: 'Harness the power of the city.',
+                subcategory: 'Grid',
                 baseCost: 35,
                 baseCapacity: 50,
                 costMultiplier: 1.10,
@@ -198,6 +212,7 @@ class BitcoinClickerGame {
                 id: 'solar',
                 name: 'Solar Panel Array',
                 description: 'Clean renewable energy from the sun.',
+                subcategory: 'Renewable',
                 baseCost: 500,
                 baseCapacity: 500,
                 costMultiplier: 1.15,
@@ -207,6 +222,7 @@ class BitcoinClickerGame {
                 id: 'diesel',
                 name: 'Diesel Generator',
                 description: 'Reliable backup power.',
+                subcategory: 'Fossil',
                 baseCost: 2000,
                 baseCapacity: 2000,
                 costMultiplier: 1.18,
@@ -216,6 +232,7 @@ class BitcoinClickerGame {
                 id: 'hydro',
                 name: 'Hydro Turbine',
                 description: 'Harness the power of water.',
+                subcategory: 'Renewable',
                 baseCost: 10000,
                 baseCapacity: 15000,
                 costMultiplier: 1.20,
@@ -226,6 +243,7 @@ class BitcoinClickerGame {
                 id: 'nuclear',
                 name: 'Nuclear Hookup',
                 description: 'Massive power from nuclear plants.',
+                subcategory: 'Advanced',
                 baseCost: 100000,
                 baseCapacity: 200000,
                 costMultiplier: 1.25,
@@ -236,6 +254,7 @@ class BitcoinClickerGame {
                 id: 'fusion',
                 name: 'Fusion Reactor',
                 description: 'The future of energy production.',
+                subcategory: 'Advanced',
                 baseCost: 1000000,
                 baseCapacity: 5000000,
                 costMultiplier: 1.30,
@@ -250,6 +269,7 @@ class BitcoinClickerGame {
                 id: 'click_power1',
                 name: 'Better Mouse',
                 description: 'Click faster with an ergonomic mouse.',
+                subcategory: 'Click Power',
                 cost: 50,
                 effect: { clickMultiplier: 2 },
                 maxPurchases: 1,
@@ -259,6 +279,7 @@ class BitcoinClickerGame {
                 id: 'click_power2',
                 name: 'Mechanical Keyboard',
                 description: 'Smash those hashes harder.',
+                subcategory: 'Click Power',
                 cost: 100,
                 effect: { clickMultiplier: 3 },
                 maxPurchases: 1,
@@ -269,6 +290,7 @@ class BitcoinClickerGame {
                 id: 'hash_efficiency',
                 name: 'Hash Optimization',
                 description: '+10% hashrate to all hardware.',
+                subcategory: 'Hashrate',
                 cost: 200,
                 effect: { hashrateMultiplier: 1.1 },
                 maxPurchases: 10,
@@ -279,6 +301,7 @@ class BitcoinClickerGame {
                 id: 'power_efficiency',
                 name: 'Power Optimization',
                 description: '-10% power consumption for all hardware.',
+                subcategory: 'Efficiency',
                 cost: 500,
                 effect: { powerReduction: 0.9 },
                 maxPurchases: 5,
@@ -290,6 +313,7 @@ class BitcoinClickerGame {
                 id: 'conversion_boost',
                 name: 'Hash Converter Upgrade',
                 description: 'Reduce hashes needed per BTC by 10%.',
+                subcategory: 'Conversion',
                 cost: 1000,
                 effect: { conversionBonus: 0.9 },
                 maxPurchases: 5,
@@ -301,6 +325,7 @@ class BitcoinClickerGame {
                 id: 'auto_clicker',
                 name: 'Auto-Clicker',
                 description: 'Automatically clicks 1 time per second.',
+                subcategory: 'Automation',
                 cost: 5000,
                 effect: { autoClick: 1 },
                 maxPurchases: 1,
@@ -308,6 +333,12 @@ class BitcoinClickerGame {
                 unlocked: false
             }
         ];
+
+        this.shopFilters = {
+            hardware: null,
+            power: null,
+            upgrades: null
+        };
         
         // Research Tree definitions - Reorganized with better spacing
         this.researchNodes = [
@@ -681,6 +712,9 @@ class BitcoinClickerGame {
 
     hardReset() {
         this.gameState = this.createDefaultState();
+        this.shopFilters.hardware = null;
+        this.shopFilters.power = null;
+        this.shopFilters.upgrades = null;
         Storage.save(this.gameState);
         this.updateUI();
         this.checkUnlocks();
@@ -1449,6 +1483,9 @@ class BitcoinClickerGame {
         this.gameState.unlockedHardware = ['cpu', 'gpu', 'asic_early'];
         this.gameState.unlockedGenerators = ['solar', 'diesel'];
         this.gameState.unlockedUpgrades = ['click_power1', 'hash_efficiency'];
+        this.shopFilters.hardware = null;
+        this.shopFilters.power = null;
+        this.shopFilters.upgrades = null;
         Utils.createNotification('Prestige!', `Gained ${hpGain} Hash Points! Total: ${this.gameState.hashPoints}`, 'success');
         this.updateUI();
         this.checkUnlocks();
@@ -1485,11 +1522,76 @@ class BitcoinClickerGame {
         }
     }
 
+    getCategoriesForItems(items, fallback = 'General') {
+        const categories = [];
+        for (const item of items) {
+            const category = (item && item.subcategory) ? item.subcategory : fallback;
+            if (!categories.includes(category)) {
+                categories.push(category);
+            }
+        }
+        return categories;
+    }
+
+    renderCategoryTabs(container, categories, activeCategory, onSelect) {
+        if (!container) return;
+        container.innerHTML = '';
+        if (categories.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+        container.style.display = 'flex';
+        categories.forEach(category => {
+            const button = document.createElement('button');
+            button.className = `category-tab${category === activeCategory ? ' active' : ''}`;
+            button.textContent = category;
+            button.addEventListener('click', () => {
+                if (category !== activeCategory && typeof onSelect === 'function') {
+                    onSelect(category);
+                }
+            });
+            container.appendChild(button);
+        });
+    }
+
     buildHardwareShop() {
         const container = document.getElementById('hardware-list');
+        const tabsContainer = document.getElementById('hardware-categories');
+        if (!container || !tabsContainer) return;
+
+        const unlockedHardware = this.hardwareTypes.filter(h => this.gameState.unlockedHardware.includes(h.id));
+        const categories = this.getCategoriesForItems(unlockedHardware, 'Other');
+
+        if (categories.length === 0) {
+            tabsContainer.style.display = 'none';
+            tabsContainer.innerHTML = '';
+            container.innerHTML = '<div class="empty-shop">No mining hardware unlocked yet.</div>';
+            this.shopFilters.hardware = null;
+            return;
+        }
+
+        let activeCategory = this.shopFilters.hardware;
+        if (!activeCategory || !categories.includes(activeCategory)) {
+            activeCategory = categories[0];
+            this.shopFilters.hardware = activeCategory;
+        }
+
+        this.renderCategoryTabs(tabsContainer, categories, activeCategory, (category) => {
+            this.shopFilters.hardware = category;
+            this.buildHardwareShop();
+        });
+
         container.innerHTML = '';
-        for (const hardware of this.hardwareTypes) {
-            if (!this.gameState.unlockedHardware.includes(hardware.id)) continue;
+        const itemsToRender = categories.length === 1
+            ? unlockedHardware
+            : unlockedHardware.filter(h => (h.subcategory || 'Other') === activeCategory);
+
+        if (itemsToRender.length === 0) {
+            container.innerHTML = `<div class="empty-shop">No mining hardware available in ${activeCategory} yet.</div>`;
+            return;
+        }
+
+        for (const hardware of itemsToRender) {
             const owned = this.gameState.hardware[hardware.id] || 0;
             const cost = this.getHardwareCost(hardware.id);
             const canAfford = this.gameState.money >= cost;
@@ -1525,9 +1627,42 @@ class BitcoinClickerGame {
 
     buildPowerShop() {
         const container = document.getElementById('power-list');
+        const tabsContainer = document.getElementById('power-categories');
+        if (!container || !tabsContainer) return;
+
+        const unlockedGenerators = this.generatorTypes.filter(g => this.gameState.unlockedGenerators.includes(g.id));
+        const categories = this.getCategoriesForItems(unlockedGenerators, 'General');
+
+        if (categories.length === 0) {
+            tabsContainer.style.display = 'none';
+            tabsContainer.innerHTML = '';
+            container.innerHTML = '<div class="empty-shop">No power systems unlocked yet.</div>';
+            this.shopFilters.power = null;
+            return;
+        }
+
+        let activeCategory = this.shopFilters.power;
+        if (!activeCategory || !categories.includes(activeCategory)) {
+            activeCategory = categories[0];
+            this.shopFilters.power = activeCategory;
+        }
+
+        this.renderCategoryTabs(tabsContainer, categories, activeCategory, (category) => {
+            this.shopFilters.power = category;
+            this.buildPowerShop();
+        });
+
         container.innerHTML = '';
-        for (const generator of this.generatorTypes) {
-            if (!this.gameState.unlockedGenerators.includes(generator.id)) continue;
+        const itemsToRender = categories.length === 1
+            ? unlockedGenerators
+            : unlockedGenerators.filter(g => (g.subcategory || 'General') === activeCategory);
+
+        if (itemsToRender.length === 0) {
+            container.innerHTML = `<div class="empty-shop">No power systems available in ${activeCategory} yet.</div>`;
+            return;
+        }
+
+        for (const generator of itemsToRender) {
             const owned = this.gameState.generators[generator.id] || 0;
             const cost = this.getGeneratorCost(generator.id);
             const canAfford = this.gameState.money >= cost;
@@ -1559,9 +1694,42 @@ class BitcoinClickerGame {
 
     buildUpgradesShop() {
         const container = document.getElementById('upgrades-list');
+        const tabsContainer = document.getElementById('upgrades-categories');
+        if (!container || !tabsContainer) return;
+
+        const unlockedUpgrades = this.upgradeTypes.filter(u => this.gameState.unlockedUpgrades.includes(u.id));
+        const categories = this.getCategoriesForItems(unlockedUpgrades, 'General');
+
+        if (categories.length === 0) {
+            tabsContainer.style.display = 'none';
+            tabsContainer.innerHTML = '';
+            container.innerHTML = '<div class="empty-shop">No upgrades unlocked yet.</div>';
+            this.shopFilters.upgrades = null;
+            return;
+        }
+
+        let activeCategory = this.shopFilters.upgrades;
+        if (!activeCategory || !categories.includes(activeCategory)) {
+            activeCategory = categories[0];
+            this.shopFilters.upgrades = activeCategory;
+        }
+
+        this.renderCategoryTabs(tabsContainer, categories, activeCategory, (category) => {
+            this.shopFilters.upgrades = category;
+            this.buildUpgradesShop();
+        });
+
         container.innerHTML = '';
-        for (const upgrade of this.upgradeTypes) {
-            if (!this.gameState.unlockedUpgrades.includes(upgrade.id)) continue;
+        const itemsToRender = categories.length === 1
+            ? unlockedUpgrades
+            : unlockedUpgrades.filter(u => (u.subcategory || 'General') === activeCategory);
+
+        if (itemsToRender.length === 0) {
+            container.innerHTML = `<div class="empty-shop">No upgrades available in ${activeCategory} yet.</div>`;
+            return;
+        }
+
+        for (const upgrade of itemsToRender) {
             const owned = this.gameState.upgrades[upgrade.id] || 0;
             const maxed = upgrade.maxPurchases && owned >= upgrade.maxPurchases;
             const cost = this.getUpgradeCost(upgrade.id);

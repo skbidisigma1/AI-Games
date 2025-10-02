@@ -305,6 +305,38 @@ body {
     font-weight: 700;
 }
 
+/* Category Tabs */
+.category-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.category-tab {
+    background: var(--dark-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.85rem;
+    padding: 8px 16px;
+    transition: all 0.2s ease;
+}
+
+.category-tab:hover {
+    border-color: var(--bitcoin-orange);
+    color: var(--bitcoin-orange);
+}
+
+.category-tab.active {
+    background: linear-gradient(135deg, var(--bitcoin-orange-dark), var(--bitcoin-orange));
+    border-color: var(--bitcoin-orange-light);
+    color: var(--dark-bg);
+    box-shadow: 0 0 12px rgba(247, 147, 26, 0.3);
+}
+
 /* Content Area */
 #content-area {
     position: relative;
@@ -388,6 +420,16 @@ body {
     margin-bottom: 12px;
     font-size: 0.9rem;
     line-height: 1.4;
+}
+
+.empty-shop {
+    background: var(--dark-surface-light);
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    padding: 25px;
+    text-align: center;
 }
 
 .item-stats {
