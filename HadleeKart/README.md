@@ -1,10 +1,14 @@
 # HadleeKart
 
-A barebones Three.js racing prototype focused on smooth vehicle physics and a follow camera. Drive along a straight test track to validate feel before layering on content.
+A Three.js racing game featuring custom tracks, checkpoint-based lap tracking, item boxes, and advanced drift mechanics.
 
 ## Getting Started
 
 Open `index.html` in a modern browser. No build step is required.
+
+## Current Track
+
+**Spungilious Speedway** - A custom-designed circuit track with checkpoints, item boxes, and trick ramps.
 
 ## Controls
 
@@ -12,10 +16,33 @@ Open `index.html` in a modern browser. No build step is required.
 - `S` / `ArrowDown` – Brake / Reverse
 - `A` / `ArrowLeft` – Steer left
 - `D` / `ArrowRight` – Steer right
-- `Space` – Short handbrake-style skid
 - `Shift` – Hop into a drift and charge mini-turbos
 - `E` – Use held item
 - `R` – (Debug) Cycle a random item
+- `T` – Respawn at last checkpoint
+
+## Features
+
+### Track System
+- Custom GLB track loading with proper collision detection
+- 12 checkpoints for lap validation (must pass through all to complete lap)
+- 9 dropoff respawn points for falling off the track
+- 15 item box locations with auto-respawn
+- Trick ramps (detection implemented, trick mechanics coming soon)
+- Separate collision for track surface, walls, and decorations
+
+### Lap & Checkpoint System
+- 3-lap races with checkpoint validation
+- Only counts lap completion if all checkpoints are passed in order
+- Lap time tracking with formatted display
+- Smart respawn system: drops you at last checkpoint or dropoff point passed
+- Automatic respawn when falling below track bounds
+
+### Item Boxes
+- Floating golden cubes at predefined locations
+- 5-second respawn timer after collection
+- Rotating and bobbing animation
+- Automatic item distribution on collection
 
 ## Next Steps
 

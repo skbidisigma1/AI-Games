@@ -31,13 +31,21 @@
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2500);
 
-  initGame({ THREE, GLTFLoader, scene, camera, renderer, config: HADLEE_KART_CONFIG, container });
-
-  function loop() {
-    updateGame();
-    requestAnimationFrame(loop);
-  }
-  loop();
+  // Async initialization
+  (async () => {
+    try {
+      await initGame({ THREE, GLTFLoader, scene, camera, renderer, config: HADLEE_KART_CONFIG, container });
+      
+      function loop() {
+        updateGame();
+        requestAnimationFrame(loop);
+      }
+      loop();
+    } catch (error) {
+      console.error('Failed to initialize game:', error);
+      container.innerHTML = '<div style="color: white; padding: 20px;">Failed to load track. Check console for details.</div>';
+    }
+  })();
 
   window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);

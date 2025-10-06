@@ -1,8 +1,10 @@
 import { ItemManager } from './items.js';
+import { TrackLoader } from './trackLoader.js';
+import { CheckpointManager } from './checkpoint.js';
 
 let internal = null;
 
-export function initGame({ THREE, GLTFLoader, scene, camera, renderer, config, container }) {
+export async function initGame({ THREE, GLTFLoader, scene, camera, renderer, config, container }) {
   if (!THREE) throw new Error('THREE not provided');
   if (!GLTFLoader) throw new Error('GLTFLoader not provided');
   if (!scene) throw new Error('scene not provided');
@@ -18,7 +20,7 @@ export function initGame({ THREE, GLTFLoader, scene, camera, renderer, config, c
   const overlay = document.createElement('div');
   overlay.className = 'overlay';
   overlay.innerHTML = [
-    '<strong>HadleeKart Prototype</strong>',
+    '<strong>HadleeKart - Spungilious Speedway</strong>',
     'W / ArrowUp: accelerate',
     'S / ArrowDown: brake / reverse',
     'A / D or Arrow keys: steer',
@@ -37,6 +39,16 @@ export function initGame({ THREE, GLTFLoader, scene, camera, renderer, config, c
   itemLine.style.marginTop = '0.25rem';
   itemLine.textContent = 'Item: None';
   overlay.appendChild(itemLine);
+
+  const lapLine = document.createElement('div');
+  lapLine.style.marginTop = '0.25rem';
+  lapLine.textContent = 'Lap: 1/3 | Checkpoints: 0/0';
+  overlay.appendChild(lapLine);
+
+  const respawnLine = document.createElement('div');
+  respawnLine.style.marginTop = '0.25rem';
+  respawnLine.textContent = 'Press T to respawn';
+  overlay.appendChild(respawnLine);
 
   const rendererConfig = CONFIG.renderer || {};
   const pixelRatioCap = rendererConfig.maxPixelRatio ?? 2;
@@ -67,60 +79,45 @@ export function initGame({ THREE, GLTFLoader, scene, camera, renderer, config, c
   sun.castShadow = true;
   const shadowSize = lightingConfig.shadowMapSize ?? 1024;
   sun.shadow.mapSize.set(shadowSize, shadowSize);
+  sun.shadow.camera.left = -200;
+  sun.shadow.camera.right = 200;
+  sun.shadow.camera.top = 200;
+  sun.shadow.camera.bottom = -200;
+  sun.shadow.camera.far = 500;
   scene.add(sun);
 
-  // Track & environment
-  const trackConfig = CONFIG.track || {};
-  const trackWidth = trackConfig.width ?? 24;
-  const trackLength = trackConfig.length ?? 2000;
-
-  const trackSurface = trackConfig.surface || {};
-  const trackMaterial = new THREE.MeshStandardMaterial({
-    color: trackSurface.color ?? 0x1f2933,
-    roughness: trackSurface.roughness ?? 0.8,
-    metalness: trackSurface.metalness ?? 0.1,
-  });
-  const trackGeometry = new THREE.PlaneGeometry(trackWidth, trackLength, 20, 200);
-  const track = new THREE.Mesh(trackGeometry, trackMaterial);
-  track.rotation.x = -Math.PI / 2;
-  track.receiveShadow = true;
-  scene.add(track);
-
-  const centerLineConfig = trackConfig.centerLine || {};
-  const centerLineMaterial = new THREE.MeshBasicMaterial({ color: centerLineConfig.color ?? 0xf9d342 });
-  const centerLineGeometry = new THREE.PlaneGeometry(centerLineConfig.width ?? 0.3, trackLength);
-  const centerLine = new THREE.Mesh(centerLineGeometry, centerLineMaterial);
-  centerLine.rotation.x = -Math.PI / 2;
-  centerLine.position.y = 0.01;
-  scene.add(centerLine);
-
-  const guardrailConfig = trackConfig.guardrail || {};
-  const buildGuardrail = (direction) => {
-    const thickness = guardrailConfig.thickness ?? 1;
-    const height = guardrailConfig.height ?? 2.5;
-    const inset = trackConfig.guardrailInset ?? 1.5;
-    const railGeometry = new THREE.BoxGeometry(thickness, height, trackLength);
-    const railMaterial = new THREE.MeshStandardMaterial({
-      color: guardrailConfig.color ?? 0x35435a,
-      roughness: guardrailConfig.roughness ?? 0.5,
-    });
-    const rail = new THREE.Mesh(railGeometry, railMaterial);
-    const xOffset = direction * (trackWidth / 2 - inset);
-    rail.position.set(xOffset, height / 2, 0);
-    rail.castShadow = true;
-    rail.receiveShadow = true;
-    scene.add(rail);
+  // Load custom track
+  console.log('[Game] Loading track...');
+  const trackLoader = new TrackLoader({ THREE, GLTFLoader, scene });
+  const trackData = await trackLoader.load('./assets/track/spungilious_speedway/Spungilious Speedway.glb');
+  
+  // Initialize checkpoint manager
+  const checkpointManager = new CheckpointManager(
+    trackData.checkpoints, 
+    trackData.dropoffPoints,
+    trackData.startPositions
+  );
+  checkpointManager.onCheckpointPass = (checkpoint, passed, total) => {
+    console.log(`Checkpoint ${checkpoint.index} passed! (${passed}/${total})`);
   };
-  buildGuardrail(1);
-  buildGuardrail(-1);
+  checkpointManager.onLapComplete = (lap, time) => {
+    console.log(`LAP ${lap} COMPLETE! Time: ${CheckpointManager.formatTime(time)}`);
+  };
+  checkpointManager.onRaceComplete = (totalTime, lapTimes) => {
+    console.log('RACE FINISHED!', {
+      total: CheckpointManager.formatTime(totalTime),
+      laps: lapTimes.map(t => CheckpointManager.formatTime(t))
+    });
+  };
 
+  // Sky dome
   const skyGeometry = new THREE.SphereGeometry(skyConfig.radius ?? 1600, 32, 32);
   const skyMaterial = new THREE.MeshBasicMaterial({ color: skyConfig.color ?? 0x0c0f16, side: THREE.BackSide });
   const skyDome = new THREE.Mesh(skyGeometry, skyMaterial);
   scene.add(skyDome);
 
   // Input state
-  const input = { forward: false, backward: false, left: false, right: false, drift: false, driftJustPressed: false };
+  const input = { forward: false, backward: false, left: false, right: false, drift: false, driftJustPressed: false, respawn: false };
   const setKeyState = (event, state) => {
     switch (event.code) {
       case 'KeyW':
@@ -141,6 +138,9 @@ export function initGame({ THREE, GLTFLoader, scene, camera, renderer, config, c
       case 'KeyR':
         if (state && internal?.vehicle?.itemManager) internal.vehicle.itemManager.cycleExample();
         break;
+      case 'KeyT':
+        if (state) input.respawn = true;
+        break;
       default: break;
     }
   };
@@ -155,8 +155,12 @@ export function initGame({ THREE, GLTFLoader, scene, camera, renderer, config, c
   };
 
   class Vehicle {
-    constructor(statusElement) {
+    constructor(statusElement, lapElement, trackData, checkpointMgr, trackLoader) {
       this.statusElement = statusElement;
+      this.lapElement = lapElement;
+      this.trackData = trackData;
+      this.checkpointManager = checkpointMgr;
+      this.trackLoader = trackLoader;
       this.vehicleConfig = CONFIG.vehicle || {};
       this.physicsConfig = this.vehicleConfig.physics || {};
       this.driftConfig = CONFIG.drift || { stages: [] };
@@ -211,24 +215,54 @@ export function initGame({ THREE, GLTFLoader, scene, camera, renderer, config, c
       this.hitboxHeight = 2.85;  // Y dimension (9.5m × 0.3 - vertical)
       this.hitboxLength = 5.25;  // Z dimension (17.5m × 0.3 - forward/back)
 
-      const spawnOffset = this.vehicleConfig.spawnZOffset ?? 50;
-      this.group.position.set(0, 0, -trackLength / 2 + spawnOffset);
+      // Spawn at Start.0
+      const spawnPos = trackData.startPositions[0];
+      console.log('[Vehicle] Spawn position:', spawnPos);
+      console.log('[Vehicle] All start positions:', trackData.startPositions.map(p => ({ index: p.index, x: p.position.x, y: p.position.y, z: p.position.z })));
+      if (spawnPos) {
+        // Use the X and Z from spawn position, but calculate Y smartly
+        this.group.position.set(spawnPos.position.x, 0, spawnPos.position.z);
+        
+        // Get the actual ground height at this position
+        const groundCheck = this.trackLoader.getGroundHeight(this.group.position);
+        
+        if (groundCheck.hit) {
+          // Spawn at ground level plus half the kart's hitbox height
+          // This places the kart's bottom at ground level
+          this.group.position.y = groundCheck.height + (this.hitboxHeight * 0.5);
+          console.log('[Vehicle] Ground detected at Y:', groundCheck.height.toFixed(2), 
+                      'spawning kart at Y:', this.group.position.y.toFixed(2));
+        } else {
+          // Fallback to spawn position Y if no ground found
+          this.group.position.y = spawnPos.position.y + this.hitboxHeight * 0.5;
+          console.warn('[Vehicle] No ground detected, using spawn Y + offset');
+        }
+        
+        this.heading = spawnPos.rotation;
+        console.log('[Vehicle] Final spawn position:', this.group.position.x.toFixed(2), 
+                    this.group.position.y.toFixed(2), this.group.position.z.toFixed(2));
+      } else {
+        this.group.position.set(0, 0, 0);
+        this.heading = 0;
+      }
       scene.add(this.group);
 
-      this.heading = 0;
       this.velocity = new THREE.Vector3();
       this.verticalVelocity = 0;
       this.lastSteer = 0;
 
-      this.bounds = {
-        halfWidth: trackWidth * 0.5 - (trackConfig.guardrailInset ?? 1.5) - 0.2,
-        halfLength: trackLength * 0.5 - 12,
-      };
+      // Falloff detection
+      this.falloffTimer = 0;
+      this.falloffThreshold = -10; // Y position below which we respawn
 
       this.driftState = { active: false, direction: 0, timer: 0, stage: -1, yawOffset: 0, leanAngle: 0, pending: false, turnMultiplier: 1, chargeRate: 1, controlState: 'neutral', brakeTimer: 0 };
       this.boostState = { timer: 0, strength: 0 };
       this.isGrounded = true;
       this.groundThreshold = 0.02;
+      
+      // Checkpoint cooldown to prevent spam
+      this.checkpointCooldown = 0;
+      
       this.updateStatusText();
     }
 
@@ -303,37 +337,147 @@ export function initGame({ THREE, GLTFLoader, scene, camera, renderer, config, c
       if (this.boostState.timer > 0) { acceleration.addScaledVector(forwardVector, this.boostState.strength); this.boostState.timer = Math.max(0, this.boostState.timer - delta); if (this.boostState.timer === 0) this.boostState.strength = 0; }
     }
     updateVerticalMovement(delta) {
-      const gravity = this.physicsConfig.gravity ?? 25; const snapGravity = this.physicsConfig.groundSnapGravity ?? 40;
-      if (this.group.position.y > 0 || this.verticalVelocity > 0) this.verticalVelocity -= gravity * delta;
-      if (this.group.position.y < 0.25 && this.verticalVelocity < 0) this.verticalVelocity -= snapGravity * delta;
-      this.group.position.y += this.verticalVelocity * delta;
-      if (this.group.position.y <= 0) { this.group.position.y = 0; if (this.verticalVelocity < 0) this.verticalVelocity = 0; }
+      const gravity = this.physicsConfig.gravity ?? 25;
+      const snapGravity = this.physicsConfig.groundSnapGravity ?? 40;
+      
+      // Get ground height using raycasting
+      const groundCheck = this.trackLoader.getGroundHeight(this.group.position);
+      
+      if (groundCheck.hit) {
+        const groundHeight = groundCheck.height;
+        const distanceToGround = this.group.position.y - groundHeight;
+        
+        // Only apply ground physics if we're above or very close to the ground
+        // Don't snap up if we're significantly below (prevents teleporting through track)
+        const maxSnapDistance = 2.0; // Maximum distance we'll snap to ground
+        
+        if (distanceToGround > -maxSnapDistance) {
+          // If above ground, apply gravity
+          if (distanceToGround > 0.1 || this.verticalVelocity > 0) {
+            this.verticalVelocity -= gravity * delta;
+          }
+          
+          // Strong snap when close to ground and falling
+          if (distanceToGround < 0.5 && distanceToGround > 0 && this.verticalVelocity < 0) {
+            this.verticalVelocity -= snapGravity * delta;
+          }
+          
+          // Update position
+          this.group.position.y += this.verticalVelocity * delta;
+          
+          // Snap to ground if touching or slightly below (but not way below)
+          if (this.group.position.y <= groundHeight && this.group.position.y > groundHeight - 0.5) {
+            this.group.position.y = groundHeight;
+            if (this.verticalVelocity < 0) {
+              this.verticalVelocity = 0;
+            }
+          }
+        } else {
+          // We're way below the track - just fall normally
+          this.verticalVelocity -= gravity * delta;
+          this.group.position.y += this.verticalVelocity * delta;
+        }
+      } else {
+        // No ground found - falling off track
+        this.verticalVelocity -= gravity * delta;
+        this.group.position.y += this.verticalVelocity * delta;
+      }
+      
+      // Store the ground check result for isGrounded calculation
+      this.lastGroundCheck = groundCheck;
     }
     resolveTrackCollisions(proposedPosition) {
-      const finalPosition = proposedPosition.clone(); const normals = []; const epsilon = 0.01;
-      // Edge-based collision: account for half the kart's dimensions
-      const halfKartWidth = this.hitboxWidth / 2;
-      const halfKartLength = this.hitboxLength / 2;
+      // THREE is available in outer scope, not a property of Vehicle
       
-      if (proposedPosition.x + halfKartWidth > this.bounds.halfWidth) { finalPosition.x = this.bounds.halfWidth - halfKartWidth; normals.push(new THREE.Vector3(1, 0, 0)); }
-      else if (proposedPosition.x - halfKartWidth < -this.bounds.halfWidth) { finalPosition.x = -this.bounds.halfWidth + halfKartWidth; normals.push(new THREE.Vector3(-1, 0, 0)); }
-      if (proposedPosition.z + halfKartLength > this.bounds.halfLength) { finalPosition.z = this.bounds.halfLength - halfKartLength; normals.push(new THREE.Vector3(0, 0, 1)); }
-      else if (proposedPosition.z - halfKartLength < -this.bounds.halfLength) { finalPosition.z = -this.bounds.halfLength + halfKartLength; normals.push(new THREE.Vector3(0, 0, -1)); }
-      const wallConfig = this.physicsConfig.wallImpact || {}; const tangentRetentionBase = wallConfig.tangentRetention ?? 0.85; const restitutionBase = wallConfig.restitution ?? 0.25; const minSpeedLoss = wallConfig.minSpeedLoss ?? 0.1; const maxSpeedLoss = wallConfig.maxSpeedLoss ?? 0.5; const driftCancelDot = wallConfig.driftCancelDot ?? 0.65; const severeDot = wallConfig.severeDot ?? Math.min(0.95, driftCancelDot + 0.2);
-      let maxSeverity = 0; let driftCancel = false;
-      normals.forEach(outwardNormal => {
-        const approachSpeed = this.velocity.dot(outwardNormal); if (approachSpeed <= 0) return;
-        const speed = this.velocity.length(); const directness = speed > 0 ? THREE.MathUtils.clamp(approachSpeed / speed, 0, 1) : 0; maxSeverity = Math.max(maxSeverity, directness);
-        const tangentRetention = 1 - (1 - tangentRetentionBase) * directness; const restitution = restitutionBase;
-        const velocityNormal = outwardNormal.clone().multiplyScalar(approachSpeed); const velocityTangential = this.velocity.clone().sub(velocityNormal);
-        const reflectedNormal = outwardNormal.clone().multiplyScalar(-approachSpeed * restitution); const adjustedTangential = velocityTangential.multiplyScalar(tangentRetention);
-        this.velocity.copy(adjustedTangential.add(reflectedNormal));
-        const speedLoss = THREE.MathUtils.lerp(minSpeedLoss, maxSpeedLoss, directness); this.velocity.multiplyScalar(Math.max(0, 1 - speedLoss));
-        if (directness >= severeDot) this.velocity.multiplyScalar(0.85);
-        finalPosition.add(outwardNormal.clone().multiplyScalar(-epsilon));
-        if (directness >= driftCancelDot) driftCancel = true;
+      // Check wall collisions using Box3
+      const wallCollision = this.trackLoader.checkWallCollision(proposedPosition, {
+        width: this.hitboxWidth,
+        height: this.hitboxHeight,
+        length: this.hitboxLength
       });
-      return { position: finalPosition, hitWall: normals.length > 0, severity: maxSeverity, cancelDrift: driftCancel };
+      
+      let finalPosition = proposedPosition.clone();
+      
+      if (wallCollision.colliding) {
+        // Apply pushback from walls
+        finalPosition.add(wallCollision.pushback);
+        
+        // Calculate bounce velocity
+        const pushbackNormal = wallCollision.pushback.clone().normalize();
+        const velocityDot = this.velocity.dot(pushbackNormal);
+        
+        if (velocityDot < 0) {
+          // Reflect velocity
+          const wallConfig = this.physicsConfig.wallImpact || {};
+          const restitution = wallConfig.restitution ?? 0.25;
+          const tangentRetention = wallConfig.tangentRetention ?? 0.85;
+          
+          // Split velocity into normal and tangent components
+          const normalVelocity = pushbackNormal.clone().multiplyScalar(velocityDot);
+          const tangentVelocity = this.velocity.clone().sub(normalVelocity);
+          
+          // Apply bounce and friction
+          const reflected = pushbackNormal.clone().multiplyScalar(-velocityDot * restitution);
+          const retained = tangentVelocity.multiplyScalar(tangentRetention);
+          
+          this.velocity.copy(reflected.add(retained));
+          
+          // Speed loss on impact
+          const directness = Math.abs(velocityDot) / (this.velocity.length() + 0.001);
+          const speedLoss = THREE.MathUtils.lerp(0.1, 0.5, directness);
+          this.velocity.multiplyScalar(1 - speedLoss);
+        }
+        
+        return {
+          position: finalPosition,
+          hitWall: true,
+          severity: Math.abs(velocityDot) / (this.velocity.length() + 0.001),
+          cancelDrift: Math.abs(velocityDot) > 0.65
+        };
+      }
+      
+      return {
+        position: finalPosition,
+        hitWall: false,
+        severity: 0,
+        cancelDrift: false
+      };
+    }
+    
+    respawn() {
+      const respawnPoint = this.checkpointManager.getRespawnPoint();
+      
+      // Set X and Z position
+      this.group.position.set(respawnPoint.position.x, 0, respawnPoint.position.z);
+      
+      // Get the actual ground height at this position
+      const groundCheck = this.trackLoader.getGroundHeight(this.group.position);
+      
+      if (groundCheck.hit) {
+        // Spawn at ground level plus half the kart's hitbox height
+        // This places the kart's bottom at ground level
+        this.group.position.y = groundCheck.height + (this.hitboxHeight * 0.5);
+        console.log('[Vehicle] Respawn ground at Y:', groundCheck.height.toFixed(2), 
+                    'placing kart at Y:', this.group.position.y.toFixed(2));
+      } else {
+        // Fallback to respawn point Y if no ground found
+        this.group.position.y = respawnPoint.position.y + this.hitboxHeight * 0.5;
+        console.warn('[Vehicle] No ground detected at respawn, using position Y + offset');
+      }
+      
+      this.heading = respawnPoint.rotation;
+      this.velocity.set(0, 0, 0);
+      this.verticalVelocity = 0;
+      this.driftState.active = false;
+      this.boostState.timer = 0;
+      
+      // Set cooldown to prevent immediately triggering checkpoint again
+      this.checkpointCooldown = 1.0; // 1 second cooldown
+      
+      console.log('[Vehicle] Respawned at checkpoint', {
+        pos: { x: this.group.position.x.toFixed(2), y: this.group.position.y.toFixed(2), z: this.group.position.z.toFixed(2) },
+        heading: this.heading.toFixed(2)
+      });
     }
     updateVisuals(delta) {
       const turnBias = this.driftState.turnMultiplier ?? 1; const yawTarget = this.driftState.active ? (this.driftState.direction * (this.driftConfig.yawOffset ?? 0.25) * turnBias) : 0; const leanStrength = Math.min(turnBias, 1.4); const leanTarget = this.driftState.active ? (-this.driftState.direction * (this.driftConfig.maxLean ?? 0.15) * leanStrength) : 0;
@@ -342,6 +486,28 @@ export function initGame({ THREE, GLTFLoader, scene, camera, renderer, config, c
       this.group.rotation.y = this.heading + this.driftState.yawOffset; this.group.rotation.z = this.driftState.leanAngle;
     }
     update(delta) {
+      // Handle manual respawn
+      if (input.respawn) {
+        this.respawn();
+        input.respawn = false;
+      }
+      
+      // Update checkpoint cooldown
+      if (this.checkpointCooldown > 0) {
+        this.checkpointCooldown -= delta;
+      }
+      
+      // Check for falloff
+      if (this.group.position.y < this.falloffThreshold) {
+        this.falloffTimer += delta;
+        if (this.falloffTimer > 0.5) { // Grace period
+          this.respawn();
+          this.falloffTimer = 0;
+        }
+      } else {
+        this.falloffTimer = 0;
+      }
+      
       const forwardVector = new THREE.Vector3(Math.sin(this.heading), 0, Math.cos(this.heading)).normalize();
       const rightVector = new THREE.Vector3().crossVectors(upVector, forwardVector).normalize();
       const wasGrounded = this.isGrounded; const forwardSpeed = this.velocity.dot(forwardVector); const steerInput = (input.left ? 1 : 0) - (input.right ? 1 : 0); if (steerInput !== 0) this.lastSteer = steerInput;
@@ -372,17 +538,40 @@ export function initGame({ THREE, GLTFLoader, scene, camera, renderer, config, c
       const proposedPosition = this.group.position.clone().addScaledVector(this.velocity, delta); const wallResult = this.resolveTrackCollisions(proposedPosition); this.group.position.copy(wallResult.position);
       if (wallResult.hitWall && wallResult.cancelDrift && this.driftState.active) this.releaseDrift({ awardBoost: false });
       this.updateVerticalMovement(delta);
-      const isGrounded = this.group.position.y <= this.groundThreshold; const landed = isGrounded && !wasGrounded; this.isGrounded = isGrounded;
+      
+      // Check if grounded based on actual distance to ground
+      // IMPORTANT: Ground must be BELOW us (groundHeight <= our Y position)
+      // This prevents "grounded" state when underneath elevated track sections
+      const isGrounded = this.lastGroundCheck && this.lastGroundCheck.hit && 
+                         this.lastGroundCheck.height <= this.group.position.y &&
+                         (this.group.position.y - this.lastGroundCheck.height) < 0.1;
+      const landed = isGrounded && !wasGrounded; 
+      this.isGrounded = isGrounded;
+      
       const currentSpeed = this.velocity.length(); this.handleDriftPostPhysics(delta, currentSpeed, adjustedForwardSpeed, isGrounded, landed);
-      this.group.position.x = THREE.MathUtils.clamp(this.group.position.x, -this.bounds.halfWidth, this.bounds.halfWidth);
-      this.group.position.z = THREE.MathUtils.clamp(this.group.position.z, -this.bounds.halfLength, this.bounds.halfLength);
+      
+      // Update checkpoint manager (only if cooldown expired)
+      if (this.checkpointCooldown <= 0) {
+        this.checkpointManager.update(this.group.position);
+      }
+      
+      // Update lap UI
+      const status = this.checkpointManager.getStatus();
+      if (this.lapElement) {
+        this.lapElement.textContent = `Lap: ${status.currentLap}/${status.totalLaps} | Checkpoints: ${status.checkpointsPassed}/${status.totalCheckpoints}`;
+      }
+      
       this.updateVisuals(delta); this.updateStatusText();
       if (this.itemManager) { this.itemManager.update(delta); const mult = this.itemManager.getSpeedMultiplier(); if (mult !== 1) { const forwardVector2 = new THREE.Vector3(Math.sin(this.heading), 0, Math.cos(this.heading)).normalize(); const forwardSpeed2 = this.velocity.dot(forwardVector2); const boosted = forwardSpeed2 * mult; const maxSpeed2 = this.physicsConfig.maxSpeed ?? 120; const clamped = Math.min(boosted, maxSpeed2 * 1.5); const forwardComponent2 = forwardVector2.clone().multiplyScalar(clamped); const rightVector2 = new THREE.Vector3().crossVectors(upVector, forwardVector2).normalize(); const lateralComponent2 = rightVector2.clone().multiplyScalar(this.velocity.dot(rightVector2)); this.velocity.copy(forwardComponent2.add(lateralComponent2)); } }
       input.driftJustPressed = false;
     }
   }
 
-  const vehicle = new Vehicle(statusLine);
+  const vehicle = new Vehicle(statusLine, lapLine, trackData, checkpointManager, trackLoader);
+  
+  // Start the race
+  checkpointManager.startRace();
+  
   const targetCameraPosition = new THREE.Vector3();
   const lookTarget = new THREE.Vector3();
   const clock = new THREE.Clock();
@@ -407,15 +596,29 @@ export function initGame({ THREE, GLTFLoader, scene, camera, renderer, config, c
   };
   window.addEventListener('resize', handleResize);
 
-  internal = { THREE, scene, camera, renderer, vehicle, clock, updateCamera };
-  return { vehicle };
+  internal = { THREE, scene, camera, renderer, vehicle, clock, updateCamera, trackLoader };
+  return { vehicle, trackData, checkpointManager };
 }
 
 export function updateGame() {
   if (!internal) return;
-  const { vehicle, clock, updateCamera, renderer, scene, camera } = internal;
+  const { vehicle, clock, updateCamera, renderer, scene, camera, trackLoader } = internal;
   const delta = Math.min(clock.getDelta(), 0.05);
+  
   vehicle.update(delta);
+  
+  // Update item boxes
+  if (trackLoader) {
+    trackLoader.updateItemBoxes(delta);
+    
+    // Check item box collisions
+    const collected = trackLoader.checkItemBoxCollision(vehicle.group.position, 2.5);
+    if (collected.length > 0 && vehicle.itemManager) {
+      // Give a random item (for now)
+      vehicle.itemManager.cycleExample();
+    }
+  }
+  
   updateCamera(delta);
   renderer.render(scene, camera);
 }
