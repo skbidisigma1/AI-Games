@@ -388,31 +388,35 @@ export class TrackLoader {
       position: obj.position
     });
     
-    // Use object's position directly
-    const position = obj.position.clone();
-    
     // Create a trigger box from the object's bounds
     // Temporarily add to scene to calculate bounds correctly
     this.scene.add(obj);
     const box = new this.THREE.Box3().setFromObject(obj);
     this.scene.remove(obj);
     
+    // Get position from the box center (world position)
+    const position = new this.THREE.Vector3();
+    box.getCenter(position);
+    
     // Check if box is valid (not collapsed to a point)
     const size = new this.THREE.Vector3();
     box.getSize(size);
     
-    console.log(`[TrackLoader] Checkpoint ${index} initial box size:`, {
-      x: size.x.toFixed(4),
-      y: size.y.toFixed(4),
-      z: size.z.toFixed(4)
+    console.log(`[TrackLoader] Checkpoint ${index} box:`, {
+      center: { x: position.x.toFixed(2), y: position.y.toFixed(2), z: position.z.toFixed(2) },
+      size: { x: size.x.toFixed(4), y: size.y.toFixed(4), z: size.z.toFixed(4) }
     });
     
     // If the object has no geometry (is an Empty), create a default trigger box
     if (size.x < 0.1 && size.y < 0.1 && size.z < 0.1) {
       console.warn(`[TrackLoader] Checkpoint ${index} has no geometry, creating default trigger box`);
+      // Use object's world position if available, otherwise use box center
+      const worldPos = new this.THREE.Vector3();
+      obj.getWorldPosition(worldPos);
+      position.copy(worldPos);
       // Create a reasonable sized trigger box (20 units wide, 10 tall, 5 deep)
-      const halfSize = new this.THREE.Vector3(10, 5, 2.5);
       box.setFromCenterAndSize(position, new this.THREE.Vector3(20, 10, 5));
+      console.log(`[TrackLoader] Using world position:`, { x: position.x.toFixed(2), y: position.y.toFixed(2), z: position.z.toFixed(2) });
     }
     
     this.trackData.checkpoints.push({
@@ -423,7 +427,7 @@ export class TrackLoader {
       name: obj.name
     });
     
-    console.log(`[TrackLoader] Checkpoint ${index} added:`, {
+    console.log(`[TrackLoader] Checkpoint ${index} FINAL:`, {
       name: obj.name,
       position: { x: position.x.toFixed(2), y: position.y.toFixed(2), z: position.z.toFixed(2) },
       box: { min: box.min, max: box.max }
@@ -467,8 +471,7 @@ export class TrackLoader {
       children: obj.children ? obj.children.length : 0
     });
     
-    // Use object's position and rotation directly
-    const position = obj.position.clone();
+    // Get rotation from the object
     const euler = obj.rotation.clone();
     
     // Create trigger box
@@ -476,21 +479,29 @@ export class TrackLoader {
     const box = new this.THREE.Box3().setFromObject(obj);
     this.scene.remove(obj);
     
+    // Get position from box center (world position)
+    const position = new this.THREE.Vector3();
+    box.getCenter(position);
+    
     // Check if box is valid
     const size = new this.THREE.Vector3();
     box.getSize(size);
     
-    console.log(`[TrackLoader] Dropoff ${index} initial box size:`, {
-      x: size.x.toFixed(4),
-      y: size.y.toFixed(4),
-      z: size.z.toFixed(4)
+    console.log(`[TrackLoader] Dropoff ${index} box:`, {
+      center: { x: position.x.toFixed(2), y: position.y.toFixed(2), z: position.z.toFixed(2) },
+      size: { x: size.x.toFixed(4), y: size.y.toFixed(4), z: size.z.toFixed(4) }
     });
     
     // If the object has no geometry (is an Empty), create a default trigger box
     if (size.x < 0.1 && size.y < 0.1 && size.z < 0.1) {
       console.warn(`[TrackLoader] Dropoff ${index} has no geometry, creating default trigger box`);
+      // Use object's world position
+      const worldPos = new this.THREE.Vector3();
+      obj.getWorldPosition(worldPos);
+      position.copy(worldPos);
       // Create a reasonable sized trigger box (15 units wide, 8 tall, 4 deep)
       box.setFromCenterAndSize(position, new this.THREE.Vector3(15, 8, 4));
+      console.log(`[TrackLoader] Using world position:`, { x: position.x.toFixed(2), y: position.y.toFixed(2), z: position.z.toFixed(2) });
     }
     
     this.trackData.dropoffPoints.push({
@@ -500,7 +511,7 @@ export class TrackLoader {
       box: box
     });
     
-    console.log(`[TrackLoader] Dropoff ${index} added:`, {
+    console.log(`[TrackLoader] Dropoff ${index} FINAL:`, {
       position: { x: position.x.toFixed(2), y: position.y.toFixed(2), z: position.z.toFixed(2) },
       rotation: euler.y.toFixed(2),
       box: { min: box.min, max: box.max }
