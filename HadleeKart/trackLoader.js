@@ -4,10 +4,12 @@
  */
 
 export class TrackLoader {
-  constructor({ THREE, GLTFLoader, scene }) {
+  constructor({ THREE, GLTFLoader, scene, config }) {
     this.THREE = THREE;
     this.GLTFLoader = GLTFLoader;
     this.scene = scene;
+    this.config = config || {};
+    this.debugConfig = this.config.debug || {};
     
     this.trackData = {
       surfaces: [], // Array to hold multiple track meshes
@@ -86,12 +88,16 @@ export class TrackLoader {
       loader.load(
         path,
         (gltf) => {
-          console.log('[TrackLoader] Loaded track:', path);
-          console.log('[TrackLoader] GLTF scene:', gltf.scene);
+          if (this.debugConfig.logTrackLoading) {
+            console.log('[TrackLoader] Loaded track:', path);
+            console.log('[TrackLoader] GLTF scene:', gltf.scene);
+          }
           
           // Store animations if any
           if (gltf.animations && gltf.animations.length > 0) {
-            console.log('[TrackLoader] Found', gltf.animations.length, 'animations');
+            if (this.debugConfig.logTrackLoading) {
+              console.log('[TrackLoader] Found', gltf.animations.length, 'animations');
+            }
             this.animations = gltf.animations;
             
             // Create animation mixer for the scene
@@ -103,7 +109,9 @@ export class TrackLoader {
               const action = mixer.clipAction(clip);
               action.timeScale = 0.5; // 50% speed
               action.play();
-              console.log('[TrackLoader] Playing animation:', clip.name, 'at 50% speed');
+              if (this.debugConfig.logTrackLoading) {
+                console.log('[TrackLoader] Playing animation:', clip.name, 'at 50% speed');
+              }
             });
           }
           
@@ -137,40 +145,18 @@ export class TrackLoader {
     const { THREE } = this;
     
     // Debug: log all object names in the scene
-    const objectNames = [];
-    if (root && root.children) {
-      console.log('[TrackLoader] Root has', root.children.length, 'direct children');
-      console.log('[TrackLoader] Detailed children list:');
-      root.children.forEach((child, idx) => {
-        const name = child ? (child.name || '<unnamed>') : '<null>';
-        const type = child ? (child.type || '<no type>') : '<null>';
-        const hasChildren = child && child.children ? child.children.length : 0;
-        console.log(`  [${idx}] name="${name}" type=${type} children=${hasChildren}`);
-        
-        if (child && child.name) {
-          objectNames.push(child.name);
-          
-          // Check if this object has children - log them all
-          if (child.children && child.children.length > 0) {
-            console.log(`      Children of "${child.name}":`);
-            child.children.forEach((subChild, subIdx) => {
-              const subName = subChild ? (subChild.name || '<unnamed>') : '<null>';
-              const subType = subChild ? (subChild.type || '<no type>') : '<null>';
-              console.log(`        [${subIdx}] name="${subName}" type=${subType}`);
-            });
-          }
-        }
-      });
-      console.log('[TrackLoader] Direct children names:', objectNames);
-      
-      // Now also do a full traverse to see ALL objects
-      const allObjects = [];
-      root.traverse((obj) => {
-        if (obj && obj.name) {
-          allObjects.push(obj.name);
-        }
-      });
-      console.log('[TrackLoader] ALL objects (via traverse):', allObjects);
+    if (this.debugConfig.logTrackLoading) {
+      const objectNames = [];
+      if (root && root.children) {
+        console.log('[TrackLoader] Root has', root.children.length, 'direct children');
+        root.children.forEach((child, idx) => {
+          const name = child ? (child.name || '<unnamed>') : '<null>';
+          const type = child ? (child.type || '<no type>') : '<null>';
+          const hasChildren = child && child.children ? child.children.length : 0;
+          console.log(`  [${idx}] name="${name}" type=${type} children=${hasChildren}`);
+          if (child && child.name) objectNames.push(child.name);
+        });
+      }
     }
     
     // Process each direct child (all objects are siblings in your Blender export)
@@ -180,16 +166,15 @@ export class TrackLoader {
       const childrenCopy = [...root.children];
       childrenCopy.forEach((child, index) => {
         if (!child) {
-          console.warn(`[TrackLoader] Child ${index} is null/undefined`);
+          if (this.debugConfig.logTrackLoading) console.warn(`[TrackLoader] Child ${index} is null/undefined`);
           return;
         }
         if (!child.name) {
-          console.warn(`[TrackLoader] Child ${index} has no name:`, child);
+          if (this.debugConfig.logTrackLoading) console.warn(`[TrackLoader] Child ${index} has no name:`, child);
           return;
         }
 
         const name = child.name;
-        console.log(`[TrackLoader] Processing child ${index}: "${name}"`);
         
         // Determine role for logging
         let role = 'other';
@@ -203,7 +188,9 @@ export class TrackLoader {
         else if (name.startsWith('Dropoff')) role = 'dropoff';
         
         // Log element info for debugging
-        this.logElementInfo(child, role);
+        if (this.debugConfig.logTrackLoading) {
+          this.logElementInfo(child, role);
+        }
 
         // Main track surface (Track, Track0, Track1, etc.)
         if (name === 'Track' || name.startsWith('Track')) {
@@ -249,13 +236,15 @@ export class TrackLoader {
     this.trackData.startPositions.sort((a, b) => a.index - b.index);
     this.trackData.itemBoxLocations.sort((a, b) => a.index - b.index);
     
-    console.log('[TrackLoader] Parsed track:', {
-      checkpoints: this.trackData.checkpoints.length,
-      dropoffs: this.trackData.dropoffPoints.length,
-      starts: this.trackData.startPositions.length,
-      items: this.trackData.itemBoxLocations.length,
-      trickZones: this.trackData.trickZones.length
-    });
+    if (this.debugConfig.logTrackLoading) {
+      console.log('[TrackLoader] Parsed track:', {
+        checkpoints: this.trackData.checkpoints.length,
+        dropoffs: this.trackData.dropoffPoints.length,
+        starts: this.trackData.startPositions.length,
+        items: this.trackData.itemBoxLocations.length,
+        trickZones: this.trackData.trickZones.length
+      });
+    }
   }
 
   setupTrackSurface(mesh) {
@@ -266,7 +255,7 @@ export class TrackLoader {
       mesh.castShadow = false;
       this.scene.add(mesh);
       this.trackData.surfaces.push(mesh);
-      console.log('[TrackLoader] Track surface added:', mesh.name);
+      if (this.debugConfig.logTrackLoading) console.log('[TrackLoader] Track surface added:', mesh.name);
     } else if (mesh.children && mesh.children.length > 0) {
       mesh.children.forEach((child) => {
         if (child.isMesh) {
@@ -276,11 +265,11 @@ export class TrackLoader {
         }
       });
       this.scene.add(mesh);
-      console.log('[TrackLoader] Track surface group added:', mesh.name);
+      if (this.debugConfig.logTrackLoading) console.log('[TrackLoader] Track surface group added:', mesh.name);
     } else {
       this.scene.add(mesh);
       this.trackData.surfaces.push(mesh);
-      console.log('[TrackLoader] Track surface added (unknown type):', mesh.name);
+      if (this.debugConfig.logTrackLoading) console.log('[TrackLoader] Track surface added (unknown type):', mesh.name);
     }
   }
 
@@ -304,7 +293,7 @@ export class TrackLoader {
       name: wall.name 
     });
     
-    console.log('[TrackLoader] Wall added for raycasting:', wall.name);
+    if (this.debugConfig.logTrackLoading) console.log('[TrackLoader] Wall added for raycasting:', wall.name);
   }
 
   setupTrickZones(trick) {
@@ -321,7 +310,7 @@ export class TrackLoader {
     else if (trick.children && trick.children.length > 0) trick.children.forEach((c) => addTrickMesh(c));
     else this.scene.add(trick);
 
-    console.log('[TrackLoader] Trick zones added:', this.trackData.trickZones.length);
+    if (this.debugConfig.logTrackLoading) console.log('[TrackLoader] Trick zones added:', this.trackData.trickZones.length);
   }
 
   setupDecorations(misc) {
@@ -348,7 +337,7 @@ export class TrackLoader {
     this.scene.add(misc);
     this.miscObjects.push(misc);
     
-    console.log('[TrackLoader] Decoration added:', misc.name);
+    if (this.debugConfig.logTrackLoading) console.log('[TrackLoader] Decoration added:', misc.name);
   }
 
   setupStartPosition(obj) {
@@ -368,7 +357,9 @@ export class TrackLoader {
       rotation: euler.y // Y-axis rotation (heading)
     });
     
-    console.log(`[TrackLoader] Start position ${index} at:`, position.x.toFixed(2), position.y.toFixed(2), position.z.toFixed(2), 'rotation:', euler.y.toFixed(2));
+    if (this.debugConfig.logTrackLoading) {
+      console.log(`[TrackLoader] Start position ${index} at:`, position.x.toFixed(2), position.y.toFixed(2), position.z.toFixed(2), 'rotation:', euler.y.toFixed(2));
+    }
     
     // Make invisible (don't add to scene)
     obj.visible = false;
@@ -427,20 +418,21 @@ export class TrackLoader {
       name: obj.name
     });
     
-    console.log(`[TrackLoader] Checkpoint ${index} FINAL:`, {
-      name: obj.name,
-      position: { x: position.x.toFixed(2), y: position.y.toFixed(2), z: position.z.toFixed(2) },
-      box: { min: box.min, max: box.max }
-    });
+    if (this.debugConfig.logTrackLoading) {
+      console.log(`[TrackLoader] Checkpoint ${index} FINAL:`, {
+        name: obj.name,
+        position: { x: position.x.toFixed(2), y: position.y.toFixed(2), z: position.z.toFixed(2) },
+        box: { min: box.min, max: box.max }
+      });
+    }
     
     // Make invisible but keep for collision detection
     obj.visible = false;
     
     // Optional: visualize in debug mode
-    if (true) { // Set to true for debugging
+    if (this.debugConfig.visualizeCheckpoints) {
       const helper = new this.THREE.Box3Helper(box, 0x00ff00);
       this.scene.add(helper);
-      console.log(`[TrackLoader] Checkpoint ${index} debug helper added`);
     }
   }
 
@@ -448,8 +440,44 @@ export class TrackLoader {
     const indexMatch = obj.name.match(/Item(\d+)/);
     const index = indexMatch ? parseInt(indexMatch[1]) : 0;
     
-    // Use object's position directly
-    const position = obj.position.clone();
+    // Debug: traverse parent hierarchy
+    let parentChain = [];
+    let current = obj.parent;
+    while (current) {
+      parentChain.push(current.name || '<unnamed>');
+      current = current.parent;
+    }
+    
+    console.log(`[TrackLoader] Item ${index} - ${obj.name}:`, {
+      localPosition: { x: obj.position.x, y: obj.position.y, z: obj.position.z },
+      parentChain: parentChain.join(' -> '),
+      type: obj.type,
+      isMesh: obj.isMesh,
+      isGroup: obj.isGroup,
+      hasChildren: obj.children ? obj.children.length : 0
+    });
+    
+    // Check if this is actually a mesh or a group/empty
+    if (obj.children && obj.children.length > 0) {
+      console.log(`[TrackLoader] Item ${index} has children:`, obj.children.map(c => c.name || '<unnamed>'));
+    }
+    
+    // DON'T add to scene - that changes the parent!
+    // Instead, ensure the world matrix is updated in the current hierarchy
+    if (obj.parent) {
+      obj.parent.updateMatrixWorld(true);
+    }
+    obj.updateMatrixWorld(true);
+    
+    // Get the world position
+    const position = new this.THREE.Vector3();
+    obj.getWorldPosition(position);
+    
+    console.log(`[TrackLoader] Item ${index} world position:`, {
+      x: position.x.toFixed(2),
+      y: position.y.toFixed(2),
+      z: position.z.toFixed(2)
+    });
     
     this.trackData.itemBoxLocations.push({
       index,
@@ -463,13 +491,15 @@ export class TrackLoader {
     const indexMatch = obj.name.match(/Dropoff(\d+)/);
     const index = indexMatch ? parseInt(indexMatch[1]) : 0;
     
-    console.log(`[TrackLoader] Setting up dropoff ${index}:`, {
-      name: obj.name,
-      type: obj.type,
-      isMesh: obj.isMesh,
-      hasGeometry: obj.geometry ? true : false,
-      children: obj.children ? obj.children.length : 0
-    });
+    if (this.debugConfig.logTrackLoading) {
+      console.log(`[TrackLoader] Setting up dropoff ${index}:`, {
+        name: obj.name,
+        type: obj.type,
+        isMesh: obj.isMesh,
+        hasGeometry: obj.geometry ? true : false,
+        children: obj.children ? obj.children.length : 0
+      });
+    }
     
     // Get rotation from the object
     const euler = obj.rotation.clone();
@@ -487,21 +517,24 @@ export class TrackLoader {
     const size = new this.THREE.Vector3();
     box.getSize(size);
     
-    console.log(`[TrackLoader] Dropoff ${index} box:`, {
-      center: { x: position.x.toFixed(2), y: position.y.toFixed(2), z: position.z.toFixed(2) },
-      size: { x: size.x.toFixed(4), y: size.y.toFixed(4), z: size.z.toFixed(4) }
-    });
+    if (this.debugConfig.logTrackLoading) {
+      console.log(`[TrackLoader] Dropoff ${index} box:`, {
+        center: { x: position.x.toFixed(2), y: position.y.toFixed(2), z: position.z.toFixed(2) },
+        size: { x: size.x.toFixed(4), y: size.y.toFixed(4), z: size.z.toFixed(4) }
+      });
+    }
     
     // If the object has no geometry (is an Empty), create a default trigger box
     if (size.x < 0.1 && size.y < 0.1 && size.z < 0.1) {
-      console.warn(`[TrackLoader] Dropoff ${index} has no geometry, creating default trigger box`);
+      if (this.debugConfig.logTrackLoading) {
+        console.warn(`[TrackLoader] Dropoff ${index} has no geometry, creating default trigger box`);
+      }
       // Use object's world position
       const worldPos = new this.THREE.Vector3();
       obj.getWorldPosition(worldPos);
       position.copy(worldPos);
       // Create a reasonable sized trigger box (15 units wide, 8 tall, 4 deep)
       box.setFromCenterAndSize(position, new this.THREE.Vector3(15, 8, 4));
-      console.log(`[TrackLoader] Using world position:`, { x: position.x.toFixed(2), y: position.y.toFixed(2), z: position.z.toFixed(2) });
     }
     
     this.trackData.dropoffPoints.push({
@@ -511,19 +544,12 @@ export class TrackLoader {
       box: box
     });
     
-    console.log(`[TrackLoader] Dropoff ${index} FINAL:`, {
-      position: { x: position.x.toFixed(2), y: position.y.toFixed(2), z: position.z.toFixed(2) },
-      rotation: euler.y.toFixed(2),
-      box: { min: box.min, max: box.max }
-    });
-    
     obj.visible = false;
     
     // Debug visualization
-    if (true) {
+    if (this.debugConfig.visualizeDropoffs) {
       const helper = new this.THREE.Box3Helper(box, 0xff0000);
       this.scene.add(helper);
-      console.log(`[TrackLoader] Dropoff ${index} debug helper added`);
     }
   }
 
@@ -539,10 +565,12 @@ export class TrackLoader {
       this.trackData.bounds.min.copy(box.min);
       this.trackData.bounds.max.copy(box.max);
       
-      console.log('[TrackLoader] Track bounds:', {
-        min: this.trackData.bounds.min,
-        max: this.trackData.bounds.max
-      });
+      if (this.debugConfig.logTrackLoading) {
+        console.log('[TrackLoader] Track bounds:', {
+          min: this.trackData.bounds.min,
+          max: this.trackData.bounds.max
+        });
+      }
     }
   }
 
@@ -551,13 +579,18 @@ export class TrackLoader {
    */
   createItemBoxes() {
     const { THREE } = this;
+    const itemBoxConfig = this.config.itemBox || {};
     
     // Simple cube for now
-    const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+    const geometry = new THREE.BoxGeometry(
+      itemBoxConfig.size || 1.5,
+      itemBoxConfig.size || 1.5,
+      itemBoxConfig.size || 1.5
+    );
     const material = new THREE.MeshStandardMaterial({
-      color: 0xffdd00,
-      emissive: 0xffaa00,
-      emissiveIntensity: 0.3,
+      color: itemBoxConfig.color || 0xffdd00,
+      emissive: itemBoxConfig.emissive || 0xffaa00,
+      emissiveIntensity: itemBoxConfig.emissiveIntensity || 0.3,
       roughness: 0.4,
       metalness: 0.6
     });
@@ -579,7 +612,9 @@ export class TrackLoader {
       this.scene.add(mesh);
     });
     
-    console.log('[TrackLoader] Item boxes created:', this.itemBoxMeshes.length);
+    if (this.debugConfig.logTrackLoading) {
+      console.log('[TrackLoader] Item boxes created:', this.itemBoxMeshes.length);
+    }
   }
 
   /**
@@ -592,8 +627,10 @@ export class TrackLoader {
       
       if (state.active) {
         // Rotate and bob
-        mesh.rotation.y += delta * 2;
-        mesh.position.y = this.trackData.itemBoxLocations[i].position.y + Math.sin(Date.now() * 0.003) * 0.3;
+        mesh.rotation.y += delta * (this.config.itemBox?.rotationSpeed || 2);
+        const bobSpeed = this.config.itemBox?.bobSpeed || 0.003;
+        const bobHeight = this.config.itemBox?.bobHeight || 0.3;
+        mesh.position.y = this.trackData.itemBoxLocations[i].position.y + Math.sin(Date.now() * bobSpeed) * bobHeight;
         mesh.visible = true;
       } else {
         // Respawning
@@ -617,6 +654,7 @@ export class TrackLoader {
    */
   checkItemBoxCollision(kartPosition, kartRadius = 2) {
     const collected = [];
+    const collectionRadius = this.config.itemBox?.collectionRadius || 2.5;
     
     this.itemBoxMeshes.forEach((mesh, i) => {
       const state = this.itemBoxStates[i];
@@ -626,7 +664,7 @@ export class TrackLoader {
       if (distance < kartRadius + 1) {
         // Collected!
         state.active = false;
-        state.respawnTimer = 5; // 5 seconds respawn
+        state.respawnTimer = this.config.itemBox?.respawnTime || 5;
         collected.push(i);
       }
     });

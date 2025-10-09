@@ -43,7 +43,18 @@
       loop();
     } catch (error) {
       console.error('Failed to initialize game:', error);
-      container.innerHTML = '<div style="color: white; padding: 20px;">Failed to load track. Check console for details.</div>';
+      const errorDiv = document.createElement('div');
+      errorDiv.style.cssText = 'color: white; padding: 20px; font-family: monospace; max-width: 800px; margin: 20px auto;';
+      errorDiv.innerHTML = `
+        <h2 style="color: #ff6b6b;">Failed to load game</h2>
+        <p><strong>Error:</strong> ${error.message}</p>
+        <details style="margin-top: 10px;">
+          <summary style="cursor: pointer; color: #4dabf7;">Stack trace (click to expand)</summary>
+          <pre style="background: #1a1a1a; padding: 10px; border-radius: 4px; overflow-x: auto; margin-top: 10px;">${error.stack || 'No stack trace available'}</pre>
+        </details>
+      `;
+      container.innerHTML = '';
+      container.appendChild(errorDiv);
     }
   })();
 

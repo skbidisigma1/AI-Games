@@ -1,7 +1,21 @@
 export const HADLEE_KART_CONFIG = {
+  // Debug flags - control logging verbosity
+  debug: {
+    logInfo: false,           // General info (model loading, spawning)
+    logCheckpoints: false,    // Checkpoint pass events
+    logLaps: true,            // Lap completion events (important)
+    logRespawn: false,        // Respawn events
+    logCollisions: false,     // Wall collision details
+    logItems: false,          // Item collection/usage
+    visualizeCheckpoints: false, // Show checkpoint boxes in 3D
+    visualizeDropoffs: false,    // Show dropoff boxes in 3D
+    logTrackLoading: false    // Track parsing details
+  },
+  
   renderer: {
     maxPixelRatio: 2
   },
+  
   camera: {
     fov: 60,
     near: 0.1,
@@ -12,6 +26,7 @@ export const HADLEE_KART_CONFIG = {
     lookHeight: 1.6,
     smoothing: 0.001
   },
+  
   lighting: {
     ambientSky: 0xcfd9ff,
     ambientGround: 0x060608,
@@ -21,7 +36,9 @@ export const HADLEE_KART_CONFIG = {
     sunPosition: { x: 25, y: 45, z: 12 },
     shadowMapSize: 1024
   },
+  
   track: {
+    path: './assets/track/spungilious_speedway/Spungilious Speedway.glb',
     width: 26,
     length: 1000,
     guardrailInset: 0.8,
@@ -41,10 +58,24 @@ export const HADLEE_KART_CONFIG = {
       thickness: 0.5
     }
   },
+  
   sky: {
     radius: 1600,
     color: 0x0c0f16
   },
+  
+  itemBox: {
+    respawnTime: 5,           // Seconds before item box reappears
+    collectionRadius: 2.5,    // Distance at which kart collects item
+    size: 1.5,                // Item box cube size
+    rotationSpeed: 2,         // Rotation speed (rad/s)
+    bobHeight: 0.3,           // Vertical bob distance
+    bobSpeed: 0.003,          // Bob animation speed
+    color: 0xffdd00,
+    emissive: 0xffaa00,
+    emissiveIntensity: 0.3
+  },
+  
   vehicle: {
     body: {
       size: { x: 1.8, y: 0.9, z: 3.2 },
@@ -79,6 +110,10 @@ export const HADLEE_KART_CONFIG = {
       gravity: 26,
       groundSnapGravity: 55,
       jumpDamping: 20,
+      maxSnapDistance: 2.0,      // Max distance to snap to ground
+      falloffThreshold: -10,     // Y position that triggers respawn
+      falloffGracePeriod: 0.5,   // Seconds below threshold before respawn
+      respawnCheckpointCooldown: 1.0, // Seconds after respawn before checkpoint detection
       wallImpact: {
         restitution: 0.25,
         tangentRetention: 0.85,
@@ -89,6 +124,7 @@ export const HADLEE_KART_CONFIG = {
       }
     }
   },
+  
   drift: {
     minSpeed: 15,
     minSpeedRatio: 0.5,
@@ -114,6 +150,11 @@ export const HADLEE_KART_CONFIG = {
       { name: 'Orange', time: 1.2, color: '#ffa646', boostStrength: 220, duration: 1 },
       { name: 'Rainbow', time: 2, color: '#ff5fe2', boostStrength: 220, duration: 2.5 }
     ]
+  },
+  
+  race: {
+    totalLaps: 3,
+    checkpointCooldown: 0.1    // Prevent checkpoint spam
   }
 };
 
