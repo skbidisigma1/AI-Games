@@ -53,6 +53,7 @@ export class Vehicle {
       yawOffset: 0,
       leanAngle: 0,
       pending: false,
+      pendingTimer: 0,
       turnMultiplier: 1,
       chargeRate: 1,
       controlState: 'neutral',
@@ -320,7 +321,7 @@ export class Vehicle {
     
     // Post-physics drift handling
     const currentSpeed = this.velocity.length();
-    this.handleDriftPostPhysics(delta, currentSpeed, forwardSpeed, isGrounded, landed, input);
+    this.handleDriftPostPhysics(delta, currentSpeed, forwardSpeed, isGrounded, landed, input, steerInput);
   }
   
   applyAcceleration(acceleration, input, forwardVector, forwardSpeed, dualInput) {
@@ -471,9 +472,10 @@ export class Vehicle {
       this.verticalVelocity = this.physicsConfig.hopVelocity || 5;
     }
     this.driftState.pending = true;
+    this.driftState.pendingTimer = 0;
   }
   
-  handleDriftPostPhysics(delta, speed, forwardSpeed, isGrounded, landed, input) {
+  handleDriftPostPhysics(delta, speed, forwardSpeed, isGrounded, landed, input, steerInput) {
     if (!this.driftState.active && !this.driftState.pending) return;
     
     // Release drift if button is released while drifting
@@ -482,16 +484,39 @@ export class Vehicle {
       return;
     }
     
-    // Release drift if not holding button while pending
+    // Handle pending drift state
     if (!this.driftState.active && this.driftState.pending) {
+      // Cancel pending if drift button released
+      if (!input.drift) {
+        this.driftState.pending = false;
+        this.driftState.pendingTimer = 0;
+        return;
+      }
+      
       // Check if we should start drifting
-      const directionInput = (this.lastSteer);
+      const directionInput = steerInput;
       const minSpeed = this.getDriftMinimumSpeed();
       const readyForDrift = isGrounded && forwardSpeed >= minSpeed && directionInput !== 0;
       
-      if (readyForDrift && (landed || this.verticalVelocity === 0)) {
+      // Define drift initiation window (time after landing where drift can start)
+      const driftInitWindow = 0.075; // 75ms window after becoming grounded
+      
+      // Start drift if conditions met and within time window after landing
+      if (readyForDrift && this.driftState.pendingTimer <= driftInitWindow) {
         this.startDrift(directionInput);
       }
+      
+      // Update pending timer (only while grounded)
+      if (isGrounded) {
+        this.driftState.pendingTimer += delta;
+        
+        // Cancel pending if window expired
+        if (this.driftState.pendingTimer > driftInitWindow) {
+          this.driftState.pending = false;
+          this.driftState.pendingTimer = 0;
+        }
+      }
+      
       return;
     }
     
@@ -542,6 +567,7 @@ export class Vehicle {
     Object.assign(this.driftState, {
       active: false,
       pending: false,
+      pendingTimer: 0,
       direction: 0,
       timer: 0,
       stage: -1,

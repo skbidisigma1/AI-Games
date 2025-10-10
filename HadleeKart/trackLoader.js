@@ -274,26 +274,32 @@ export class TrackLoader {
   }
 
   setupWalls(wall) {
-    // Each wall is now a separate mesh (Wall0, Wall1, etc.)
-    if (!wall.isMesh) {
-      console.warn('[TrackLoader] Wall is not a mesh:', wall.name);
+    // Walls may be exported as a single mesh or as a group containing multiple meshes.
+    const addWallMesh = (mesh) => {
+      if (!mesh.isMesh) return;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.visible = true;
+      this.scene.add(mesh);
+      this.trackData.walls.push({ mesh: mesh, name: mesh.name });
+      if (this.debugConfig.logTrackLoading) console.log('[TrackLoader] Wall added for raycasting:', mesh.name);
+    };
+
+    if (wall.isMesh) {
+      addWallMesh(wall);
       return;
     }
-    
-    wall.castShadow = true;
-    wall.receiveShadow = true;
-    wall.visible = true;
-    
-    // Add to scene
-    this.scene.add(wall);
-    
-    // Store wall mesh for raycasting collision (no Box3 needed)
-    this.trackData.walls.push({ 
-      mesh: wall,
-      name: wall.name 
-    });
-    
-    if (this.debugConfig.logTrackLoading) console.log('[TrackLoader] Wall added for raycasting:', wall.name);
+
+    // If this is a group, traverse children and add any meshes as walls
+    if (wall.children && wall.children.length > 0) {
+      wall.traverse((child) => {
+        addWallMesh(child);
+      });
+      return;
+    }
+
+    // Fallback: not a mesh or group with meshes
+    console.warn('[TrackLoader] Wall object had no meshes to register for collisions:', wall.name);
   }
 
   setupTrickZones(trick) {
@@ -630,7 +636,8 @@ export class TrackLoader {
         mesh.rotation.y += delta * (this.config.itemBox?.rotationSpeed || 2);
         const bobSpeed = this.config.itemBox?.bobSpeed || 0.003;
         const bobHeight = this.config.itemBox?.bobHeight || 0.3;
-        mesh.position.y = this.trackData.itemBoxLocations[i].position.y + Math.sin(Date.now() * bobSpeed) * bobHeight;
+        // Use seconds for time-based animation (Date.now() is milliseconds)
+        mesh.position.y = this.trackData.itemBoxLocations[i].position.y + Math.sin((Date.now() / 1000) * bobSpeed) * bobHeight;
         mesh.visible = true;
       } else {
         // Respawning
@@ -654,21 +661,24 @@ export class TrackLoader {
    */
   checkItemBoxCollision(kartPosition, kartRadius = 2) {
     const collected = [];
-    const collectionRadius = this.config.itemBox?.collectionRadius || 2.5;
-    
+    // Use provided kartRadius argument as the collection radius if the caller intends that,
+    // otherwise fall back to the configured itemBox.collectionRadius.
+    const configured = this.config.itemBox?.collectionRadius || 2.5;
+    const threshold = typeof kartRadius === 'number' && kartRadius > 0 ? kartRadius : configured;
+
     this.itemBoxMeshes.forEach((mesh, i) => {
       const state = this.itemBoxStates[i];
       if (!state.active) return;
-      
+
       const distance = kartPosition.distanceTo(mesh.position);
-      if (distance < kartRadius + 1) {
+      if (distance < threshold) {
         // Collected!
         state.active = false;
         state.respawnTimer = this.config.itemBox?.respawnTime || 5;
         collected.push(i);
       }
     });
-    
+
     return collected;
   }
 
