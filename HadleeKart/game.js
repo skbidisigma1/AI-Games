@@ -6,7 +6,7 @@ import { ParticleSystem } from './particles.js';
 
 let internal = null;
 
-export async function initGame({ THREE, GLTFLoader, scene, camera, renderer, config, container }) {
+export async function initGame({ THREE, GLTFLoader, scene, camera, renderer, config, container, track, settings, onExitToMenu, onRestart }) {
   if (!THREE) throw new Error('THREE not provided');
   if (!GLTFLoader) throw new Error('GLTFLoader not provided');
   if (!scene) throw new Error('scene not provided');
@@ -18,42 +18,77 @@ export async function initGame({ THREE, GLTFLoader, scene, camera, renderer, con
   container = container || document.getElementById('game-container');
   if (!container) throw new Error('Game container not found');
 
-  // Overlay / UI
+  // HUD
   const overlay = document.createElement('div');
-  overlay.className = 'overlay';
-  overlay.innerHTML = [
-    '<strong>HadleeKart - Spungilious Speedway</strong>',
-    'W / ArrowUp: accelerate',
-    'S / ArrowDown: brake / reverse',
-    'A / D or Arrow keys: steer',
-    'Shift: hop and drift',
-    'E: use item',
-    'R: cycle random item (debug)',
-  ].join('<br>');
+  overlay.className = 'hud-root';
+  if (settings && settings.showHud === false) {
+    overlay.style.display = 'none';
+  }
+  overlay.innerHTML = `
+    <div class="hud-top">
+      <div class="hud-card hud-left">
+        <div class="hud-title">HadleeKart</div>
+        <div id="hud-time" class="hud-line">Time: 0:00.000</div>
+        <div id="hud-lap" class="hud-line">Lap: 1/3</div>
+        <div id="hud-surface" class="hud-line">Surface: Road</div>
+      </div>
+
+      <div class="hud-card hud-right">
+        <div id="hud-speed" class="hud-speed">0</div>
+        <div class="hud-speed-sub">speed</div>
+
+        <div class="hud-meter">
+          <div id="hud-drift" class="hud-meter-label">Mini-Turbo: none</div>
+          <div class="hud-meter-bar"><div id="hud-drift-fill" class="hud-meter-fill"></div></div>
+        </div>
+
+        <div class="hud-meter">
+          <div id="hud-boost" class="hud-meter-label">Boost: 0.00s</div>
+          <div class="hud-meter-bar"><div id="hud-boost-fill" class="hud-meter-fill hud-meter-fill-boost"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hud-bottom">
+      <div class="hud-card hud-item">
+        <div id="hud-item" class="hud-line">Item - Holding: None</div>
+        <div class="hud-hint">Shift: drift • E: use item • X: rear view • T: respawn • Esc: pause</div>
+      </div>
+    </div>
+  `;
   container.appendChild(overlay);
 
-  const statusLine = document.createElement('div');
-  statusLine.style.marginTop = '0.5rem';
-  statusLine.textContent = 'Mini-Turbo: none';
-  overlay.appendChild(statusLine);
+  const statusLine = overlay.querySelector('#hud-drift');
+  const lapLine = overlay.querySelector('#hud-lap');
+  const itemLine = overlay.querySelector('#hud-item');
+  const timeLine = overlay.querySelector('#hud-time');
+  const speedLine = overlay.querySelector('#hud-speed');
+  const surfaceLine = overlay.querySelector('#hud-surface');
+  const driftFill = overlay.querySelector('#hud-drift-fill');
+  const boostLine = overlay.querySelector('#hud-boost');
+  const boostFill = overlay.querySelector('#hud-boost-fill');
 
-  const itemLine = document.createElement('div');
-  itemLine.style.marginTop = '0.25rem';
-  itemLine.textContent = 'Item: None';
-  overlay.appendChild(itemLine);
-
-  const lapLine = document.createElement('div');
-  lapLine.style.marginTop = '0.25rem';
-  lapLine.textContent = 'Lap: 1/3 | Checkpoints: 0/0';
-  overlay.appendChild(lapLine);
-
-  const respawnLine = document.createElement('div');
-  respawnLine.style.marginTop = '0.25rem';
-  respawnLine.textContent = 'Press T to respawn';
-  overlay.appendChild(respawnLine);
+  // Results (race complete)
+  const resultsOverlay = document.createElement('div');
+  resultsOverlay.className = 'race-results';
+  resultsOverlay.style.display = 'none';
+  resultsOverlay.innerHTML = `
+    <div class="ui-card">
+      <div class="ui-title">Race Complete</div>
+      <div id="results-total" class="ui-subtitle" style="margin-top: 8px;"></div>
+      <div id="results-laps" class="ui-footnote" style="margin-top: 12px;"></div>
+      <div class="ui-grid" style="margin-top: 16px;">
+        <button id="results-restart" class="ui-btn ui-btn-primary">Restart</button>
+        <button id="results-exit" class="ui-btn ui-btn-danger">Exit to Menu</button>
+      </div>
+    </div>
+  `;
+  container.appendChild(resultsOverlay);
 
   const rendererConfig = CONFIG.renderer || {};
-  const pixelRatioCap = rendererConfig.maxPixelRatio ?? 2;
+  const pixelRatioCap = (settings && typeof settings.maxPixelRatio === 'number')
+    ? settings.maxPixelRatio
+    : (rendererConfig.maxPixelRatio ?? 2);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatioCap));
   renderer.shadowMap.enabled = true;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -127,10 +162,18 @@ export async function initGame({ THREE, GLTFLoader, scene, camera, renderer, con
   sun.shadow.camera.far = 500;
   scene.add(sun);
 
-  // Load custom track
+  // Load track
   const trackPath = CONFIG.track?.path || './assets/track/spungilious_speedway/Spungilious Speedway.glb';
   const trackLoader = new TrackLoader({ THREE, GLTFLoader, scene, config: CONFIG });
-  const trackData = await trackLoader.load(trackPath);
+
+  // Optional override (used by editor playtest)
+  const trackSource = track || { type: 'glb', path: trackPath };
+  let trackData;
+  if (trackSource?.type === 'spec') {
+    trackData = await trackLoader.loadFromSpec(trackSource.spec);
+  } else {
+    trackData = await trackLoader.load(trackSource?.path || trackPath);
+  }
   const particleConfig = CONFIG.particles || {};
   const particleSystem = new ParticleSystem({ THREE, scene, maxParticles: particleConfig.maxPoolSize || 1800 });
   
@@ -155,7 +198,27 @@ export async function initGame({ THREE, GLTFLoader, scene, camera, renderer, con
       total: CheckpointManager.formatTime(totalTime),
       laps: lapTimes.map(t => CheckpointManager.formatTime(t))
     });
+
+    // Show results UI
+    const totalEl = resultsOverlay.querySelector('#results-total');
+    const lapsEl = resultsOverlay.querySelector('#results-laps');
+    totalEl.textContent = `Total: ${CheckpointManager.formatTime(totalTime)}`;
+    lapsEl.innerHTML = lapTimes.map((t, i) => `Lap ${i + 1}: ${CheckpointManager.formatTime(t)}`).join('<br>');
+    resultsOverlay.style.display = '';
   };
+
+  resultsOverlay.querySelector('#results-restart').addEventListener('click', async () => {
+    resultsOverlay.style.display = 'none';
+    if (typeof onRestart === 'function') {
+      await onRestart();
+    }
+  });
+  resultsOverlay.querySelector('#results-exit').addEventListener('click', async () => {
+    resultsOverlay.style.display = 'none';
+    if (typeof onExitToMenu === 'function') {
+      await onExitToMenu();
+    }
+  });
 
   // Sky dome
   if (!skyConfig.hdrPath) {
@@ -197,8 +260,10 @@ export async function initGame({ THREE, GLTFLoader, scene, camera, renderer, con
       default: break;
     }
   };
-  window.addEventListener('keydown', e => setKeyState(e, true));
-  window.addEventListener('keyup', e => setKeyState(e, false));
+  const keydownHandler = (e) => setKeyState(e, true);
+  const keyupHandler = (e) => setKeyState(e, false);
+  window.addEventListener('keydown', keydownHandler);
+  window.addEventListener('keyup', keyupHandler);
 
   // Create vehicle with modular Vehicle class
   const vehicle = new Vehicle({
@@ -280,17 +345,71 @@ export async function initGame({ THREE, GLTFLoader, scene, camera, renderer, con
   };
   window.addEventListener('resize', handleResize);
 
-  internal = { THREE, scene, camera, renderer, vehicle, clock, updateCamera, trackLoader, particleSystem, input, config: CONFIG };
+  internal = {
+    THREE,
+    scene,
+    camera,
+    renderer,
+    vehicle,
+    clock,
+    updateCamera,
+    trackLoader,
+    particleSystem,
+    input,
+    config: CONFIG,
+    checkpointManager,
+    _ui: { overlay, resultsOverlay, timeLine, speedLine, surfaceLine, driftFill, boostLine, boostFill, _boostMax: 0 },
+    _handlers: { keydownHandler, keyupHandler, handleResize }
+  };
   return { vehicle, trackData, checkpointManager };
 }
 
 export function updateGame() {
   if (!internal) return;
-  const { vehicle, clock, updateCamera, renderer, scene, camera, trackLoader, particleSystem, input, THREE, config } = internal;
+  const { vehicle, clock, updateCamera, renderer, scene, camera, trackLoader, particleSystem, input, THREE, config, checkpointManager, _ui } = internal;
   const delta = Math.min(clock.getDelta(), 0.05);
   const particlePhysics = config?.particles?.physics || {};
   
   vehicle.update(delta, input);
+
+  // HUD updates
+  if (_ui?.timeLine && checkpointManager?.raceStartTime) {
+    const now = performance.now();
+    const total = Math.max(0, now - checkpointManager.raceStartTime);
+    _ui.timeLine.textContent = `Time: ${CheckpointManager.formatTime(total)}`;
+  }
+  if (_ui?.speedLine) {
+    const speed = vehicle.velocity ? vehicle.velocity.length() : 0;
+    _ui.speedLine.textContent = speed.toFixed(0);
+  }
+  if (_ui?.surfaceLine) {
+    const t = vehicle.surfaceState?.type || 'road';
+    const label = t === 'offroadWeak' ? 'Offroad (Weak)' : (t === 'offroadStrong' ? 'Offroad (Strong)' : (t === 'boost' ? 'Boost' : 'Road'));
+    _ui.surfaceLine.textContent = `Surface: ${label}`;
+  }
+  if (_ui?.boostLine && _ui?.boostFill) {
+    const remaining = Math.max(0, vehicle.boostState?.timer || 0);
+    _ui.boostLine.textContent = `Boost: ${remaining.toFixed(2)}s`;
+    if (remaining > _ui._boostMax) _ui._boostMax = remaining;
+    if (remaining <= 0) _ui._boostMax = 0;
+    const denom = Math.max(0.001, _ui._boostMax || 0.45);
+    const pct = remaining > 0 ? Math.max(0, Math.min(1, remaining / denom)) : 0;
+    _ui.boostFill.style.width = `${(pct * 100).toFixed(1)}%`;
+  }
+  if (_ui?.driftFill) {
+    const driftCfg = vehicle.driftConfig || {};
+    const stages = Array.isArray(driftCfg.stages) ? driftCfg.stages : [];
+    const maxTime = stages.length ? stages[stages.length - 1].time : 1;
+    const t = vehicle.driftState?.active ? (vehicle.driftState.timer || 0) : 0;
+    const pct = maxTime > 0 ? Math.max(0, Math.min(1, t / maxTime)) : 0;
+    _ui.driftFill.style.width = `${(pct * 100).toFixed(1)}%`;
+    if (vehicle.driftState?.active && vehicle.driftState.stage >= 0 && stages[vehicle.driftState.stage]) {
+      _ui.driftFill.style.background = stages[vehicle.driftState.stage].color || 'rgba(255,255,255,0.55)';
+    } else {
+      _ui.driftFill.style.background = 'rgba(255,255,255,0.55)';
+    }
+    if (!vehicle.driftState?.active) _ui.driftFill.style.width = '0%';
+  }
   
   // Update item boxes
   if (trackLoader) {
@@ -339,4 +458,42 @@ export function updateGame() {
   
   updateCamera(delta);
   renderer.render(scene, camera);
+}
+
+export function disposeGame() {
+  if (!internal) return;
+
+  const { scene, trackLoader, vehicle, particleSystem, _ui, _handlers } = internal;
+
+  // Remove UI
+  if (_ui?.overlay && _ui.overlay.parentElement) {
+    _ui.overlay.parentElement.removeChild(_ui.overlay);
+  }
+  if (_ui?.resultsOverlay && _ui.resultsOverlay.parentElement) {
+    _ui.resultsOverlay.parentElement.removeChild(_ui.resultsOverlay);
+  }
+
+  // Remove listeners
+  if (_handlers?.keydownHandler) window.removeEventListener('keydown', _handlers.keydownHandler);
+  if (_handlers?.keyupHandler) window.removeEventListener('keyup', _handlers.keyupHandler);
+  if (_handlers?.handleResize) window.removeEventListener('resize', _handlers.handleResize);
+
+  // Remove track objects
+  if (trackLoader && typeof trackLoader.dispose === 'function') {
+    trackLoader.dispose();
+  }
+
+  // Remove vehicle
+  if (vehicle?.group) {
+    scene.remove(vehicle.group);
+  }
+
+  // Remove particle system
+  if (particleSystem?.mesh) {
+    scene.remove(particleSystem.mesh);
+  }
+  if (particleSystem?.geometry?.dispose) particleSystem.geometry.dispose();
+  if (particleSystem?.material?.dispose) particleSystem.material.dispose();
+
+  internal = null;
 }

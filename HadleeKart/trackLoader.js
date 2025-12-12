@@ -27,6 +27,22 @@ export class TrackLoader {
     this.animations = [];
     this.animationMixers = [];
     this.miscObjects = [];
+
+    this._ownedObjects = [];
+  }
+
+  _tryBuildBVH(mesh) {
+    if (!mesh?.geometry?.computeBoundsTree) return;
+    try {
+      mesh.geometry.computeBoundsTree();
+    } catch {
+      // ignore
+    }
+  }
+
+  _registerOwned(obj) {
+    if (!obj) return;
+    this._ownedObjects.push(obj);
   }
 
   // Debug helper: log useful info about a scene element
@@ -136,6 +152,50 @@ export class TrackLoader {
         }
       );
     });
+  }
+
+  async loadFromSpec(spec) {
+    // Lazy import to avoid pulling editor/build tools unless needed.
+    const { createTrackBuilder } = await import('./trackBuilders/index.js');
+
+    this.dispose();
+    this.trackData = {
+      surfaces: [],
+      walls: [],
+      trickZones: [],
+      checkpoints: [],
+      dropoffPoints: [],
+      itemBoxLocations: [],
+      startPositions: [],
+      bounds: { min: new this.THREE.Vector3(), max: new this.THREE.Vector3() }
+    };
+
+    const builderType = spec?.type || 'modular';
+    const builder = createTrackBuilder(builderType);
+    const built = builder.build({ THREE: this.THREE, scene: this.scene, config: this.config, spec });
+
+    this._registerOwned(built.group);
+    this.trackData.surfaces = built.surfaces || [];
+    this.trackData.walls = built.walls || [];
+    this.trackData.trickZones = built.trickZones || [];
+    this.trackData.checkpoints = built.checkpoints || [];
+    this.trackData.dropoffPoints = built.dropoffPoints || [];
+    this.trackData.itemBoxLocations = built.itemBoxLocations || [];
+    this.trackData.startPositions = built.startPositions || [];
+    if (built.bounds) {
+      this.trackData.bounds.min.copy(built.bounds.min);
+      this.trackData.bounds.max.copy(built.bounds.max);
+    }
+
+    // Sort for expected ordering
+    this.trackData.checkpoints.sort((a, b) => a.index - b.index);
+    this.trackData.dropoffPoints.sort((a, b) => a.index - b.index);
+    this.trackData.startPositions.sort((a, b) => a.index - b.index);
+    this.trackData.itemBoxLocations.sort((a, b) => a.index - b.index);
+
+    // Create item meshes
+    this.createItemBoxes();
+    return this.trackData;
   }
 
   /**
@@ -253,22 +313,27 @@ export class TrackLoader {
     if (mesh.isMesh) {
       mesh.receiveShadow = true;
       mesh.castShadow = false;
+      this._tryBuildBVH(mesh);
       this.scene.add(mesh);
       this.trackData.surfaces.push(mesh);
+      this._registerOwned(mesh);
       if (this.debugConfig.logTrackLoading) console.log('[TrackLoader] Track surface added:', mesh.name);
     } else if (mesh.children && mesh.children.length > 0) {
       mesh.children.forEach((child) => {
         if (child.isMesh) {
           child.receiveShadow = true;
           child.castShadow = false;
+          this._tryBuildBVH(child);
           this.trackData.surfaces.push(child);
         }
       });
       this.scene.add(mesh);
+      this._registerOwned(mesh);
       if (this.debugConfig.logTrackLoading) console.log('[TrackLoader] Track surface group added:', mesh.name);
     } else {
       this.scene.add(mesh);
       this.trackData.surfaces.push(mesh);
+      this._registerOwned(mesh);
       if (this.debugConfig.logTrackLoading) console.log('[TrackLoader] Track surface added (unknown type):', mesh.name);
     }
   }
@@ -280,7 +345,9 @@ export class TrackLoader {
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       mesh.visible = true;
+      this._tryBuildBVH(mesh);
       this.scene.add(mesh);
+      this._registerOwned(mesh);
       this.trackData.walls.push({ mesh: mesh, name: mesh.name });
       if (this.debugConfig.logTrackLoading) console.log('[TrackLoader] Wall added for raycasting:', mesh.name);
     };
@@ -308,13 +375,18 @@ export class TrackLoader {
       if (!mesh.isMesh) return;
       mesh.castShadow = true;
       mesh.receiveShadow = true;
+      this._tryBuildBVH(mesh);
       this.trackData.trickZones.push({ mesh: mesh, bounds: new this.THREE.Box3().setFromObject(mesh) });
       this.scene.add(mesh);
+      this._registerOwned(mesh);
     };
 
     if (trick.isMesh) addTrickMesh(trick);
     else if (trick.children && trick.children.length > 0) trick.children.forEach((c) => addTrickMesh(c));
-    else this.scene.add(trick);
+    else {
+      this.scene.add(trick);
+      this._registerOwned(trick);
+    }
 
     if (this.debugConfig.logTrackLoading) console.log('[TrackLoader] Trick zones added:', this.trackData.trickZones.length);
   }
@@ -342,6 +414,7 @@ export class TrackLoader {
     
     this.scene.add(misc);
     this.miscObjects.push(misc);
+    this._registerOwned(misc);
     
     if (this.debugConfig.logTrackLoading) console.log('[TrackLoader] Decoration added:', misc.name);
   }
@@ -616,6 +689,7 @@ export class TrackLoader {
       });
       
       this.scene.add(mesh);
+      this._registerOwned(mesh);
     });
     
     if (this.debugConfig.logTrackLoading) {
@@ -704,10 +778,21 @@ export class TrackLoader {
   /**
    * Raycast down to find ground height at position
    * @param {Vector3} position - Position to check
-   * @returns {Object} { height: number, hit: boolean, normal: Vector3 }
+   * @returns {Object} { height: number, hit: boolean, normal: Vector3, point?: Vector3, surfaceType?: string, hitObject?: Object3D }
    */
   getGroundHeight(position) {
     const { THREE } = this;
+
+    const resolveSurfaceType = (obj) => {
+      let cur = obj;
+      while (cur) {
+        if (cur.userData && typeof cur.userData.surfaceType === 'string') {
+          return cur.userData.surfaceType;
+        }
+        cur = cur.parent;
+      }
+      return 'road';
+    };
     
     // Raycast straight down from high above the position
     const raycaster = new THREE.Raycaster();
@@ -742,7 +827,9 @@ export class TrackLoader {
         height: closest.point.y,
         hit: true,
         normal: closest.face ? closest.face.normal.clone() : new THREE.Vector3(0, 1, 0),
-        point: closest.point
+        point: closest.point,
+        surfaceType: resolveSurfaceType(closest.object),
+        hitObject: closest.object
       };
     }
     
@@ -819,6 +906,53 @@ export class TrackLoader {
     return {
       colliding: collisionCount > 0,
       pushback: totalPushback
+    };
+  }
+
+  dispose() {
+    // Remove item meshes and reset state
+    this.itemBoxMeshes = [];
+    this.itemBoxStates = [];
+    this.animations = [];
+    this.animationMixers = [];
+    this.miscObjects = [];
+
+    // Remove owned objects from scene and dispose materials/geometries we created/loaded.
+    const seen = new Set();
+    this._ownedObjects.forEach((obj) => {
+      if (!obj || seen.has(obj)) return;
+      seen.add(obj);
+      try {
+        this.scene.remove(obj);
+      } catch {
+        // ignore
+      }
+      obj.traverse?.((child) => {
+        if (child.geometry) {
+          if (child.geometry.disposeBoundsTree) {
+            try { child.geometry.disposeBoundsTree(); } catch { /* ignore */ }
+          }
+          if (child.geometry.dispose) child.geometry.dispose();
+        }
+        if (child.material) {
+          const mats = Array.isArray(child.material) ? child.material : [child.material];
+          mats.forEach((m) => m?.dispose?.());
+        }
+      });
+    });
+
+    this._ownedObjects = [];
+
+    // Reset track data
+    this.trackData = {
+      surfaces: [],
+      walls: [],
+      trickZones: [],
+      checkpoints: [],
+      dropoffPoints: [],
+      itemBoxLocations: [],
+      startPositions: [],
+      bounds: { min: new this.THREE.Vector3(), max: new this.THREE.Vector3() }
     };
   }
 }

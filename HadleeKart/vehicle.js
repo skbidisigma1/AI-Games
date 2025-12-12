@@ -62,6 +62,18 @@ export class Vehicle {
     
     // Boost state
     this.boostState = { timer: 0, strength: 0 };
+
+    // Surface state (road/offroad/boost)
+    this.surfaceState = {
+      type: 'road',
+      maxSpeedMultiplier: 1,
+      accelMultiplier: 1,
+      dragMultiplier: 1,
+      rollMultiplier: 1,
+      driftAllowed: true
+    };
+    this._boostPadCooldown = 0;
+    this._wasOnBoostPad = false;
     
     // Respawn state
     this.falloffTimer = 0;
@@ -227,6 +239,9 @@ export class Vehicle {
     const upVector = new THREE.Vector3(0, 1, 0);
     const forwardVector = new THREE.Vector3(Math.sin(this.heading), 0, Math.cos(this.heading)).normalize();
     const rightVector = new THREE.Vector3().crossVectors(upVector, forwardVector).normalize();
+
+    // Surface modifiers (based on the previous ground check).
+    this._setSurfaceStateFromType(this.lastGroundCheck?.surfaceType);
     
     const wasGrounded = this.isGrounded;
     const forwardSpeed = this.velocity.dot(forwardVector);
@@ -235,6 +250,15 @@ export class Vehicle {
     
     // Drift handling
     this.handleDriftPrePhysics(wasGrounded, input);
+
+    // Strong offroad: cannot start/continue drift.
+    if (this.surfaceState && this.surfaceState.driftAllowed === false) {
+      if (this.driftState.active) this.releaseDrift({ awardBoost: false });
+      if (this.driftState.pending) {
+        this.driftState.pending = false;
+        this.driftState.pendingTimer = 0;
+      }
+    }
     
     // Determine traction mode
     const dualInput = input.forward && input.backward;
@@ -270,11 +294,11 @@ export class Vehicle {
     }
     
     // Drag and deceleration
-    const dragCoefficient = this.physicsConfig.dragCoefficient || 1.9;
+    const dragCoefficient = (this.physicsConfig.dragCoefficient || 1.9) * (this.surfaceState.dragMultiplier || 1);
     acceleration.addScaledVector(this.velocity, -dragCoefficient);
     
     if (!input.forward && !input.backward && this.boostState.timer <= 0) {
-      const rollResistance = this.physicsConfig.naturalDeceleration || 12;
+      const rollResistance = (this.physicsConfig.naturalDeceleration || 12) * (this.surfaceState.rollMultiplier || 1);
       acceleration.addScaledVector(this.velocity, -rollResistance);
     }
     
@@ -325,7 +349,7 @@ export class Vehicle {
   }
   
   applyAcceleration(acceleration, input, forwardVector, forwardSpeed, dualInput) {
-    const accelRate = this.physicsConfig.accelerationRate || 55;
+    const accelRate = (this.physicsConfig.accelerationRate || 55) * (this.surfaceState.accelMultiplier || 1);
     const brakeStrength = this.physicsConfig.brakeStrength || 70;
     const reverseFactor = this.physicsConfig.reverseAccelerationFactor || 0.7;
     
@@ -348,7 +372,7 @@ export class Vehicle {
   }
   
   applySpeedLimits(forwardVector, rightVector) {
-    const maxSpeed = this.physicsConfig.maxSpeed || 120;
+    const maxSpeed = (this.physicsConfig.maxSpeed || 120) * (this.surfaceState.maxSpeedMultiplier || 1);
     const reverseSpeedFactor = this.physicsConfig.reverseSpeedFactor || 0.75;
     
     let adjustedForwardSpeed = this.velocity.dot(forwardVector);
@@ -404,6 +428,9 @@ export class Vehicle {
     const snapGravity = this.physicsConfig.groundSnapGravity || 40;
     
     const groundCheck = this.trackLoader.getGroundHeight(this.group.position);
+
+    // Boost pad cooldown tick.
+    this._boostPadCooldown = Math.max(0, (this._boostPadCooldown || 0) - delta);
     
     if (groundCheck.hit) {
       const groundHeight = groundCheck.height;
@@ -431,12 +458,66 @@ export class Vehicle {
         this.verticalVelocity -= gravity * delta;
         this.group.position.y += this.verticalVelocity * delta;
       }
+
+      // Boost panel trigger: only when close to ground.
+      const surfaceType = groundCheck.surfaceType || 'road';
+      const onBoost = surfaceType === 'boost' && (this.group.position.y - groundHeight) < 0.25;
+      const padCfg = this.config?.boostPads || {};
+      const padStrength = typeof padCfg.strength === 'number' ? padCfg.strength : 220;
+      const padDuration = typeof padCfg.duration === 'number' ? padCfg.duration : 0.45;
+      const padCooldown = typeof padCfg.cooldown === 'number' ? padCfg.cooldown : 0.22;
+      if (onBoost && !this._wasOnBoostPad && this._boostPadCooldown <= 0) {
+        this.boostState.timer = Math.max(this.boostState.timer || 0, padDuration);
+        this.boostState.strength = Math.max(this.boostState.strength || 0, padStrength);
+        this._boostPadCooldown = padCooldown;
+      }
+      this._wasOnBoostPad = onBoost;
     } else {
       this.verticalVelocity -= gravity * delta;
       this.group.position.y += this.verticalVelocity * delta;
+
+      this._wasOnBoostPad = false;
     }
     
     this.lastGroundCheck = groundCheck;
+
+    // Keep surface state in sync for HUD (and next frame physics).
+    this._setSurfaceStateFromType(this.lastGroundCheck?.surfaceType);
+  }
+
+  _setSurfaceStateFromType(surfaceType) {
+    const t = typeof surfaceType === 'string' ? surfaceType : 'road';
+    const offCfg = this.config?.offroad || {};
+
+    const weak = {
+      maxSpeedMultiplier: typeof offCfg.weakMaxSpeedMultiplier === 'number' ? offCfg.weakMaxSpeedMultiplier : 0.8,
+      accelMultiplier: typeof offCfg.weakAccelMultiplier === 'number' ? offCfg.weakAccelMultiplier : 0.85,
+      dragMultiplier: typeof offCfg.weakDragMultiplier === 'number' ? offCfg.weakDragMultiplier : 1.2,
+      rollMultiplier: typeof offCfg.weakRollMultiplier === 'number' ? offCfg.weakRollMultiplier : 1.15,
+      driftAllowed: true
+    };
+    const strong = {
+      maxSpeedMultiplier: typeof offCfg.strongMaxSpeedMultiplier === 'number' ? offCfg.strongMaxSpeedMultiplier : 0.60,
+      accelMultiplier: typeof offCfg.strongAccelMultiplier === 'number' ? offCfg.strongAccelMultiplier : 0.6,
+      dragMultiplier: typeof offCfg.strongDragMultiplier === 'number' ? offCfg.strongDragMultiplier : 1.4,
+      rollMultiplier: typeof offCfg.strongRollMultiplier === 'number' ? offCfg.strongRollMultiplier : 1.3,
+      driftAllowed: false
+    };
+
+    if (t === 'offroadWeak') {
+      this.surfaceState = { type: t, ...weak };
+      return;
+    }
+    if (t === 'offroadStrong') {
+      this.surfaceState = { type: t, ...strong };
+      return;
+    }
+    if (t === 'boost') {
+      this.surfaceState = { type: t, maxSpeedMultiplier: 1.2, accelMultiplier: 1, dragMultiplier: 1, rollMultiplier: 1, driftAllowed: true };
+      return;
+    }
+
+    this.surfaceState = { type: 'road', maxSpeedMultiplier: 1, accelMultiplier: 1, dragMultiplier: 1, rollMultiplier: 1, driftAllowed: true };
   }
   
   applyBoost(acceleration, forwardVector, delta) {

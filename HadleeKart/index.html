@@ -12,7 +12,8 @@
 {
   "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
-    "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+    "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
+    "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.9.3/build/index.module.js"
   }
 }
 </script>
@@ -21,7 +22,7 @@
   import * as THREE from 'three';
   import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
   import { HADLEE_KART_CONFIG } from './settings.js';
-  import { initGame, updateGame } from './game.js';
+  import { initApp, updateApp } from './app.js';
 
   const container = document.getElementById('game-container');
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -34,10 +35,10 @@
   // Async initialization
   (async () => {
     try {
-      await initGame({ THREE, GLTFLoader, scene, camera, renderer, config: HADLEE_KART_CONFIG, container });
+      await initApp({ THREE, GLTFLoader, scene, camera, renderer, config: HADLEE_KART_CONFIG, container });
       
       function loop() {
-        updateGame();
+        updateApp();
         requestAnimationFrame(loop);
       }
       loop();
