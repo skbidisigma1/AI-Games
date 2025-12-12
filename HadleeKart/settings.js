@@ -1,15 +1,14 @@
 export const HADLEE_KART_CONFIG = {
-  // Debug flags - control logging verbosity
   debug: {
-    logInfo: false,           // General info (model loading, spawning)
+    logInfo: true,           // General info (model loading, spawning)
     logCheckpoints: false,    // Checkpoint pass events
-    logLaps: true,            // Lap completion events (important)
+    logLaps: true,           // Lap completion events (important)
     logRespawn: false,        // Respawn events
     logCollisions: false,     // Wall collision details
     logItems: false,          // Item collection/usage
     visualizeCheckpoints: false, // Show checkpoint boxes in 3D
     visualizeDropoffs: false,    // Show dropoff boxes in 3D
-    logTrackLoading: false    // Track parsing details
+    logTrackLoading: true    // Track parsing details
   },
   
   renderer: {
@@ -24,7 +23,15 @@ export const HADLEE_KART_CONFIG = {
     followHeight: 3.6,
     lookAhead: 7,
     lookHeight: 1.6,
-    smoothing: 0.001
+    smoothing: 0.001,
+    rearView: {
+      followDistance: 8,
+      followHeight: 4,
+      lookBack: 12,
+      lookHeight: 1.8,
+      fovOffset: 5,
+      speedDistanceGain: 6
+    }
   },
   
   lighting: {
@@ -39,6 +46,7 @@ export const HADLEE_KART_CONFIG = {
   
   track: {
     path: './assets/track/spungilious_speedway/Spungilious Speedway.glb',
+    bakePath: './assets/track/spungilious_speedway/bake/bake.png',
     width: 26,
     length: 1000,
     guardrailInset: 0.8,
@@ -61,16 +69,19 @@ export const HADLEE_KART_CONFIG = {
   
   sky: {
     radius: 1600,
-    color: 0x0c0f16
+    color: 0x0c0f16,
+    hdrPath: './assets/track/spungilious_speedway/sky/sky.hdr',
+    useAsEnvironment: true, // Disable IBL to let baked lighting shine
+    environmentIntensity: 0.3 // If enabled, keep it subtle
   },
   
   itemBox: {
-    respawnTime: 5,           // Seconds before item box reappears
-    collectionRadius: 2.5,    // Distance at which kart collects item
-    size: 1.5,                // Item box cube size
-    rotationSpeed: 2,         // Rotation speed (rad/s)
-    bobHeight: 0.3,           // Vertical bob distance
-    bobSpeed: 0.003,          // Bob animation speed
+    respawnTime: 1, // Seconds before item box reappears
+    collectionRadius: 2.5, // Distance at which kart collects item
+    size: 1.5, // Item box cube size
+    rotationSpeed: 2, // rad/s
+    bobHeight: 0.3, // Vertical bob distance
+    bobSpeed: 3, // Frequency in Hz
     color: 0xffdd00,
     emissive: 0xffaa00,
     emissiveIntensity: 0.3
@@ -96,6 +107,7 @@ export const HADLEE_KART_CONFIG = {
       dualInputForwardFactor: 0.3,
       dragCoefficient: 1.9,
       naturalDeceleration: 4,
+      airDeceleration: 0.025, // 2.5% speed loss per second when airborne
       lateralRetention: {
         normal: 0.18,
         lowTraction: 0.48,
@@ -110,9 +122,9 @@ export const HADLEE_KART_CONFIG = {
       gravity: 26,
       groundSnapGravity: 55,
       jumpDamping: 20,
-      maxSnapDistance: 2.0,      // Max distance to snap to ground
-      falloffThreshold: -10,     // Y position that triggers respawn
-      falloffGracePeriod: 0.5,   // Seconds below threshold before respawn
+      maxSnapDistance: 2.0, // Max distance to snap to ground
+      falloffThreshold: -10, // Y position that triggers respawn
+      falloffGracePeriod: 0.5, // Seconds below threshold before respawn
       respawnCheckpointCooldown: 1.0, // Seconds after respawn before checkpoint detection
       wallImpact: {
         restitution: 0.25,
@@ -154,7 +166,50 @@ export const HADLEE_KART_CONFIG = {
   
   race: {
     totalLaps: 3,
-    checkpointCooldown: 0.1    // Prevent checkpoint spam
+    checkpointCooldown: 0.2
+  },
+  
+  trick: {
+    upwardImpulse: 8,
+    boostStrengthRatio: 0.45,
+    boostDuration: 0.5,
+    cooldown: 0.2
+  },
+  
+  particles: {
+    maxPoolSize: 2000,
+    physics: {
+      groundOffset: 0.02,
+      bounce: 0.32,
+      friction: 0.7
+    },
+    drift: {
+      pre: { rate: 20, size: [0.08, 0.12], life: [0.25, 0.4], alpha: 0.4, colors: ['#72b6ff'] },
+      blue: { rate: 32, size: [0.1, 0.16], life: [0.3, 0.45], alpha: 0.55, colors: ['#72b6ff'] },
+      orange: { rate: 45, size: [0.12, 0.18], life: [0.35, 0.5], alpha: 0.65, colors: ['#ffa646'] },
+      rainbow: { rate: 60, size: [0.14, 0.22], life: [0.4, 0.6], alpha: 0.8, colors: ['#ff5fe2', '#72b6ff', '#ffd166'] }
+    },
+    boost: {
+      rate: 70,
+      size: [0.14, 0.24],
+      life: [0.25, 0.45],
+      alpha: 0.85,
+      color: '#ff8b3d'
+    },
+    landing: {
+      count: 18,
+      size: [0.1, 0.18],
+      life: [0.25, 0.45],
+      alpha: 0.45
+    },
+    items: {
+      count: 24,
+      color: 0xfff06a,
+      colorJitter: 0xffffff,
+      size: [0.12, 0.24],
+      life: [0.35, 0.7],
+      alpha: 0.85
+    }
   }
 };
 

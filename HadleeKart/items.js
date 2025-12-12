@@ -37,7 +37,8 @@ class ItemManager {
       this.speedBoostStrength = 0.2; // 20%
       this.singleBoostDuration = 2.0;
       this.onUpdateUI = opts?.onUpdateUI || (()=>{});
-      this.log = opts?.log || console.log;
+      this.log = opts?.log || ((msg) => {}); // Default to no-op, let caller provide logging
+      this.debugConfig = opts?.debugConfig || {};
     }
 
     give(def){
@@ -156,7 +157,9 @@ class ItemManager {
       if(!this.state.shock.active){
         this.state.shock.active = true;
         this.state.shock.remaining = 1.5; // placeholder self slow or effect window
-        this.log('[Item Placeholder] Activated Lightning (no opponents to shrink).');
+        if(this.debugConfig.logItems) {
+          console.log('[Item Placeholder] Activated Lightning (no opponents to shrink).');
+        }
       }
       item.remainingUses = 0;
     }
@@ -167,7 +170,9 @@ class ItemManager {
     }
 
     triggerSuperHorn(item){
-      this.log('[Item Placeholder] Super Horn blast (would destroy Blue Shell).');
+      if(this.debugConfig.logItems) {
+        console.log('[Item Placeholder] Super Horn blast (would destroy Blue Shell).');
+      }
       item.remainingUses = 0;
     }
 
@@ -177,7 +182,9 @@ class ItemManager {
       if(/shell/i.test(def.type)) verb = 'Launched';
       if(def.type === 'fire_flower') verb = 'Fired';
       if(def.type === 'super_horn') verb = 'Blasted';
-      this.log(`[Item Placeholder] ${verb} ${def.name}. (No opponents yet)`);
+      if(this.debugConfig.logItems) {
+        console.log(`[Item Placeholder] ${verb} ${def.name}. (No opponents yet)`);
+      }
     }
 
     update(delta){

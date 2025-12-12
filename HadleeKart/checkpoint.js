@@ -53,19 +53,21 @@ export class CheckpointManager {
     if (this.startPositions.length > 0) {
       const start0 = this.startPositions[0];
       this.lastRespawnPoint = start0.position.clone();
-      this.lastRespawnRotation = start0.rotation;
+      // Use calculated rotation facing next checkpoint instead of fixed rotation
+      this.lastRespawnRotation = this.calculateOptimalRespawnRotation(start0.position);
       if (this.debugConfig.logCheckpoints) {
         console.log('[CheckpointManager] Initial respawn set to Start0:', {
           x: start0.position.x.toFixed(2),
           y: start0.position.y.toFixed(2),
-          z: start0.position.z.toFixed(2)
+          z: start0.position.z.toFixed(2),
+          rotation: this.lastRespawnRotation.toFixed(2)
         });
       }
     } else if (this.checkpoints.length > 0) {
       // Fallback to checkpoint if no start positions
       const finishLine = this.checkpoints[0];
       this.lastRespawnPoint = finishLine.position.clone();
-      this.lastRespawnRotation = 0;
+      this.lastRespawnRotation = this.calculateOptimalRespawnRotation(finishLine.position);
       console.warn('[CheckpointManager] No start positions, using checkpoint 0');
     }
     
@@ -115,7 +117,7 @@ export class CheckpointManager {
     
     // Always update respawn point when crossing any checkpoint (even if already passed this lap)
     this.lastRespawnPoint = checkpoint.position.clone();
-    this.lastRespawnRotation = 0;
+    // Rotation will be calculated dynamically to face next checkpoint
     
     // IMPORTANT: Check finish line BEFORE the early return for already-passed checkpoints
     // This allows lap completion when crossing finish line multiple times
@@ -178,7 +180,7 @@ export class CheckpointManager {
     
     // Dropoff points update respawn location, don't count as checkpoints
     this.lastRespawnPoint = dropoff.position.clone();
-    this.lastRespawnRotation = dropoff.rotation;
+    // Rotation will be calculated dynamically to face next checkpoint
     
     if (this.debugConfig.logCheckpoints) {
       console.log(`[CheckpointManager] Dropoff ${dropoff.index} passed - respawn point updated`);
@@ -263,10 +265,65 @@ export class CheckpointManager {
       };
     }
     
+    // Calculate optimal rotation to face the next checkpoint or dropoff
+    const rotation = this.calculateOptimalRespawnRotation(this.lastRespawnPoint);
+    
     return {
       position: this.lastRespawnPoint.clone(),
-      rotation: this.lastRespawnRotation
+      rotation: rotation
     };
+  }
+
+  /**
+   * Calculate rotation to face the nearest next checkpoint or dropoff from a position
+   */
+  calculateOptimalRespawnRotation(fromPosition) {
+    // Find the next checkpoint we need to pass
+    let targetPosition = null;
+    
+    // First, try to find the next uncompleted checkpoint
+    for (let i = 0; i < this.checkpoints.length; i++) {
+      const checkpoint = this.checkpoints[i];
+      const key = `cp_${checkpoint.index}`;
+      
+      if (!this.checkpointsPassed.has(key)) {
+        targetPosition = checkpoint.position;
+        break;
+      }
+    }
+    
+    // If all checkpoints passed, aim for the finish line (checkpoint 0)
+    if (!targetPosition && this.checkpoints.length > 0) {
+      targetPosition = this.checkpoints[0].position;
+    }
+    
+    // If still no target, try nearest dropoff point
+    if (!targetPosition && this.dropoffPoints.length > 0) {
+      let nearestDropoff = null;
+      let nearestDistance = Infinity;
+      
+      for (const dropoff of this.dropoffPoints) {
+        const dist = fromPosition.distanceTo(dropoff.position);
+        if (dist < nearestDistance && dist > 0.1) { // Avoid the current dropoff
+          nearestDistance = dist;
+          nearestDropoff = dropoff;
+        }
+      }
+      
+      if (nearestDropoff) {
+        targetPosition = nearestDropoff.position;
+      }
+    }
+    
+    // Calculate rotation angle to face the target
+    if (targetPosition) {
+      const dx = targetPosition.x - fromPosition.x;
+      const dz = targetPosition.z - fromPosition.z;
+      return Math.atan2(dx, dz);
+    }
+    
+    // Fallback to stored rotation or 0
+    return this.lastRespawnRotation || 0;
   }
 
   /**

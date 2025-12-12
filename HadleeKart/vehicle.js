@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Vehicle Class - Handles kart physics, movement, and controls
  */
 

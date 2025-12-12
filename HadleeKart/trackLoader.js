@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Track Loader for HadleeKart
  * Loads and parses custom track GLB files
  */
