@@ -19,6 +19,61 @@ html, body {
   --ui-shadow: 0 18px 70px rgba(0, 0, 0, 0.45);
 }
 
+/* =========================
+   Editor: Outliner Menu
+   ========================= */
+
+.ed-contextmenu {
+  position: absolute;
+  z-index: 9999;
+  min-width: 220px;
+  max-width: 360px;
+  background: rgba(10, 14, 24, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: 0 18px 70px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+  pointer-events: auto;
+}
+
+.ed-contextmenu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.ed-contextmenu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ed-contextmenu-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ed-contextmenu-hotkey {
+  flex: 0 0 auto;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.ed-contextmenu-sep {
+  height: 1px;
+  margin: 6px 4px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
 #game-container {
   width: 100vw;
   height: 100vh;
@@ -448,6 +503,19 @@ canvas {
   padding: 10px 12px;
 }
 
+.editor-panel-inline {
+  position: relative;
+  left: auto;
+  right: auto;
+  top: auto;
+  width: 100%;
+  pointer-events: auto;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+}
+
 .editor-row {
   display: flex;
   align-items: center;
@@ -512,4 +580,596 @@ canvas {
   border-radius: 10px;
   padding: 8px 10px;
   display: inline-block;
+}
+
+/* -------- Editor UI Shell (split panes) -------- */
+
+.ed-ui-root {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ed-menubar {
+  pointer-events: auto;
+  height: 34px;
+  position: relative;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  background: rgba(10, 14, 24, 0.72);
+  border-bottom: 1px solid var(--ui-border);
+  backdrop-filter: blur(10px);
+}
+
+.ed-menubar-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ed-menubar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ed-menubar-title {
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.2px;
+  opacity: 0.9;
+}
+
+.ed-menubar-menu {
+  position: relative;
+}
+
+.ed-menubar-btn {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.ed-menubar-menu.is-open .ed-menubar-btn,
+.ed-menubar-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+.ed-menubar-pop {
+  pointer-events: auto;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 220px;
+  background: rgba(10, 14, 24, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 12px;
+  box-shadow: 0 18px 70px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(12px);
+  padding: 6px;
+  z-index: 420;
+}
+
+.ed-menubar-action {
+  pointer-events: auto;
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  padding: 7px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+
+.ed-menubar-action:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.ed-menubar-action-primary {
+  border-color: rgba(124, 92, 255, 0.55);
+  background: rgba(124, 92, 255, 0.20);
+}
+
+.ed-menubar-item {
+  appearance: none;
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.ed-menubar-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+.ed-menubar-item-right {
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
+.ed-menubar-sep {
+  height: 1px;
+  margin: 6px 6px;
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.ed-workspace {
+  position: relative;
+  flex: 1;
+}
+
+.ed-pane {
+  pointer-events: auto;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  background: rgba(10, 14, 24, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.30);
+}
+
+.ed-pane-left {
+  left: 10px;
+  top: 10px;
+  bottom: 44px;
+  border-radius: 14px;
+}
+
+.ed-pane-right {
+  right: 10px;
+  top: 10px;
+  bottom: 44px;
+  border-radius: 14px;
+}
+
+.ed-pane-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.ed-pane-title {
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.2px;
+}
+
+.ed-pane-subtitle {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.ed-pane-content {
+  overflow: auto;
+  padding: 10px 10px;
+}
+
+/* Properties panel */
+
+.ed-props {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ed-props-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.ed-props-advanced {
+  margin-top: 10px;
+}
+
+.ed-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  opacity: 0.92;
+}
+
+.ed-check input[type="checkbox"] {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+}
+
+.ed-check input[type="checkbox"]:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.ed-check input[type="checkbox"]:checked {
+  border-color: rgba(34, 197, 94, 0.70);
+  background: rgba(34, 197, 94, 0.18);
+}
+
+.ed-check input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
+  border: solid rgba(255, 255, 255, 0.92);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.ed-outliner {
+  overflow: auto;
+  padding: 8px;
+}
+
+.ed-outliner-row {
+  appearance: none;
+  width: 100%;
+  text-align: left;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.88);
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  opacity: 0.92;
+}
+
+.ed-outliner-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+.ed-outliner-row.is-selected {
+  background: rgba(124, 92, 255, 0.14);
+  border-color: rgba(124, 92, 255, 0.30);
+}
+
+.ed-outliner-row.is-primary {
+  box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.40);
+}
+
+.ed-resizer {
+  pointer-events: auto;
+  position: absolute;
+  top: 10px;
+  bottom: 44px;
+  z-index: 80;
+  width: 10px;
+  cursor: col-resize;
+}
+
+.ed-resizer-left {
+  left: 10px;
+}
+
+.ed-resizer-right {
+  right: 10px;
+}
+
+.ed-resizer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 4px;
+  width: 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+body.ed-resizing {
+  cursor: col-resize;
+}
+
+.ed-viewport {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ed-statusbar {
+  pointer-events: auto;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  background: rgba(10, 14, 24, 0.72);
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(10px);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+/* Bottom tray (Materials) */
+
+.ed-bottompanel {
+  pointer-events: auto;
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  height: 280px;
+  z-index: 70;
+  background: rgba(10, 14, 24, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 14px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.30);
+  display: flex;
+  flex-direction: column;
+}
+
+.ed-bottompanel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.ed-bottompanel-title {
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.2px;
+}
+
+.ed-bottompanel-content {
+  padding: 8px 10px;
+  overflow: auto;
+}
+
+.ed-mat-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 0.9fr;
+  gap: 10px;
+}
+
+.ed-mat-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.ed-mat-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.ed-mat-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ed-mat-section {
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ed-mat-hint {
+  margin-top: 8px;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.ed-mat-palette {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ed-mat-swatch {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  padding: 8px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.ed-mat-swatch:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ed-mat-swatch.is-active {
+  border-color: rgba(34, 197, 94, 0.65);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.18) inset;
+}
+
+.ed-mat-swatch-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.ed-mat-swatch-label {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.92;
+}
+
+.ed-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 8px 8px;
+}
+
+.ed-card-title {
+  font-weight: 800;
+  font-size: 12px;
+  opacity: 0.92;
+  margin-bottom: 6px;
+}
+
+.ed-grid {
+  display: grid;
+  grid-template-columns: 110px 1fr 1fr 1fr;
+  gap: 6px;
+  align-items: center;
+}
+
+.ed-grid-h {
+  font-size: 11px;
+  opacity: 0.70;
+}
+
+.ed-field {
+  width: 100%;
+}
+
+.ed-field input[type="range"] {
+  width: 100%;
+}
+
+.ed-field input[type="color"] {
+  width: 100%;
+  height: 28px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0;
+}
+
+.ed-field select,
+.ed-field input[type="number"] {
+  width: 100%;
+  height: 30px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  padding: 0 10px;
+  color-scheme: dark;
+}
+
+.ed-field select option {
+  color: #111;
+  background: #ffffff;
+}
+
+.ed-kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 11px;
+  opacity: 0.78;
+}
+
+/* Pause modal */
+
+.ed-modal {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.ed-modal.is-open {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.ed-modal-card {
+  /* IMPORTANT: child elements can override parent's pointer-events.
+     Keep the card non-interactive unless the modal is open. */
+  pointer-events: none;
+  background: rgba(10, 14, 24, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 16px;
+  padding: 18px 18px;
+  min-width: 320px;
+  max-width: 520px;
+  box-shadow: 0 18px 70px rgba(0, 0, 0, 0.55);
+}
+
+.ed-modal.is-open .ed-modal-card {
+  pointer-events: auto;
+}
+
+.ed-modal-title {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.ed-modal-sub {
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.ed-modal-grid {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.ed-status-left {
+  opacity: 0.82;
+}
+
+.ed-status-right {
+  opacity: 0.9;
+  font-variant-numeric: tabular-nums;
 }

@@ -158,6 +158,11 @@ export class TrackLoader {
     // Lazy import to avoid pulling editor/build tools unless needed.
     const { createTrackBuilder } = await import('./trackBuilders/index.js');
 
+    const startCount = Array.isArray(spec?.markers?.start) ? spec.markers.start.length : 0;
+    if (startCount !== 12) {
+      throw new Error(`Track spec must define exactly 12 start positions (found ${startCount}).`);
+    }
+
     this.dispose();
     this.trackData = {
       surfaces: [],

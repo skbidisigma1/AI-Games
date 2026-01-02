@@ -27,6 +27,39 @@ export class CheckpointManager {
     this.onCheckpointPass = null;
     this.onLapComplete = null;
     this.onRaceComplete = null;
+
+    // Scratch vector to avoid per-frame allocations.
+    this._tmpLocal = (this.startPositions[0]?.position || this.checkpoints[0]?.position || null)?.clone?.() || null;
+  }
+
+  _containsPointCheckpoint(checkpoint, worldPoint) {
+    // Prefer oriented box (OBB) hit testing when available.
+    const obb = checkpoint?.obb;
+    if (obb?.center?.isVector3 && obb?.halfSize?.isVector3 && obb?.invQuat) {
+      const tmp = this._tmpLocal || (this._tmpLocal = worldPoint.clone());
+      tmp.copy(worldPoint).sub(obb.center);
+      // invQuat is a THREE.Quaternion
+      tmp.applyQuaternion(obb.invQuat);
+      const hx = obb.halfSize.x;
+      const hy = obb.halfSize.y;
+      const hz = obb.halfSize.z;
+      const insideObb = (Math.abs(tmp.x) <= hx) && (Math.abs(tmp.y) <= hy) && (Math.abs(tmp.z) <= hz);
+      if (insideObb) return true;
+
+      // Robustness fallback: if OBB math/data is off for any reason, still allow
+      // the (enclosing) AABB to trigger checkpoints rather than breaking laps.
+      if (checkpoint?.box?.containsPoint) {
+        return checkpoint.box.containsPoint(worldPoint);
+      }
+      return false;
+    }
+
+    // Fallback: axis-aligned box
+    if (checkpoint?.box?.containsPoint) {
+      return checkpoint.box.containsPoint(worldPoint);
+    }
+
+    return false;
   }
 
   /**
@@ -84,7 +117,7 @@ export class CheckpointManager {
     
     // Check regular checkpoints
     this.checkpoints.forEach((checkpoint) => {
-      if (checkpoint.box.containsPoint(kartPosition)) {
+      if (this._containsPointCheckpoint(checkpoint, kartPosition)) {
         this.passCheckpoint(checkpoint, kartPosition);
       }
     });

@@ -169,10 +169,20 @@ export async function initGame({ THREE, GLTFLoader, scene, camera, renderer, con
   // Optional override (used by editor playtest)
   const trackSource = track || { type: 'glb', path: trackPath };
   let trackData;
-  if (trackSource?.type === 'spec') {
-    trackData = await trackLoader.loadFromSpec(trackSource.spec);
-  } else {
-    trackData = await trackLoader.load(trackSource?.path || trackPath);
+  try {
+    if (trackSource?.type === 'spec') {
+      trackData = await trackLoader.loadFromSpec(trackSource.spec);
+    } else {
+      trackData = await trackLoader.load(trackSource?.path || trackPath);
+    }
+  } catch (err) {
+    console.error('[Game] Failed to load track:', err);
+    alert(`Failed to load track: ${err?.message || err}`);
+    if (typeof onExitToMenu === 'function') {
+      await onExitToMenu();
+      return;
+    }
+    throw err;
   }
   const particleConfig = CONFIG.particles || {};
   const particleSystem = new ParticleSystem({ THREE, scene, maxParticles: particleConfig.maxPoolSize || 1800 });

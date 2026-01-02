@@ -4,7 +4,21 @@ export class FreeFlyControls {
     this.camera = camera;
     this.domElement = domElement;
 
-    this.enabled = true;
+    this._enabled = true;
+    Object.defineProperty(this, 'enabled', {
+      get: () => this._enabled,
+      set: (value) => {
+        const next = !!value;
+        if (this._enabled === next) return;
+        this._enabled = next;
+
+        // Disabling should never leave movement/looking "stuck".
+        if (!next) {
+          this._looking = false;
+          this._keys = Object.create(null);
+        }
+      }
+    });
 
     this.lookSpeed = 0.0022;
     this.moveSpeed = 45;
@@ -25,11 +39,13 @@ export class FreeFlyControls {
       pointerdown: (e) => this._onPointerDown(e),
       pointerup: () => this._onPointerUp(),
       pointermove: (e) => this._onPointerMove(e),
-      contextmenu: (e) => this._onContextMenu(e)
+      contextmenu: (e) => this._onContextMenu(e),
+      blur: () => this._onBlur()
     };
 
     window.addEventListener('keydown', this._handlers.keydown);
     window.addEventListener('keyup', this._handlers.keyup);
+    window.addEventListener('blur', this._handlers.blur);
     domElement.addEventListener('pointerdown', this._handlers.pointerdown);
     window.addEventListener('pointerup', this._handlers.pointerup);
     window.addEventListener('pointermove', this._handlers.pointermove);
@@ -41,10 +57,19 @@ export class FreeFlyControls {
   dispose() {
     window.removeEventListener('keydown', this._handlers.keydown);
     window.removeEventListener('keyup', this._handlers.keyup);
+    window.removeEventListener('blur', this._handlers.blur);
     this.domElement.removeEventListener('pointerdown', this._handlers.pointerdown);
     window.removeEventListener('pointerup', this._handlers.pointerup);
     window.removeEventListener('pointermove', this._handlers.pointermove);
     this.domElement.removeEventListener('contextmenu', this._handlers.contextmenu);
+  }
+
+  _isTextInputFocused() {
+    const el = document.activeElement;
+    if (!el) return false;
+    if (el.isContentEditable) return true;
+    const tag = el.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
   }
 
   _syncFromCamera() {
@@ -54,8 +79,17 @@ export class FreeFlyControls {
   }
 
   _onKey(event, down) {
+    // Always process key-up so we don't get "stuck" movement when controls are disabled
+    // during a drag/pause.
+    if (!down) {
+      this._keys[event.code] = false;
+      return;
+    }
+
     if (!this.enabled) return;
-    this._keys[event.code] = down;
+    // Don't steal WASD/etc while the user is typing in editor inputs.
+    if (this._isTextInputFocused()) return;
+    this._keys[event.code] = true;
   }
 
   _onPointerDown(event) {
@@ -86,6 +120,11 @@ export class FreeFlyControls {
   _onContextMenu(event) {
     // Prevent right-click menu so RMB look feels normal
     event.preventDefault();
+  }
+
+  _onBlur() {
+    this._looking = false;
+    this._keys = Object.create(null);
   }
 
   update(dt) {

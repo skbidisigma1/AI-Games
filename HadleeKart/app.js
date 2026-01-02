@@ -180,11 +180,12 @@ export async function initApp({ THREE, GLTFLoader, scene, camera, renderer, conf
           LMB: place/select piece<br>
           Shift + LMB: multi-select<br>
           RMB + WASD: fly camera<br>
-          G / R / S: move / rotate / scale<br>
+          G / R / F: move / rotate / scale<br>
           Ctrl + Z / Y: undo / redo<br>
           Ctrl + D: duplicate<br>
-          F: focus selection<br>
+          C: focus selection<br>
           V: toggle snapping (grid=1, angle=12.5°)<br>
+          Esc: editor menu (resume / playtest / exit)<br>
           Alt: temporarily disable snapping<br>
           Shift: half-step snap • Ctrl: 1/5-step • Shift+Ctrl: 1/10-step<br>
           Delete: delete selection

@@ -1,6 +1,9 @@
 import { createTrackBuilder } from '../trackBuilders/index.js';
 import { FreeFlyControls } from './freeFlyControls.js';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
+import { createEditorUI } from './ui/editorUI.js';
+import { createCommandRegistry } from './ui/commandRegistry.js';
+import { createEditorKeymap } from './ui/keymap.js';
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -50,9 +53,29 @@ function deepCloneJson(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function mergeSpecWithDefaults(spec) {
+  const base = defaultTrackSpec();
+  const incoming = (spec && typeof spec === 'object') ? spec : {};
+
+  // Shallow merge top-level, then deep-ish merge for known nested objects.
+  const merged = { ...base, ...incoming };
+  merged.materials = { ...(base.materials || {}), ...(incoming.materials || {}) };
+  merged.markers = { ...(base.markers || {}), ...(incoming.markers || {}) };
+  merged.pieces = Array.isArray(incoming.pieces) ? incoming.pieces : (Array.isArray(base.pieces) ? base.pieces : []);
+  return merged;
+}
+
 function safeJsonStringify(value) {
   try {
     return JSON.stringify(value);
+  } catch {
+    return null;
+  }
+}
+
+function tryCreateTrackBuilder(type) {
+  try {
+    return createTrackBuilder(type);
   } catch {
     return null;
   }
@@ -63,6 +86,16 @@ export class TrackEditorMode {
     this._active = false;
     this._root = null;
     this._ui = null;
+    this._uiShell = null;
+    this._commands = null;
+    this._keymap = null;
+
+    this._paused = false;
+
+    // Track transform mode locally (so we can show delta UI and avoid relying on TransformControls internals).
+    this._transformMode = 'translate';
+    this._transformDeltaStart = null;
+    this._transformDeltaText = '';
     this._controls = null;
     this._fly = null;
     this._grid = null;
@@ -79,6 +112,27 @@ export class TrackEditorMode {
 
     this._spec = defaultTrackSpec();
 
+    this._placementMatEl = null;
+
+    // Materials tray UI
+    this._materialsRoot = null;
+    this._materialsTitleEl = null;
+    this._materialsActionsEl = null;
+    this._materialsBodyEl = null;
+    this._materialsRenderKey = '';
+    this._materialsPaletteEl = null;
+    this._materialsSelectionHintEl = null;
+    this._materialsSelMatEl = null;
+    this._materialsClearOverridesBtn = null;
+
+    this._pieceMatOverrideEnabledEl = null;
+    this._pieceMatColorEl = null;
+    this._pieceMatColor2El = null;
+    this._pieceMatRoughEl = null;
+    this._pieceMatRoughNumEl = null;
+    this._pieceMatMetalEl = null;
+    this._pieceMatMetalNumEl = null;
+
     this._raycaster = null;
     this._plane = null;
 
@@ -93,9 +147,20 @@ export class TrackEditorMode {
     this._transform = null;
     this._transformHelper = null;
     this._placement = { kind: 'road_straight', material: 'road' };
+    this._placementMode = 'piece';
     this._placementPreview = null;
     this._previewMat = null;
     this._previewLastHit = null;
+
+    this._markersGroup = null;
+    this._markerMeshes = { start: [], checkpoints: [], items: [] };
+    this._selectedMarker = null; // { type: 'start'|'checkpoints'|'items', index }
+
+    this._markerMatStart = null;
+    this._markerMatCheckpoint = null;
+    this._markerMatItem = null;
+
+    this._clipboard = null;
 
     this._snap = {
       enabled: true,
@@ -105,12 +170,6 @@ export class TrackEditorMode {
     };
 
     this._mods = { shift: false, ctrl: false, alt: false, meta: false };
-
-    this._pieceMatOverrideEnabledEl = null;
-    this._pieceMatColorEl = null;
-    this._pieceMatColor2El = null;
-    this._pieceMatRoughEl = null;
-    this._pieceMatMetalEl = null;
 
     this._handlers = {};
     this._onExitToMenu = null;
@@ -122,10 +181,53 @@ export class TrackEditorMode {
     this._transformDragSnapshot = null;
     this._transformDragWasMulti = false;
 
+    this._isTransformDragging = false;
+    this._pendingGeneratedRebuild = false;
+
     this._historyDebounceTimer = null;
 
     this._gizmoMatDefault = null;
     this._gizmoMatSelected = null;
+  }
+
+  _resetSessionState() {
+    // Clear selection + history to a clean baseline.
+    this._selection?.clear?.();
+    this._selectedPieceIndex = -1;
+    this._selectedMarker = null;
+    this._pivotAttached = false;
+    this._transform?.detach?.();
+    if (this._selectionPivot) this._selectionPivot.visible = false;
+
+    this._history = [];
+    this._historyIndex = -1;
+  }
+
+  _importSpecFromJsonString(text, { sourceName } = {}) {
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (err) {
+      throw new Error(`Invalid JSON${sourceName ? ` (${sourceName})` : ''}`);
+    }
+
+    if (!parsed || typeof parsed !== 'object') {
+      throw new Error('Invalid track spec (expected an object)');
+    }
+    if (!Array.isArray(parsed.pieces)) {
+      throw new Error('Invalid track spec (missing pieces array)');
+    }
+
+    this._spec = mergeSpecWithDefaults(parsed);
+    this._ensureBasicMarkers();
+    this._ensurePieceNames();
+
+    this._resetSessionState();
+    this._rebuildPieceMeshes();
+    this._rebuildMarkerMeshes();
+    this._rebuild();
+    this._pushHistory(true);
+    this._syncUi();
   }
 
   async enter({ THREE, scene, camera, renderer, config, container, onExitToMenu, onPlaytest }) {
@@ -138,7 +240,8 @@ export class TrackEditorMode {
     this._onExitToMenu = onExitToMenu;
     this._onPlaytest = onPlaytest;
 
-    this._builder = createTrackBuilder('modular');
+    // Builder is selected after we load any saved spec.
+    this._builder = null;
 
     this._root = new THREE.Group();
     this._root.name = 'EditorRoot';
@@ -171,144 +274,251 @@ export class TrackEditorMode {
     // Fly camera (WASD move, QE up/down, hold RMB to look, Shift to go fast)
     this._fly = new FreeFlyControls({ THREE, camera, domElement: renderer.domElement });
 
-    // UI overlay
+    // Editor UI shell (menus + panes)
+    this._commands = createCommandRegistry();
+    this._keymap = createEditorKeymap({
+      runCommand: (id) => this._commands?.run?.(id)
+    });
+    this._uiShell = createEditorUI({
+      container,
+      onMenuAction: (id) => this._commands?.run?.(id),
+      onOutlinerSelect: (payload) => {
+        if (!payload || typeof payload !== 'object') return;
+        if (payload.kind === 'marker') {
+          this._selectMarker(payload.markerType, payload.index);
+          return;
+        }
+        this.selectPiece(payload.index, payload.additive);
+      },
+      onOutlinerRename: (payload) => {
+        if (!payload || payload.kind !== 'piece') return;
+        const idx = payload.index;
+        if (!Array.isArray(this._spec?.pieces) || typeof idx !== 'number' || idx < 0 || idx >= this._spec.pieces.length) return;
+        const piece = this._spec.pieces[idx];
+        piece.name = typeof payload.name === 'string' ? payload.name : String(payload.name ?? '');
+        this._pushHistory();
+        this._syncUi();
+      }
+    });
+
     const ui = document.createElement('div');
-    ui.className = 'editor-panel';
+    ui.className = 'ed-props';
     ui.innerHTML = `
-      <div class="editor-row">
-        <div class="editor-title">Track Editor</div>
-        <div class="editor-actions">
-          <button id="editor-back" class="editor-btn">Back</button>
-          <button id="editor-save" class="editor-btn">Save</button>
-          <button id="editor-export" class="editor-btn">Export JSON</button>
-          <button id="editor-play" class="editor-btn editor-btn-primary">Playtest</button>
+      <div class="ed-card">
+        <div class="ed-card-title">Placement</div>
+        <div class="ed-grid" style="grid-template-columns: 90px 1fr;">
+          <div class="ed-grid-h">Mode</div>
+          <div class="ed-field">
+            <select id="editor-place-mode">
+              <option value="piece">Piece</option>
+              <option value="start">Start</option>
+              <option value="checkpoint">Checkpoint</option>
+              <option value="item">Item</option>
+            </select>
+          </div>
+
+          <div class="ed-grid-h">Piece</div>
+          <div class="ed-field">
+            <select id="editor-piece">
+              <option value="road_straight">road_straight</option>
+              <option value="road_straight_short">road_straight_short</option>
+              <option value="road_straight_long">road_straight_long</option>
+              <option value="road_platform">road_platform</option>
+              <option value="road_curve">road_curve</option>
+              <option value="road_curve_90">road_curve_90</option>
+              <option value="road_curve_45">road_curve_45</option>
+              <option value="road_ramp">road_ramp</option>
+              <option value="road_ramp_45">road_ramp_45</option>
+              <option value="wall_straight">wall_straight</option>
+              <option value="barrier_block">barrier_block</option>
+              <option value="barrier_pipe">barrier_pipe</option>
+              <option value="barrier_cone">barrier_cone</option>
+              <option value="prop_pillar">prop_pillar</option>
+              <option value="prop_ring">prop_ring</option>
+              <option value="prop_arch">prop_arch</option>
+              <option value="prop_tree">prop_tree</option>
+            </select>
+          </div>
+
+          <div class="ed-grid-h">Material</div>
+          <div class="ed-field">
+            <select id="editor-mat">
+              <option value="road">road</option>
+              <option value="offroadWeak">offroadWeak</option>
+              <option value="offroadStrong">offroadStrong</option>
+              <option value="boost">boost</option>
+              <option value="wall">wall</option>
+              <option value="prop">prop</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="ed-props-actions">
+          <button id="editor-mode-move" class="editor-btn" type="button">Move</button>
+          <button id="editor-mode-rotate" class="editor-btn" type="button">Rotate</button>
+          <button id="editor-mode-scale" class="editor-btn" type="button">Scale</button>
+          <button id="editor-delete" class="editor-btn" type="button">Delete</button>
+        </div>
+
+        <div class="ed-props-advanced" id="editor-curve-angle-row" style="display:none;">
+          <div class="ed-grid" style="grid-template-columns: 90px 1fr 80px;">
+            <div class="ed-grid-h">Curve°</div>
+            <div class="ed-field"><input id="editor-curve-angle" type="range" min="1" max="90" step="1" value="90"></div>
+            <div class="ed-field"><input id="editor-curve-angle-num" type="number" min="1" max="90" step="1" value="90"></div>
+          </div>
+        </div>
+
+        <div class="ed-props-advanced" id="editor-ramp-angle-row" style="display:none;">
+          <div class="ed-grid" style="grid-template-columns: 90px 1fr 80px;">
+            <div class="ed-grid-h">Ramp°</div>
+            <div class="ed-field"><input id="editor-ramp-angle" type="range" min="1" max="45" step="1" value="25"></div>
+            <div class="ed-field"><input id="editor-ramp-angle-num" type="number" min="1" max="45" step="1" value="25"></div>
+          </div>
         </div>
       </div>
 
-      <div class="editor-row editor-controls">
-        <label class="editor-label">Piece
-          <select id="editor-piece">
-            <option value="road_straight">road_straight</option>
-            <option value="road_straight_short">road_straight_short</option>
-            <option value="road_straight_long">road_straight_long</option>
-            <option value="road_platform">road_platform</option>
-            <option value="road_curve_90">road_curve_90</option>
-            <option value="road_ramp">road_ramp</option>
-            <option value="wall_straight">wall_straight</option>
-            <option value="barrier_block">barrier_block</option>
-            <option value="barrier_pipe">barrier_pipe</option>
-            <option value="barrier_cone">barrier_cone</option>
-            <option value="prop_pillar">prop_pillar</option>
-            <option value="prop_ring">prop_ring</option>
-            <option value="prop_arch">prop_arch</option>
-            <option value="prop_tree">prop_tree</option>
-          </select>
-        </label>
-        <label class="editor-label">Material
-          <select id="editor-mat">
-            <option value="road">road</option>
-            <option value="offroadWeak">offroadWeak</option>
-            <option value="offroadStrong">offroadStrong</option>
-            <option value="boost">boost</option>
-            <option value="wall">wall</option>
-            <option value="prop">prop</option>
-          </select>
-        </label>
-        <button id="editor-mode-move" class="editor-btn">Move</button>
-        <button id="editor-mode-rotate" class="editor-btn">Rotate</button>
-        <button id="editor-mode-scale" class="editor-btn">Scale</button>
-        <button id="editor-delete" class="editor-btn">Delete</button>
-      </div>
+      <div class="ed-card">
+        <div class="ed-card-title">Snapping</div>
+        <div class="ed-grid" style="grid-template-columns: 90px 1fr;">
+          <div class="ed-grid-h">Enabled</div>
+          <label class="ed-check"><input id="editor-snap-enabled" type="checkbox"> Snap</label>
 
-      <div class="editor-row editor-controls">
-        <label class="editor-label"><input id="editor-snap-enabled" type="checkbox"> Snap</label>
-        <label class="editor-label">Grid <input id="editor-snap-grid" type="number" min="0" step="0.25" value="1" style="width: 70px;"></label>
-        <label class="editor-label">Angle° <input id="editor-snap-rot" type="number" min="0" step="0.5" value="12.5" style="width: 70px;"></label>
-      </div>
+          <div class="ed-grid-h">Grid</div>
+          <div class="ed-field"><input id="editor-snap-grid" type="number" min="0" step="0.25" value="1"></div>
 
-      <div class="editor-row editor-controls">
-        <div class="editor-title" style="font-size: 13px; opacity: 0.85;">Materials</div>
-      </div>
-      <div class="editor-row editor-controls">
-        <div class="editor-mat-grid" style="display: grid; grid-template-columns: 90px 1fr 1fr 1fr; gap: 8px; align-items: center; width: 100%;">
-          <div style="opacity: 0.8;">Key</div>
-          <div style="opacity: 0.8;">Color</div>
-          <div style="opacity: 0.8;">Rough</div>
-          <div style="opacity: 0.8;">Metal</div>
-
-          <div>road</div>
-          <input id="mat-road-color" type="color">
-          <input id="mat-road-rough" type="range" min="0" max="1" step="0.01">
-          <input id="mat-road-metal" type="range" min="0" max="1" step="0.01">
-
-          <div>offroadWeak</div>
-          <input id="mat-offroadWeak-color" type="color">
-          <input id="mat-offroadWeak-rough" type="range" min="0" max="1" step="0.01">
-          <input id="mat-offroadWeak-metal" type="range" min="0" max="1" step="0.01">
-
-          <div>offroadStrong</div>
-          <input id="mat-offroadStrong-color" type="color">
-          <input id="mat-offroadStrong-rough" type="range" min="0" max="1" step="0.01">
-          <input id="mat-offroadStrong-metal" type="range" min="0" max="1" step="0.01">
-
-          <div>boost</div>
-          <input id="mat-boost-color" type="color">
-          <input id="mat-boost-rough" type="range" min="0" max="1" step="0.01">
-          <input id="mat-boost-metal" type="range" min="0" max="1" step="0.01">
-
-          <div>wall</div>
-          <input id="mat-wall-color" type="color">
-          <input id="mat-wall-rough" type="range" min="0" max="1" step="0.01">
-          <input id="mat-wall-metal" type="range" min="0" max="1" step="0.01">
-
-          <div>prop</div>
-          <input id="mat-prop-color" type="color">
-          <input id="mat-prop-rough" type="range" min="0" max="1" step="0.01">
-          <input id="mat-prop-metal" type="range" min="0" max="1" step="0.01">
+          <div class="ed-grid-h">Angle°</div>
+          <div class="ed-field"><input id="editor-snap-rot" type="number" min="0" step="0.5" value="12.5"></div>
         </div>
+        <div class="ed-mat-hint">Hold Alt to temporarily disable snapping</div>
       </div>
 
-      <div class="editor-row editor-controls">
-        <div class="editor-title" style="font-size: 13px; opacity: 0.85;">Selected Piece Override</div>
-      </div>
-      <div class="editor-row editor-controls">
-        <label class="editor-label"><input id="piece-mat-override" type="checkbox"> Override material</label>
-        <label class="editor-label">Color <input id="piece-mat-color" type="color"></label>
-        <label class="editor-label">Leaves <input id="piece-mat-color-2" type="color"></label>
-        <label class="editor-label">Rough <input id="piece-mat-rough" type="range" min="0" max="1" step="0.01"></label>
-        <label class="editor-label">Metal <input id="piece-mat-metal" type="range" min="0" max="1" step="0.01"></label>
-      </div>
-
-      <div class="editor-help">
-        LMB: place/select • Shift+LMB: multi-select • RMB+WASD: fly • G/R/S: move/rotate/scale • Ctrl+Z/Y: undo/redo • Ctrl+D: duplicate • F: focus • V: toggle snap • Alt: disable snap • Shift/Ctrl: finer snap
+      <div class="ed-mat-hint">
+        LMB: place/select • Shift+LMB: multi-select • RMB+WASD: fly • G/R/F: move/rotate/scale • Ctrl+Z/Y: undo/redo • Ctrl+D: duplicate • Enter: deselect • C: focus • V: toggle snap • Esc: menu
       </div>
     `;
-    container.appendChild(ui);
+    this._uiShell.rightContent.appendChild(ui);
     this._ui = ui;
+
+    this._registerCommands();
 
     // Load last saved spec if present
     const saved = loadSavedTrackSpec();
-    if (saved?.type === 'modular' && Array.isArray(saved?.pieces)) {
-      this._spec = { ...defaultTrackSpec(), ...saved };
+    if (saved?.type && Array.isArray(saved?.pieces)) {
+      // Merge with defaults to keep missing fields stable.
+      this._spec = mergeSpecWithDefaults(saved);
     }
 
+    this._ensureBasicMarkers();
+    this._ensurePieceNames();
+
+    // Select the appropriate builder for the spec.
+    this._builder = tryCreateTrackBuilder(this._spec?.type) || tryCreateTrackBuilder('modular');
+
     // Reset history/selection for a clean editor session.
-    this._history = [];
-    this._historyIndex = -1;
-    this._selection.clear();
-    this._selectedPieceIndex = -1;
+    this._resetSessionState();
 
     // Hook UI
+    const modeEl = ui.querySelector('#editor-place-mode');
     const pieceEl = ui.querySelector('#editor-piece');
     const matEl = ui.querySelector('#editor-mat');
+    const curveRowEl = ui.querySelector('#editor-curve-angle-row');
+    const curveAngleEl = ui.querySelector('#editor-curve-angle');
+    const curveAngleNumEl = ui.querySelector('#editor-curve-angle-num');
+    const rampRowEl = ui.querySelector('#editor-ramp-angle-row');
+    const rampAngleEl = ui.querySelector('#editor-ramp-angle');
+    const rampAngleNumEl = ui.querySelector('#editor-ramp-angle-num');
+    modeEl.value = this._placementMode;
     pieceEl.value = this._placement.kind;
     matEl.value = this._placement.material;
+
+    const syncPlacementModeUi = () => {
+      const isPiece = this._placementMode === 'piece';
+      pieceEl.disabled = !isPiece;
+      matEl.disabled = !isPiece;
+    };
+
+    modeEl.addEventListener('change', () => {
+      this._placementMode = modeEl.value;
+      syncPlacementModeUi();
+      this._refreshPlacementPreviewFromLastHit();
+      this._toast(`Mode: ${this._placementMode}`);
+    });
+
+    const syncAngleUI = () => {
+      const kind = this._placement.kind;
+      const isCurve = kind === 'road_curve' || kind === 'road_curve_90' || kind === 'road_curve_45';
+      const isRamp = kind === 'road_ramp' || kind === 'road_ramp_45';
+
+      curveRowEl.style.display = isCurve ? '' : 'none';
+      rampRowEl.style.display = isRamp ? '' : 'none';
+
+      if (isCurve) {
+        const def = this._defaultSizeForKind(kind);
+        const current = this._placement?.size?.angleDeg;
+        const angle = clamp(Number(current ?? def?.angleDeg ?? 90), 1, 90);
+        curveAngleEl.value = String(angle);
+        curveAngleNumEl.value = String(angle);
+      }
+
+      if (isRamp) {
+        const def = this._defaultSizeForKind(kind);
+        const current = this._placement?.size?.angleDeg;
+        const angle = clamp(Number(current ?? def?.angleDeg ?? 25), 1, 45);
+        rampAngleEl.value = String(angle);
+        rampAngleNumEl.value = String(angle);
+      }
+    };
+
+    const applyPlacementAngle = (angleDeg) => {
+      const kind = this._placement.kind;
+      const isCurve = kind === 'road_curve' || kind === 'road_curve_90' || kind === 'road_curve_45';
+      const isRamp = kind === 'road_ramp' || kind === 'road_ramp_45';
+      if (!isCurve && !isRamp) {
+        this._placement.size = undefined;
+        return;
+      }
+      this._placement.size = { ...(this._placement.size || {}), angleDeg };
+      this._refreshPlacementPreviewFromLastHit();
+    };
+
+    const onCurveAngleChanged = (raw) => {
+      const angle = clamp(Number(raw), 1, 90);
+      curveAngleEl.value = String(angle);
+      curveAngleNumEl.value = String(angle);
+      applyPlacementAngle(angle);
+    };
+
+    const onRampAngleChanged = (raw) => {
+      const angle = clamp(Number(raw), 1, 45);
+      rampAngleEl.value = String(angle);
+      rampAngleNumEl.value = String(angle);
+      applyPlacementAngle(angle);
+    };
+
+    curveAngleEl.addEventListener('input', () => onCurveAngleChanged(curveAngleEl.value));
+    curveAngleNumEl.addEventListener('input', () => onCurveAngleChanged(curveAngleNumEl.value));
+    rampAngleEl.addEventListener('input', () => onRampAngleChanged(rampAngleEl.value));
+    rampAngleNumEl.addEventListener('input', () => onRampAngleChanged(rampAngleNumEl.value));
+
     pieceEl.addEventListener('change', () => {
       this._placement.kind = pieceEl.value;
+      const kind = this._placement.kind;
+      const isCurve = kind === 'road_curve' || kind === 'road_curve_90' || kind === 'road_curve_45';
+      const isRamp = kind === 'road_ramp' || kind === 'road_ramp_45';
+      if (!isCurve && !isRamp) this._placement.size = undefined;
+      syncAngleUI();
+      this._refreshPlacementPreviewFromLastHit();
     });
     matEl.addEventListener('change', () => {
       this._placement.material = matEl.value;
+      this._syncMaterialsTrayUI();
     });
+
+    // Store so the materials tray can update it.
+    this._placementMatEl = matEl;
+
+    syncAngleUI();
+    syncPlacementModeUi();
 
     // Snap UI
     const snapEnabledEl = ui.querySelector('#editor-snap-enabled');
@@ -330,118 +540,96 @@ export class TrackEditorMode {
     snapGridEl.addEventListener('change', applySnap);
     snapRotEl.addEventListener('change', applySnap);
 
-    // Materials UI bindings
+    // Bottom materials tray UI
+    const matsRoot = document.createElement('div');
+    matsRoot.className = 'ed-mat-layout';
+    matsRoot.innerHTML = `
+      <div class="ed-card">
+        <div class="ed-card-title">Placement Palette</div>
+        <div class="ed-mat-palette" id="ed-mat-palette"></div>
+        <div class="ed-mat-hint">Affects only newly placed pieces</div>
+      </div>
+
+      <div class="ed-card">
+        <div class="ed-mat-card-head">
+          <div class="ed-card-title" id="ed-mat-title">Selection</div>
+          <div class="ed-mat-card-actions" id="ed-mat-actions"></div>
+        </div>
+        <div class="ed-mat-card-body" id="ed-mat-body">
+          <div class="ed-mat-hint" id="ed-mat-sel-hint">Select pieces to edit their material/overrides</div>
+
+          <div class="ed-mat-section">
+            <div class="ed-grid" style="grid-template-columns: 110px 1fr;">
+              <div class="ed-grid-h">Material</div>
+              <div class="ed-field">
+                <select id="ed-mat-sel-mat"></select>
+              </div>
+            </div>
+          </div>
+
+          <div class="ed-mat-section">
+            <div class="ed-grid" style="grid-template-columns: 110px 1fr 1fr 1fr;">
+              <div class="ed-grid-h">Override</div>
+              <div class="ed-field"><label><input type="checkbox" id="ed-mat-ov-enabled" /> enable</label></div>
+              <div class="ed-field"><button class="editor-btn" id="ed-mat-ov-clear" type="button">Clear</button></div>
+              <div></div>
+
+              <div class="ed-grid-h">Color</div>
+              <div class="ed-field"><input type="color" id="ed-mat-ov-color" /></div>
+              <div class="ed-field"><input type="color" id="ed-mat-ov-color2" /></div>
+              <div></div>
+
+              <div class="ed-grid-h">Rough</div>
+              <div class="ed-field"><input type="range" min="0" max="1" step="0.01" id="ed-mat-ov-rough" /></div>
+              <div class="ed-field"><input type="number" min="0" max="1" step="0.01" id="ed-mat-ov-rough-n" /></div>
+              <div></div>
+
+              <div class="ed-grid-h">Metal</div>
+              <div class="ed-field"><input type="range" min="0" max="1" step="0.01" id="ed-mat-ov-metal" /></div>
+              <div class="ed-field"><input type="number" min="0" max="1" step="0.01" id="ed-mat-ov-metal-n" /></div>
+              <div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    this._uiShell?.bottomContent?.appendChild?.(matsRoot);
+    this._materialsRoot = matsRoot;
+    this._materialsTitleEl = matsRoot.querySelector('#ed-mat-title');
+    this._materialsActionsEl = matsRoot.querySelector('#ed-mat-actions');
+    this._materialsBodyEl = matsRoot.querySelector('#ed-mat-body');
+    this._materialsRenderKey = '';
+    this._materialsPaletteEl = matsRoot.querySelector('#ed-mat-palette');
+    this._materialsSelectionHintEl = matsRoot.querySelector('#ed-mat-sel-hint');
+    this._materialsSelMatEl = matsRoot.querySelector('#ed-mat-sel-mat');
+    this._materialsClearOverridesBtn = matsRoot.querySelector('#ed-mat-ov-clear');
+
+    this._pieceMatOverrideEnabledEl = matsRoot.querySelector('#ed-mat-ov-enabled');
+    this._pieceMatColorEl = matsRoot.querySelector('#ed-mat-ov-color');
+    this._pieceMatColor2El = matsRoot.querySelector('#ed-mat-ov-color2');
+    this._pieceMatRoughEl = matsRoot.querySelector('#ed-mat-ov-rough');
+    this._pieceMatRoughNumEl = matsRoot.querySelector('#ed-mat-ov-rough-n');
+    this._pieceMatMetalEl = matsRoot.querySelector('#ed-mat-ov-metal');
+    this._pieceMatMetalNumEl = matsRoot.querySelector('#ed-mat-ov-metal-n');
+
+    // Ensure materials exist.
     this._spec.materials = this._spec.materials || {};
-    const bindMatRow = (key) => {
-      const def = this._spec.materials[key] || {};
-      this._spec.materials[key] = def;
-
-      const colorEl = ui.querySelector(`#mat-${key}-color`);
-      const roughEl = ui.querySelector(`#mat-${key}-rough`);
-      const metalEl = ui.querySelector(`#mat-${key}-metal`);
-
-      // Initialize
-      colorEl.value = this._toHexColor(def.color ?? '#ffffff');
-      roughEl.value = String(typeof def.roughness === 'number' ? def.roughness : 0.75);
-      metalEl.value = String(typeof def.metalness === 'number' ? def.metalness : 0.05);
-
-      const apply = () => {
-        def.type = def.type || 'standard';
-        def.color = colorEl.value;
-        def.roughness = clamp(Number(roughEl.value), 0, 1);
-        def.metalness = clamp(Number(metalEl.value), 0, 1);
-        this._rebuild();
-        this._scheduleHistoryPush();
-      };
-
-      colorEl.addEventListener('input', apply);
-      roughEl.addEventListener('input', apply);
-      metalEl.addEventListener('input', apply);
-    };
-    bindMatRow('road');
-    bindMatRow('offroadWeak');
-    bindMatRow('offroadStrong');
-    bindMatRow('boost');
-    bindMatRow('wall');
-    bindMatRow('prop');
-
-    // Selected-piece material override controls
-    this._pieceMatOverrideEnabledEl = ui.querySelector('#piece-mat-override');
-    this._pieceMatColorEl = ui.querySelector('#piece-mat-color');
-    this._pieceMatColor2El = ui.querySelector('#piece-mat-color-2');
-    this._pieceMatRoughEl = ui.querySelector('#piece-mat-rough');
-    this._pieceMatMetalEl = ui.querySelector('#piece-mat-metal');
-
-    const applySelectedOverride = () => {
-      const idx = this._selectedPieceIndex;
-      const piece = this._spec.pieces?.[idx];
-      if (!piece) return;
-
-      const enabled = !!this._pieceMatOverrideEnabledEl?.checked;
-      if (!enabled) {
-        piece.materialOverride = undefined;
-        piece.materialOverrideSecondary = undefined;
-        this._rebuild();
-        this._scheduleHistoryPush();
-        return;
-      }
-
-      piece.materialOverride = {
-        type: 'standard',
-        color: this._pieceMatColorEl?.value,
-        roughness: clamp(Number(this._pieceMatRoughEl?.value ?? 0.75), 0, 1),
-        metalness: clamp(Number(this._pieceMatMetalEl?.value ?? 0.05), 0, 1)
-      };
-
-      // Secondary color (primarily for tree leaves). Only applies if provided.
-      const c2 = this._pieceMatColor2El?.value;
-      piece.materialOverrideSecondary = c2
-        ? { type: 'standard', color: c2 }
-        : undefined;
-      this._rebuild();
-      this._scheduleHistoryPush();
-    };
-
-    this._pieceMatOverrideEnabledEl.addEventListener('change', applySelectedOverride);
-    this._pieceMatColorEl.addEventListener('input', applySelectedOverride);
-    this._pieceMatColor2El.addEventListener('input', applySelectedOverride);
-    this._pieceMatRoughEl.addEventListener('input', applySelectedOverride);
-    this._pieceMatMetalEl.addEventListener('input', applySelectedOverride);
-
-    ui.querySelector('#editor-back').addEventListener('click', () => {
-      if (typeof this._onExitToMenu === 'function') this._onExitToMenu();
-    });
-    ui.querySelector('#editor-save').addEventListener('click', () => {
-      saveTrackSpec(this._spec);
-      this._toast('Saved to local storage');
+    ['road', 'offroadWeak', 'offroadStrong', 'boost', 'wall', 'prop'].forEach((k) => {
+      this._spec.materials[k] = this._spec.materials[k] || {};
     });
 
-    ui.querySelector('#editor-export').addEventListener('click', async () => {
-      try {
-        const blob = new Blob([JSON.stringify(this._spec, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${(this._spec.name || 'track').replace(/[^a-z0-9_-]+/gi, '_')}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        this._toast('Exported JSON');
-      } catch (err) {
-        console.error('[Editor] Export failed:', err);
-        alert(`Export failed: ${err.message || err}`);
-      }
-    });
-    ui.querySelector('#editor-play').addEventListener('click', () => {
-      saveTrackSpec(this._spec);
-      if (typeof this._onPlaytest === 'function') this._onPlaytest(this._spec);
-    });
+    this._initMaterialsTrayHandlers();
+    this._syncMaterialsTrayUI(true);
 
     // Piece gizmos (wireframe boxes, used for selection and TransformControls)
     this._piecesGroup = new THREE.Group();
     this._piecesGroup.name = 'EditorPieces';
     this._root.add(this._piecesGroup);
+
+    // Marker gizmos (Start/Checkpoint/Item)
+    this._markersGroup = new THREE.Group();
+    this._markersGroup.name = 'EditorMarkers';
+    this._root.add(this._markersGroup);
 
     // Placement preview (hover outline)
     this._previewMat = new THREE.MeshBasicMaterial({
@@ -458,9 +646,12 @@ export class TrackEditorMode {
 
     this._transform = new TransformControls(camera, renderer.domElement);
     this._transform.setMode('translate');
+    this._transformMode = 'translate';
     this._applyTransformSnapping();
     this._transform.addEventListener('dragging-changed', (e) => {
-      if (this._fly) this._fly.enabled = !e.value;
+      if (this._fly) this._fly.enabled = !e.value && !this._paused;
+
+      this._isTransformDragging = !!e.value;
 
       // Capture a pre-drag snapshot for undo and (if multi) a transform baseline.
       if (e.value) {
@@ -492,6 +683,18 @@ export class TrackEditorMode {
           this._pivotStart = null;
           this._multiStart = null;
         }
+
+        // Start transform delta readout from current attached object.
+        const obj = this._pivotAttached ? this._selectionPivot : this._pieceMeshes[this._selectedPieceIndex];
+        if (obj) {
+          this._transformDeltaStart = {
+            position: obj.position.clone(),
+            quaternion: obj.quaternion.clone(),
+            scale: obj.scale.clone()
+          };
+          this._transformDeltaText = '';
+          this._updateStatusBar();
+        }
         return;
       }
 
@@ -503,19 +706,41 @@ export class TrackEditorMode {
           this._pushHistory();
         }
       }
+
+      // Apply a single rebuild after drag completes (keeps interaction smooth).
+      if (this._pendingGeneratedRebuild) {
+        this._pendingGeneratedRebuild = false;
+        this._rebuild();
+      }
+
       this._transformDragSnapshot = null;
       this._transformDragWasMulti = false;
       this._pivotStart = null;
       this._multiStart = null;
+
+      // Clear delta readout.
+      this._transformDeltaStart = null;
+      this._transformDeltaText = '';
+      this._updateStatusBar();
     });
     this._transform.addEventListener('objectChange', () => {
       if (this._selection.size > 1 && this._pivotAttached) {
         this._applyPivotToSelection();
         this._syncSelectionToSpec();
+      } else if (this._selectedMarker) {
+        this._syncSelectedMarkerFromObject();
       } else {
         this._syncSelectedPieceFromObject();
       }
-      this._rebuild();
+
+      this._updateTransformDeltaReadout();
+
+      // Avoid rebuilding the full generated track on every mouse move while dragging.
+      if (this._isTransformDragging) {
+        this._pendingGeneratedRebuild = true;
+      } else {
+        this._rebuild();
+      }
     });
 
     // TransformControls is not necessarily an Object3D in all Three.js versions.
@@ -523,10 +748,10 @@ export class TrackEditorMode {
     this._transformHelper = this._transform.getHelper?.() || null;
     if (this._transformHelper) this._root.add(this._transformHelper);
 
-    ui.querySelector('#editor-mode-move').addEventListener('click', () => this._transform?.setMode('translate'));
-    ui.querySelector('#editor-mode-rotate').addEventListener('click', () => this._transform?.setMode('rotate'));
-    ui.querySelector('#editor-mode-scale').addEventListener('click', () => this._transform?.setMode('scale'));
-    ui.querySelector('#editor-delete').addEventListener('click', () => this._deleteSelectedPiece());
+    ui.querySelector('#editor-mode-move').addEventListener('click', () => { this._transformMode = 'translate'; this._transform?.setMode('translate'); this._syncUi(); });
+    ui.querySelector('#editor-mode-rotate').addEventListener('click', () => { this._transformMode = 'rotate'; this._transform?.setMode('rotate'); this._syncUi(); });
+    ui.querySelector('#editor-mode-scale').addEventListener('click', () => { this._transformMode = 'scale'; this._transform?.setMode('scale'); this._syncUi(); });
+    ui.querySelector('#editor-delete').addEventListener('click', () => this._deleteSelected());
 
     // Pointer handling
     const dom = renderer.domElement;
@@ -555,8 +780,10 @@ export class TrackEditorMode {
 
     // Initial build + history baseline
     this._rebuildPieceMeshes();
+    this._rebuildMarkerMeshes();
     this._rebuild();
     this._pushHistory(true);
+    this._syncUi();
   }
 
   update(dt) {
@@ -596,6 +823,14 @@ export class TrackEditorMode {
       this._ui = null;
     }
 
+    if (this._uiShell) {
+      this._uiShell.dispose();
+      this._uiShell = null;
+    }
+
+    this._commands = null;
+    this._keymap = null;
+
     if (this._generated?.group) {
       this._root.remove(this._generated.group);
       this._disposeObject(this._generated.group);
@@ -632,6 +867,21 @@ export class TrackEditorMode {
       // Materials may have been disposed by _disposeObject; recreate next session.
       this._gizmoMatDefault = null;
       this._gizmoMatSelected = null;
+    }
+
+    if (this._markersGroup) {
+      this._root.remove(this._markersGroup);
+      this._disposeObject(this._markersGroup, { disposeMaterials: false });
+      this._markersGroup = null;
+      this._markerMeshes = { start: [], checkpoints: [], items: [] };
+      this._selectedMarker = null;
+
+      this._markerMatStart?.dispose?.();
+      this._markerMatCheckpoint?.dispose?.();
+      this._markerMatItem?.dispose?.();
+      this._markerMatStart = null;
+      this._markerMatCheckpoint = null;
+      this._markerMatItem = null;
     }
 
     if (this._selectionPivot) {
@@ -681,6 +931,20 @@ export class TrackEditorMode {
       spec: this._spec
     });
 
+    // Placement raycasts hit generated surfaces every pointer move; BVH helps a lot.
+    const surfaces = Array.isArray(built?.surfaces) ? built.surfaces : [];
+    surfaces.forEach((mesh) => {
+      const geom = mesh?.geometry;
+      if (!geom) return;
+      if (!geom.computeBoundsTree) return;
+      if (geom.boundsTree) return;
+      try {
+        geom.computeBoundsTree();
+      } catch {
+        // ignore (BVH is a perf hint, not required for correctness)
+      }
+    });
+
     this._generated = built;
     this._root.add(built.group);
   }
@@ -691,7 +955,8 @@ export class TrackEditorMode {
 
     this._pieceMeshes.forEach((m) => {
       this._piecesGroup.remove(m);
-      this._disposeObject(m);
+      // Gizmo meshes share materials; avoid disposing shared materials during rebuild.
+      this._disposeObject(m, { disposeMaterials: false });
     });
     this._pieceMeshes = [];
 
@@ -706,7 +971,62 @@ export class TrackEditorMode {
     const pieces = Array.isArray(this._spec.pieces) ? this._spec.pieces : [];
     pieces.forEach((p, idx) => {
       const bb = this._previewBoundsFor(p.kind || 'road_straight', p.size);
-      const geom = new THREE.BoxGeometry(bb.x, bb.y, bb.z);
+      let geom;
+      const kind = (p.kind || 'road_straight');
+      if (kind === 'road_curve' || kind === 'road_curve_90' || kind === 'road_curve_45') {
+        const radius = Math.max(1, p.size?.radius ?? 30);
+        const width = Math.max(1, p.size?.width ?? 26);
+        const thickness = Math.max(0.1, p.size?.thickness ?? 0.6);
+        const angleDeg = Math.max(1, Math.min(90, p.size?.angleDeg ?? (kind === 'road_curve_45' ? 45 : 90)));
+        const angle = (angleDeg * Math.PI) / 180;
+        const inner = Math.max(1, radius - width / 2);
+        const outer = radius + width / 2;
+
+        const shape = new THREE.Shape();
+        const segments = Math.max(8, Math.floor(angleDeg / 5));
+        const innerStartX = inner;
+        const innerStartY = 0;
+        const outerStartX = outer;
+        const outerStartY = 0;
+        const innerEndX = Math.cos(angle) * inner;
+        const innerEndY = -Math.sin(angle) * inner;
+
+        shape.moveTo(innerStartX, innerStartY);
+        shape.lineTo(outerStartX, outerStartY);
+        shape.absarc(0, 0, outer, 0, angle, false);
+        shape.lineTo(innerEndX, innerEndY);
+        shape.absarc(0, 0, inner, angle, 0, true);
+        shape.closePath();
+
+        geom = new THREE.ExtrudeGeometry(shape, { depth: thickness, bevelEnabled: false, curveSegments: segments });
+        geom.rotateX(Math.PI / 2);
+        geom.computeBoundingBox();
+        if (geom.boundingBox) {
+          const c = new THREE.Vector3();
+          geom.boundingBox.getCenter(c);
+          geom.translate(-c.x, -c.y, -c.z);
+        }
+      } else if (kind === 'road_ramp' || kind === 'road_ramp_45') {
+        const legacy = p.size && typeof p.size === 'object' && ('x' in p.size) && ('y' in p.size) && ('z' in p.size);
+        const length = Math.max(1, legacy ? (p.size.x ?? 40) : (p.size?.length ?? 40));
+        const width = Math.max(1, legacy ? (p.size.z ?? 26) : (p.size?.width ?? 26));
+        const thickness = Math.max(0.1, legacy ? Math.min(2, (p.size.y ?? 6) * 0.1) : (p.size?.thickness ?? 0.6));
+        const angleDeg = Math.max(1, Math.min(45, legacy ? 25 : (p.size?.angleDeg ?? (kind === 'road_ramp_45' ? 45 : 25))));
+        const rise = Math.tan((angleDeg * Math.PI) / 180) * length;
+        geom = new THREE.BoxGeometry(length, thickness, width, 1, 1, 1);
+        const pos = geom.attributes.position;
+        for (let i = 0; i < pos.count; i += 1) {
+          const x = pos.getX(i);
+          const y = pos.getY(i);
+          const t = (x + length / 2) / length;
+          const baseY = t * rise;
+          pos.setY(i, y > 0 ? (baseY + thickness) : baseY);
+        }
+        pos.needsUpdate = true;
+        geom.computeVertexNormals();
+      } else {
+        geom = new THREE.BoxGeometry(bb.x, bb.y, bb.z);
+      }
       const mesh = new THREE.Mesh(geom, this._gizmoMatDefault);
       mesh.name = `PieceGizmo_${idx}`;
       // Gizmo is centered; stored piece.position is a ground-anchor (bottom center).
@@ -741,6 +1061,7 @@ export class TrackEditorMode {
     }
     this._updateSelectionVisuals();
     this._attachTransformToSelection();
+    this._syncUi();
   }
 
   _getPointerNDC(event) {
@@ -758,48 +1079,125 @@ export class TrackEditorMode {
     return ok ? hit : null;
   }
 
+  _raycastToSurfaces(event) {
+    // Raycast against the currently generated track surfaces (more accurate than a fixed plane).
+    const ndc = this._getPointerNDC(event);
+    this._raycaster.setFromCamera(ndc, this._camera);
+
+    const surfaces = Array.isArray(this._generated?.surfaces) ? this._generated.surfaces : [];
+    if (surfaces.length === 0) return null;
+
+    const hits = this._raycaster.intersectObjects(surfaces, true);
+    if (!hits || hits.length === 0) return null;
+
+    const h = hits[0];
+    return {
+      point: h.point,
+      normal: h.face?.normal ? h.face.normal.clone() : null,
+      object: h.object
+    };
+  }
+
+  _raycastPlacement(event) {
+    // Prefer surfaces, fall back to the editor ground plane.
+    const surf = this._raycastToSurfaces(event);
+    if (surf?.point) return { point: surf.point, source: 'surface' };
+    const plane = this._raycastToPlane(event);
+    if (plane) return { point: plane, source: 'plane' };
+    return null;
+  }
+
   _pickPoint(event) {
+    return this._pickPieceHit(event)?.index ?? -1;
+  }
+
+  _pickPieceHit(event) {
+    if (!this._raycaster || !this._camera) return null;
     const ndc = this._getPointerNDC(event);
     this._raycaster.setFromCamera(ndc, this._camera);
     const hits = this._raycaster.intersectObjects(this._pieceMeshes, false);
-    if (!hits || hits.length === 0) return -1;
-    return hits[0].object.userData.pieceIndex;
+    if (!hits || hits.length === 0) return null;
+    const pieceIndex = hits[0].object?.userData?.pieceIndex;
+    if (typeof pieceIndex !== 'number') return null;
+    return { index: pieceIndex, distance: hits[0].distance };
+  }
+
+  _pickMarker(event) {
+    if (!this._raycaster || !this._camera) return null;
+    const ndc = this._getPointerNDC(event);
+    this._raycaster.setFromCamera(ndc, this._camera);
+
+    const all = [];
+    all.push(...(this._markerMeshes?.start || []));
+    all.push(...(this._markerMeshes?.checkpoints || []));
+    all.push(...(this._markerMeshes?.items || []));
+    if (all.length === 0) return null;
+
+    const hits = this._raycaster.intersectObjects(all, true);
+    if (!hits || hits.length === 0) return null;
+
+    let obj = hits[0].object;
+    while (obj && !obj.userData?.markerType && obj.parent) obj = obj.parent;
+    if (!obj?.userData?.markerType) return null;
+    return { type: obj.userData.markerType, index: obj.userData.markerIndex, object: obj, distance: hits[0].distance };
   }
 
   _onPointerDown(event) {
     if (!this._active) return;
+    if (this._paused) return;
 
     // If we're interacting with the transform gizmo, don't place new pieces.
     if (this._transform?.dragging || this._transform?.axis) return;
 
     // Left
     if (event.button === 0) {
-      const idx = this._pickPoint(event);
-      if (idx >= 0) {
-        this._handleClickSelection(idx, !!event.shiftKey);
+      const mk = this._pickMarker(event);
+      const piece = this._pickPieceHit(event);
+      if (mk && (!piece || mk.distance <= piece.distance + 1e-6)) {
+        this._selectMarker(mk.type, mk.index);
+        return;
+      }
+      if (piece?.index >= 0) {
+        this._selectedMarker = null;
+        this._handleClickSelection(piece.index, !!event.shiftKey);
         return;
       }
 
-      const hit = this._raycastToPlane(event);
-      if (!hit) return;
+      const hit = this._raycastPlacement(event);
+      if (!hit?.point) return;
 
-      const snapped = this._shouldSnapNow()
-        ? this._snapPointXZ(hit)
-        : hit;
+      // Place markers when not in piece mode.
+      if (this._placementMode && this._placementMode !== 'piece') {
+        this._placeMarkerAt(hit.point);
+        return;
+      }
 
       const kind = this._placement.kind;
       const material = this._placement.material;
+      const size = this._placementSizeForKind(kind);
+
+      // Prefer snapping to an existing piece; fall back to grid snapping.
+      const smart = this._computeSmartSnap({ point: hit.point, newKind: kind, newSize: size });
+      const snapped = smart?.point
+        ? smart.point
+        : (this._shouldSnapNow() ? this._snapPointXZ(hit.point) : hit.point);
+
       this._spec.pieces = Array.isArray(this._spec.pieces) ? this._spec.pieces : [];
+      const existingNames = new Set(this._spec.pieces.map((p) => (typeof p?.name === 'string' ? p.name.trim() : '')).filter(Boolean));
+      const newPieceName = this._generateUniquePieceName(kind, existingNames);
       this._spec.pieces.push({
+        name: newPieceName,
         kind,
         material,
-        position: { x: snapped.x, y: 0, z: snapped.z },
-        rotation: { x: 0, y: 0, z: 0 },
-        size: this._defaultSizeForKind(kind)
+        // Place on hit height so pieces can be stacked / placed on ramps.
+        position: { x: snapped.x, y: snapped.y, z: snapped.z },
+        rotation: { x: 0, y: smart?.rotationY ?? 0, z: 0 },
+        size
       });
 
       this._ensureBasicMarkers();
       this._rebuildPieceMeshes();
+      this._rebuildMarkerMeshes();
       this._rebuild();
       this._handleClickSelection(this._spec.pieces.length - 1, false);
       this._pushHistory();
@@ -808,6 +1206,7 @@ export class TrackEditorMode {
 
   _onPointerMove(event) {
     if (!this._active) return;
+    if (this._paused) return;
     this._updatePlacementPreview(event);
   }
 
@@ -827,7 +1226,8 @@ export class TrackEditorMode {
     if (kind === 'road_straight_short') return { x: 20, y: 0.6, z: 26 };
     if (kind === 'road_straight_long') return { x: 120, y: 0.6, z: 26 };
     if (kind === 'road_platform') return { x: 60, y: 0.6, z: 60 };
-    if (kind === 'road_ramp') return { x: 40, y: 6, z: 26 };
+    if (kind === 'road_ramp') return { length: 40, width: 26, thickness: 0.6, angleDeg: 25 };
+    if (kind === 'road_ramp_45') return { length: 40, width: 26, thickness: 0.6, angleDeg: 45 };
     if (kind === 'wall_straight') return { x: 60, y: 2.3, z: 0.6 };
     if (kind === 'barrier_cone') return { radius: 1.2, height: 2.4 };
     if (kind === 'barrier_block') return { x: 3, y: 2, z: 3 };
@@ -836,8 +1236,132 @@ export class TrackEditorMode {
     if (kind === 'prop_ring') return { radius: 6, tube: 0.6 };
     if (kind === 'prop_arch') return { width: 16, height: 10, depth: 2, legThickness: 1.2 };
     if (kind === 'prop_tree') return { trunkRadius: 0.6, trunkHeight: 4.5, crownRadius: 2.2, crownHeight: 4 };
-    if (kind === 'road_curve_90') return { radius: 30, width: 26, thickness: 0.6 };
+    if (kind === 'road_curve') return { radius: 30, width: 26, thickness: 0.6, angleDeg: 90 };
+    if (kind === 'road_curve_90') return { radius: 30, width: 26, thickness: 0.6, angleDeg: 90 };
+    if (kind === 'road_curve_45') return { radius: 30, width: 26, thickness: 0.6, angleDeg: 45 };
     return { x: 10, y: 10, z: 10 };
+  }
+
+  _placementSizeForKind(kind) {
+    const base = this._defaultSizeForKind(kind);
+    const override = this._placement?.size;
+    if (!override || typeof override !== 'object') return base;
+
+    const isCurve = kind === 'road_curve' || kind === 'road_curve_90' || kind === 'road_curve_45';
+    const isRamp = kind === 'road_ramp' || kind === 'road_ramp_45';
+    if (!isCurve && !isRamp) return base;
+
+    return { ...base, ...override };
+  }
+
+  _refreshPlacementPreviewFromLastHit() {
+    if (!this._placementPreview) return;
+    if (!this._placementPreview.visible) return;
+    if (!this._previewLastHit) return;
+
+    // Force the preview to rebuild next time _updatePlacementPreview runs.
+    this._placementPreview.userData._sig = null;
+
+    const place = this._previewLastHit;
+
+    // Marker preview refresh
+    if (this._placementMode && this._placementMode !== 'piece') {
+      const mode = this._placementMode;
+      const sig = `marker:${mode}`;
+      if (this._placementPreview.userData._sig !== sig) {
+        this._placementPreview.userData._sig = sig;
+        this._placementPreview.geometry?.dispose?.();
+
+        if (mode === 'start') {
+          const g = new this._THREE.ConeGeometry(0.9, 2.2, 10);
+          g.translate(0, 1.1, 0);
+          this._placementPreview.geometry = g;
+        } else if (mode === 'checkpoint') {
+          this._placementPreview.geometry = new this._THREE.BoxGeometry(30, 10, 8);
+        } else {
+          const g = new this._THREE.SphereGeometry(0.9, 10, 10);
+          g.translate(0, 0.9, 0);
+          this._placementPreview.geometry = g;
+        }
+      }
+
+      const bb = (mode === 'checkpoint') ? { x: 30, y: 10, z: 8 } : (mode === 'start' ? { x: 1.8, y: 2.2, z: 1.8 } : { x: 1.8, y: 1.8, z: 1.8 });
+      const yaw = mode === 'start' ? this._cameraYaw() : 0;
+      const y = mode === 'checkpoint' ? (place.y + bb.y * 0.5) : place.y;
+      this._placementPreview.position.set(place.x, y, place.z);
+      this._placementPreview.rotation.set(0, yaw, 0);
+      return;
+    }
+
+    // Piece preview refresh
+    const kind = this._placement.kind;
+    const size = this._placementSizeForKind(kind);
+    const bb = this._previewBoundsFor(kind, size);
+
+    const sig = `${kind}:${JSON.stringify(size)}`;
+    if (this._placementPreview.userData._sig !== sig) {
+      this._placementPreview.userData._sig = sig;
+      this._placementPreview.geometry?.dispose?.();
+
+      if (kind === 'road_curve' || kind === 'road_curve_90' || kind === 'road_curve_45') {
+        const radius = Math.max(1, size?.radius ?? 30);
+        const width = Math.max(1, size?.width ?? 26);
+        const thickness = Math.max(0.1, size?.thickness ?? 0.6);
+        const angleDeg = Math.max(1, Math.min(90, size?.angleDeg ?? (kind === 'road_curve_45' ? 45 : 90)));
+        const angle = (angleDeg * Math.PI) / 180;
+        const inner = Math.max(1, radius - width / 2);
+        const outer = radius + width / 2;
+
+        const shape = new this._THREE.Shape();
+        const segments = Math.max(8, Math.floor(angleDeg / 5));
+        const innerStartX = inner;
+        const innerStartY = 0;
+        const outerStartX = outer;
+        const outerStartY = 0;
+        const innerEndX = Math.cos(angle) * inner;
+        const innerEndY = -Math.sin(angle) * inner;
+
+        shape.moveTo(innerStartX, innerStartY);
+        shape.lineTo(outerStartX, outerStartY);
+        shape.absarc(0, 0, outer, 0, angle, false);
+        shape.lineTo(innerEndX, innerEndY);
+        shape.absarc(0, 0, inner, angle, 0, true);
+        shape.closePath();
+
+        const g = new this._THREE.ExtrudeGeometry(shape, { depth: thickness, bevelEnabled: false, curveSegments: segments });
+        g.rotateX(Math.PI / 2);
+        g.computeBoundingBox();
+        if (g.boundingBox) {
+          const c = new this._THREE.Vector3();
+          g.boundingBox.getCenter(c);
+          g.translate(-c.x, -c.y, -c.z);
+        }
+        this._placementPreview.geometry = g;
+      } else if (kind === 'road_ramp' || kind === 'road_ramp_45') {
+        const legacy = size && typeof size === 'object' && ('x' in size) && ('y' in size) && ('z' in size);
+        const length = Math.max(1, legacy ? (size.x ?? 40) : (size?.length ?? 40));
+        const width = Math.max(1, legacy ? (size.z ?? 26) : (size?.width ?? 26));
+        const thickness = Math.max(0.1, legacy ? Math.min(2, (size.y ?? 6) * 0.1) : (size?.thickness ?? 0.6));
+        const angleDeg = Math.max(1, Math.min(45, legacy ? 25 : (size?.angleDeg ?? (kind === 'road_ramp_45' ? 45 : 25))));
+        const rise = Math.tan((angleDeg * Math.PI) / 180) * length;
+        const g = new this._THREE.BoxGeometry(length, thickness, width, 1, 1, 1);
+        const pos = g.attributes.position;
+        for (let i = 0; i < pos.count; i += 1) {
+          const x = pos.getX(i);
+          const y = pos.getY(i);
+          const t = (x + length / 2) / length;
+          const baseY = t * rise;
+          pos.setY(i, y > 0 ? (baseY + thickness) : baseY);
+        }
+        pos.needsUpdate = true;
+        g.computeVertexNormals();
+        this._placementPreview.geometry = g;
+      } else {
+        this._placementPreview.geometry = new this._THREE.BoxGeometry(bb.x, bb.y, bb.z);
+      }
+    }
+
+    this._placementPreview.position.set(place.x, place.y + bb.y * 0.5, place.z);
   }
 
   _ensureBasicMarkers() {
@@ -853,6 +1377,243 @@ export class TrackEditorMode {
     }
   }
 
+  _startMarkerCount() {
+    const start = this._spec?.markers?.start;
+    return Array.isArray(start) ? start.length : 0;
+  }
+
+  _ensurePieceNames() {
+    if (!Array.isArray(this._spec?.pieces)) return;
+    const names = new Set();
+    this._spec.pieces.forEach((p) => {
+      if (p && typeof p.name === 'string' && p.name.trim().length > 0) names.add(p.name.trim());
+    });
+
+    this._spec.pieces.forEach((p) => {
+      if (!p || (typeof p.name === 'string' && p.name.trim().length > 0)) return;
+      const base = (p.kind || 'piece');
+      p.name = this._generateUniquePieceName(base, names);
+      names.add(p.name);
+    });
+  }
+
+  _generateUniquePieceName(base, existingNames = null) {
+    const names = existingNames || new Set((this._spec?.pieces || []).map((p) => (typeof p?.name === 'string' ? p.name.trim() : '')).filter(Boolean));
+    const safeBase = String(base || 'piece').replace(/\s+/g, '_');
+    for (let i = 1; i < 100000; i += 1) {
+      const cand = `${safeBase}_${String(i).padStart(3, '0')}`;
+      if (!names.has(cand)) return cand;
+    }
+    return `${safeBase}_${Date.now()}`;
+  }
+
+  _cameraYaw() {
+    if (!this._THREE || !this._camera) return 0;
+    const e = new this._THREE.Euler().setFromQuaternion(this._camera.quaternion, 'YXZ');
+    return e.y;
+  }
+
+  _rebuildMarkerMeshes() {
+    const THREE = this._THREE;
+    if (!THREE || !this._markersGroup) return;
+
+    // Remove existing
+    const existing = [];
+    existing.push(...(this._markerMeshes?.start || []));
+    existing.push(...(this._markerMeshes?.checkpoints || []));
+    existing.push(...(this._markerMeshes?.items || []));
+    existing.forEach((m) => {
+      if (!m) return;
+      this._markersGroup.remove(m);
+      this._disposeObject(m, { disposeMaterials: false });
+    });
+
+    this._markerMeshes = { start: [], checkpoints: [], items: [] };
+
+    if (!this._markerMatStart) this._markerMatStart = new THREE.MeshBasicMaterial({ color: 0x22c55e, wireframe: true });
+    if (!this._markerMatCheckpoint) this._markerMatCheckpoint = new THREE.MeshBasicMaterial({ color: 0xff4d9d, wireframe: true });
+    if (!this._markerMatItem) this._markerMatItem = new THREE.MeshBasicMaterial({ color: 0xfbbf24, wireframe: true });
+
+    this._ensureBasicMarkers();
+
+    // Start
+    (this._spec.markers.start || []).forEach((st, idx) => {
+      const g = new THREE.Group();
+      g.name = `Marker_Start_${idx}`;
+      g.userData = { kind: 'marker', markerType: 'start', markerIndex: idx };
+
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(0.9, 2.2, 10), this._markerMatStart);
+      cone.position.y = 1.1;
+      g.add(cone);
+
+      const p = st?.position || { x: 0, y: 0, z: 0 };
+      g.position.set(p.x ?? 0, p.y ?? 0, p.z ?? 0);
+      g.rotation.set(0, st?.rotation?.y ?? 0, 0);
+      this._markersGroup.add(g);
+      this._markerMeshes.start.push(g);
+    });
+
+    // Checkpoints
+    (this._spec.markers.checkpoints || []).forEach((cp, idx) => {
+      const size = cp?.size || { x: 30, y: 10, z: 8 };
+      const sx = Math.max(0.1, size.x ?? 30);
+      const sy = Math.max(0.1, size.y ?? 10);
+      const sz = Math.max(0.1, size.z ?? 8);
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), this._markerMatCheckpoint);
+      mesh.name = `Marker_Checkpoint_${idx}`;
+      mesh.userData = { kind: 'marker', markerType: 'checkpoints', markerIndex: idx };
+
+      const p = cp?.position || { x: 0, y: 2, z: 0 };
+      mesh.position.set(p.x ?? 0, p.y ?? 0, p.z ?? 0);
+      const r = cp?.rotation || { x: 0, y: 0, z: 0 };
+      mesh.rotation.set(r.x ?? 0, r.y ?? 0, r.z ?? 0);
+      this._markersGroup.add(mesh);
+      this._markerMeshes.checkpoints.push(mesh);
+    });
+
+    // Items
+    (this._spec.markers.items || []).forEach((it, idx) => {
+      const g = new THREE.Group();
+      g.name = `Marker_Item_${idx}`;
+      g.userData = { kind: 'marker', markerType: 'items', markerIndex: idx };
+
+      const sph = new THREE.Mesh(new THREE.SphereGeometry(0.9, 10, 10), this._markerMatItem);
+      sph.position.y = 0.9;
+      g.add(sph);
+
+      const p = it?.position || { x: 0, y: 0, z: 0 };
+      g.position.set(p.x ?? 0, p.y ?? 0, p.z ?? 0);
+      this._markersGroup.add(g);
+      this._markerMeshes.items.push(g);
+    });
+
+    // Clear invalid selected marker.
+    if (this._selectedMarker) {
+      const list = this._markerMeshes?.[this._selectedMarker.type];
+      if (!Array.isArray(list) || !list[this._selectedMarker.index]) {
+        this._selectedMarker = null;
+      }
+    }
+
+    this._attachTransformToSelection();
+  }
+
+  _selectMarker(type, index) {
+    const list = this._markerMeshes?.[type];
+    if (!Array.isArray(list)) return;
+    if (typeof index !== 'number' || index < 0 || index >= list.length) return;
+
+    // Markers are exclusive selection for now.
+    this._selection.clear();
+    this._selectedPieceIndex = -1;
+    this._selectedMarker = { type, index };
+
+    this._updateSelectionVisuals();
+    this._attachTransformToSelection();
+    this._syncUi();
+  }
+
+  _syncSelectedMarkerFromObject() {
+    const sel = this._selectedMarker;
+    if (!sel) return;
+    const obj = this._markerMeshes?.[sel.type]?.[sel.index];
+    if (!obj) return;
+
+    this._ensureBasicMarkers();
+    const list = this._spec?.markers?.[sel.type];
+    if (!Array.isArray(list)) return;
+    const entry = list[sel.index];
+    if (!entry) return;
+
+    if (sel.type === 'start') {
+      entry.position = { x: obj.position.x, y: obj.position.y, z: obj.position.z };
+      entry.rotation = { y: obj.rotation.y };
+      return;
+    }
+
+    if (sel.type === 'checkpoints') {
+      entry.position = { x: obj.position.x, y: obj.position.y, z: obj.position.z };
+      entry.rotation = { x: obj.rotation.x, y: obj.rotation.y, z: obj.rotation.z };
+
+      // Persist size based on the base geometry dimensions and current scale.
+      const p = obj.geometry?.parameters || {};
+      const baseX = Number.isFinite(p.width) ? p.width : (entry.size?.x ?? 30);
+      const baseY = Number.isFinite(p.height) ? p.height : (entry.size?.y ?? 10);
+      const baseZ = Number.isFinite(p.depth) ? p.depth : (entry.size?.z ?? 8);
+      entry.size = {
+        x: Math.max(0.1, baseX * (obj.scale?.x ?? 1)),
+        y: Math.max(0.1, baseY * (obj.scale?.y ?? 1)),
+        z: Math.max(0.1, baseZ * (obj.scale?.z ?? 1))
+      };
+      return;
+    }
+
+    if (sel.type === 'items') {
+      entry.position = { x: obj.position.x, y: obj.position.y, z: obj.position.z };
+    }
+  }
+
+  _placeMarkerAt(point) {
+    this._ensureBasicMarkers();
+    const place = this._shouldSnapNow() ? this._snapPointXZ(point) : point;
+
+    if (this._placementMode === 'start') {
+      if (this._spec.markers.start.length >= 12) {
+        this._toast('Max start positions: 12');
+        return;
+      }
+      const yaw = this._cameraYaw();
+      this._spec.markers.start.push({ position: { x: place.x, y: place.y, z: place.z }, rotation: { y: yaw } });
+      this._rebuildMarkerMeshes();
+      this._rebuild();
+      this._selectMarker('start', this._spec.markers.start.length - 1);
+      this._pushHistory();
+      return;
+    }
+
+    if (this._placementMode === 'checkpoint') {
+      const size = { x: 30, y: 10, z: 8 };
+      this._spec.markers.checkpoints.push({ position: { x: place.x, y: place.y + size.y * 0.5, z: place.z }, rotation: { x: 0, y: 0, z: 0 }, size });
+      this._rebuildMarkerMeshes();
+      this._rebuild();
+      this._selectMarker('checkpoints', this._spec.markers.checkpoints.length - 1);
+      this._pushHistory();
+      return;
+    }
+
+    if (this._placementMode === 'item') {
+      this._spec.markers.items.push({ position: { x: place.x, y: place.y, z: place.z } });
+      this._rebuildMarkerMeshes();
+      this._rebuild();
+      this._selectMarker('items', this._spec.markers.items.length - 1);
+      this._pushHistory();
+    }
+  }
+
+  _deleteSelected() {
+    if (this._selectedMarker) {
+      this._deleteSelectedMarker();
+      return;
+    }
+    this._deleteSelection();
+  }
+
+  _deleteSelectedMarker() {
+    const sel = this._selectedMarker;
+    if (!sel) return;
+    const list = this._spec?.markers?.[sel.type];
+    if (!Array.isArray(list)) return;
+    if (sel.index < 0 || sel.index >= list.length) return;
+
+    list.splice(sel.index, 1);
+    this._selectedMarker = null;
+    this._transform?.detach?.();
+    this._rebuildMarkerMeshes();
+    this._rebuild();
+    this._pushHistory();
+    this._syncUi();
+  }
+
   _selectPiece(index) {
     // Backwards compatible entrypoint: single select.
     this._selection.clear();
@@ -861,6 +1622,11 @@ export class TrackEditorMode {
     this._updateSelectionVisuals();
     this._attachTransformToSelection();
     this._refreshSelectedOverrideUI();
+    this._syncUi();
+  }
+
+  selectPiece(index, additive = false) {
+    this._handleClickSelection(index, additive);
   }
 
   _syncSelectedPieceFromObject() {
@@ -901,12 +1667,268 @@ export class TrackEditorMode {
     this._pieceMatOverrideEnabledEl.checked = !!ov;
     this._pieceMatColorEl.value = this._toHexColor((ov?.color) ?? (base?.color) ?? '#ffffff');
     this._pieceMatColor2El.value = this._toHexColor((ov2?.color) ?? '#2e8b57');
-    this._pieceMatRoughEl.value = String(typeof ((ov?.roughness) ?? (base?.roughness)) === 'number' ? ((ov?.roughness) ?? (base?.roughness)) : 0.75);
-    this._pieceMatMetalEl.value = String(typeof ((ov?.metalness) ?? (base?.metalness)) === 'number' ? ((ov?.metalness) ?? (base?.metalness)) : 0.05);
+    const rough = typeof ((ov?.roughness) ?? (base?.roughness)) === 'number' ? ((ov?.roughness) ?? (base?.roughness)) : 0.75;
+    const metal = typeof ((ov?.metalness) ?? (base?.metalness)) === 'number' ? ((ov?.metalness) ?? (base?.metalness)) : 0.05;
+    this._pieceMatRoughEl.value = String(rough);
+    if (this._pieceMatRoughNumEl) this._pieceMatRoughNumEl.value = String(rough);
+    this._pieceMatMetalEl.value = String(metal);
+    if (this._pieceMatMetalNumEl) this._pieceMatMetalNumEl.value = String(metal);
 
     // Only show the leaves color picker for trees (avoid UI clutter).
     const showLeaves = (piece.kind === 'prop_tree');
     if (this._pieceMatColor2El) this._pieceMatColor2El.style.display = showLeaves ? '' : 'none';
+  }
+
+  _materialKeys() {
+    return ['road', 'offroadWeak', 'offroadStrong', 'boost', 'wall', 'prop'];
+  }
+
+  _selectedPieceIndicesSorted() {
+    return Array.from(this._selection)
+      .filter((n) => typeof n === 'number' && n >= 0)
+      .sort((a, b) => a - b);
+  }
+
+  _setPlacementMaterial(key) {
+    const keys = this._materialKeys();
+    const next = keys.includes(key) ? key : 'road';
+    this._placement.material = next;
+    if (this._placementMatEl) this._placementMatEl.value = next;
+    this._syncMaterialsTrayUI();
+  }
+
+  _initMaterialsTrayHandlers() {
+    if (!this._materialsRoot) return;
+
+    // Palette buttons
+    if (this._materialsPaletteEl) {
+      const keys = this._materialKeys();
+      this._materialsPaletteEl.innerHTML = keys.map((k) => {
+        const col = this._toHexColor(this._spec.materials?.[k]?.color ?? '#ffffff');
+        return `
+          <button class="ed-mat-swatch" type="button" data-key="${k}">
+            <span class="ed-mat-swatch-dot" style="background:${col}"></span>
+            <span class="ed-mat-swatch-label">${k}</span>
+          </button>
+        `;
+      }).join('');
+
+      this._materialsPaletteEl.querySelectorAll('.ed-mat-swatch').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const k = btn.getAttribute('data-key');
+          if (k) this._setPlacementMaterial(k);
+        });
+      });
+    }
+
+    // Selection material
+    if (this._materialsSelMatEl) {
+      const keys = this._materialKeys();
+      this._materialsSelMatEl.innerHTML = [
+        '<option value="">(mixed)</option>',
+        ...keys.map((k) => `<option value="${k}">${k}</option>`)
+      ].join('');
+
+      this._materialsSelMatEl.addEventListener('change', () => {
+        const key = this._materialsSelMatEl.value;
+        if (!key) return;
+        const indices = this._selectedPieceIndicesSorted();
+        if (indices.length === 0) return;
+        indices.forEach((idx) => {
+          const p = this._spec.pieces?.[idx];
+          if (!p) return;
+          p.material = key;
+        });
+        this._rebuild();
+        this._pushHistory();
+        this._syncMaterialsTrayUI(true);
+        this._syncUi();
+      });
+    }
+
+    const applyOverrideToSelection = (patch) => {
+      const indices = this._selectedPieceIndicesSorted();
+      if (indices.length === 0) return;
+      indices.forEach((idx) => {
+        const p = this._spec.pieces?.[idx];
+        if (!p) return;
+        p.materialOverride = { ...(p.materialOverride || {}), ...(patch || {}) };
+      });
+      this._rebuild();
+      this._scheduleHistoryPush(250);
+      this._syncMaterialsTrayUI(true);
+    };
+
+    // Override enabled checkbox
+    if (this._pieceMatOverrideEnabledEl) {
+      this._pieceMatOverrideEnabledEl.addEventListener('change', () => {
+        const indices = this._selectedPieceIndicesSorted();
+        if (indices.length === 0) return;
+        const enable = !!this._pieceMatOverrideEnabledEl.checked;
+
+        // If disabling and nothing is overridden, avoid no-op history entries.
+        const pieces = this._spec.pieces || [];
+        const hadAny = indices.some((idx) => {
+          const p = pieces[idx];
+          return !!(p?.materialOverride || p?.materialOverrideSecondary);
+        });
+        if (!enable && !hadAny) {
+          this._syncMaterialsTrayUI(true);
+          return;
+        }
+
+        indices.forEach((idx) => {
+          const p = this._spec.pieces?.[idx];
+          if (!p) return;
+          if (enable) {
+            // Enabled by default: we only create overrides once the user edits values.
+            // Keeping this as a no-op avoids dirtying the spec just by selecting.
+          } else {
+            p.materialOverride = undefined;
+            p.materialOverrideSecondary = undefined;
+          }
+        });
+        this._rebuild();
+        this._pushHistory();
+        this._syncMaterialsTrayUI(true);
+        this._syncUi();
+      });
+    }
+
+    if (this._materialsClearOverridesBtn) {
+      this._materialsClearOverridesBtn.addEventListener('click', () => {
+        const indices = this._selectedPieceIndicesSorted();
+        if (indices.length === 0) return;
+        indices.forEach((idx) => {
+          const p = this._spec.pieces?.[idx];
+          if (!p) return;
+          p.materialOverride = undefined;
+          p.materialOverrideSecondary = undefined;
+        });
+        this._rebuild();
+        this._pushHistory();
+        this._syncMaterialsTrayUI(true);
+        this._syncUi();
+      });
+    }
+
+    // Override controls
+    const onColor = () => {
+      if (!this._pieceMatColorEl) return;
+      applyOverrideToSelection({ color: this._pieceMatColorEl.value });
+    };
+    const onColor2 = () => {
+      if (!this._pieceMatColor2El) return;
+      const indices = this._selectedPieceIndicesSorted();
+      if (indices.length === 0) return;
+      indices.forEach((idx) => {
+        const p = this._spec.pieces?.[idx];
+        if (!p) return;
+        p.materialOverrideSecondary = { ...(p.materialOverrideSecondary || {}), color: this._pieceMatColor2El.value };
+      });
+      this._rebuild();
+      this._scheduleHistoryPush(250);
+      this._syncMaterialsTrayUI(true);
+    };
+    const linkRangeNumber = (rangeEl, numEl, onApply) => {
+      if (!rangeEl || !numEl) return;
+      const clamp01 = (v) => clamp(v, 0, 1);
+      const sync = (fromRange) => {
+        const v = clamp01(Number(fromRange ? rangeEl.value : numEl.value));
+        rangeEl.value = String(v);
+        numEl.value = String(v);
+        onApply(v);
+      };
+      rangeEl.addEventListener('input', () => sync(true));
+      numEl.addEventListener('input', () => sync(false));
+    };
+
+    if (this._pieceMatColorEl) this._pieceMatColorEl.addEventListener('input', onColor);
+    if (this._pieceMatColor2El) this._pieceMatColor2El.addEventListener('input', onColor2);
+    linkRangeNumber(this._pieceMatRoughEl, this._pieceMatRoughNumEl, (v) => applyOverrideToSelection({ roughness: v }));
+    linkRangeNumber(this._pieceMatMetalEl, this._pieceMatMetalNumEl, (v) => applyOverrideToSelection({ metalness: v }));
+  }
+
+  _syncMaterialsTrayUI(force = false) {
+    if (!this._materialsRoot) return;
+
+    const indices = this._selectedPieceIndicesSorted();
+    const primary = typeof this._selectedPieceIndex === 'number' ? this._selectedPieceIndex : -1;
+    const hasMarkerSelection = !!this._selectedMarker;
+    const placementKey = this._placement.material || 'road';
+
+    const keyParts = [
+      `p:${placementKey}`,
+      `m:${hasMarkerSelection ? `${this._selectedMarker.type}:${this._selectedMarker.index}` : 'none'}`,
+      `sel:${indices.join(',')}`
+    ];
+    const renderKey = keyParts.join('|');
+    if (!force && renderKey === this._materialsRenderKey) return;
+    this._materialsRenderKey = renderKey;
+
+    // Palette active
+    if (this._materialsPaletteEl) {
+      this._materialsPaletteEl.querySelectorAll('.ed-mat-swatch').forEach((btn) => {
+        const k = btn.getAttribute('data-key');
+        btn.classList.toggle('is-active', k === placementKey);
+      });
+    }
+
+    // Selection title
+    if (this._materialsTitleEl) {
+      const title = hasMarkerSelection
+        ? 'Selection (marker)'
+        : (indices.length > 0 ? `Selection (${indices.length})` : 'Selection');
+      this._materialsTitleEl.textContent = title;
+    }
+
+    const disableSelectionUI = hasMarkerSelection || indices.length === 0;
+    if (this._materialsSelectionHintEl) {
+      this._materialsSelectionHintEl.style.display = disableSelectionUI ? '' : 'none';
+      this._materialsSelectionHintEl.textContent = hasMarkerSelection
+        ? 'Markers do not have materials'
+        : 'Select pieces to edit their material/overrides';
+    }
+
+    const setDisabled = (el, v) => { if (el) el.disabled = !!v; };
+    setDisabled(this._materialsSelMatEl, disableSelectionUI);
+    setDisabled(this._pieceMatOverrideEnabledEl, disableSelectionUI);
+    setDisabled(this._materialsClearOverridesBtn, disableSelectionUI);
+    setDisabled(this._pieceMatColorEl, disableSelectionUI);
+    setDisabled(this._pieceMatColor2El, disableSelectionUI);
+    setDisabled(this._pieceMatRoughEl, disableSelectionUI);
+    setDisabled(this._pieceMatRoughNumEl, disableSelectionUI);
+    setDisabled(this._pieceMatMetalEl, disableSelectionUI);
+    setDisabled(this._pieceMatMetalNumEl, disableSelectionUI);
+
+    if (disableSelectionUI) return;
+
+    const pieces = this._spec.pieces || [];
+    const primPiece = pieces[primary] || pieces[indices[0]];
+    const matKeys = indices.map((idx) => {
+      const p = pieces[idx];
+      return (p && typeof p.material === 'string') ? p.material : '';
+    });
+    const allSameMat = matKeys.length > 0 && matKeys.every((k) => k && k === matKeys[0]);
+    if (this._materialsSelMatEl) this._materialsSelMatEl.value = allSameMat ? matKeys[0] : '';
+
+    // Override checkbox mixed state
+    const hasOv = indices.map((idx) => !!pieces[idx]?.materialOverride);
+    const allOv = hasOv.length > 0 && hasOv.every(Boolean);
+    const noneOv = hasOv.length > 0 && hasOv.every((v) => !v);
+    if (this._pieceMatOverrideEnabledEl) {
+      // Override is enabled by default (even if the piece doesn't yet have an override object).
+      // Mixed selection shows indeterminate.
+      this._pieceMatOverrideEnabledEl.indeterminate = !(allOv || noneOv);
+      this._pieceMatOverrideEnabledEl.checked = true;
+    }
+
+    // Sync fields from primary piece effective values (but keep the multi-select checkbox state).
+    this._refreshSelectedOverrideUI();
+    if (this._pieceMatOverrideEnabledEl) {
+      this._pieceMatOverrideEnabledEl.indeterminate = !(allOv || noneOv);
+      this._pieceMatOverrideEnabledEl.checked = true;
+    }
   }
 
   _updatePlacementPreview(event) {
@@ -916,30 +1938,120 @@ export class TrackEditorMode {
       return;
     }
 
-    const hit = this._raycastToPlane(event);
-    if (!hit) {
+    const hit = this._raycastPlacement(event);
+    if (!hit?.point) {
       this._placementPreview.visible = false;
       return;
     }
 
-    const place = this._shouldSnapNow()
-      ? this._snapPointXZ(hit)
-      : hit;
+    // Marker preview
+    if (this._placementMode && this._placementMode !== 'piece') {
+      const mode = this._placementMode;
+      const place = this._shouldSnapNow() ? this._snapPointXZ(hit.point) : hit.point;
+      const sig = `marker:${mode}`;
+      if (this._placementPreview.userData._sig !== sig) {
+        this._placementPreview.userData._sig = sig;
+        this._placementPreview.geometry?.dispose?.();
+
+        if (mode === 'start') {
+          const g = new this._THREE.ConeGeometry(0.9, 2.2, 10);
+          g.translate(0, 1.1, 0);
+          this._placementPreview.geometry = g;
+        } else if (mode === 'checkpoint') {
+          this._placementPreview.geometry = new this._THREE.BoxGeometry(30, 10, 8);
+        } else {
+          const g = new this._THREE.SphereGeometry(0.9, 10, 10);
+          g.translate(0, 0.9, 0);
+          this._placementPreview.geometry = g;
+        }
+      }
+
+      const bb = (mode === 'checkpoint') ? { x: 30, y: 10, z: 8 } : (mode === 'start' ? { x: 1.8, y: 2.2, z: 1.8 } : { x: 1.8, y: 1.8, z: 1.8 });
+      const yaw = mode === 'start' ? this._cameraYaw() : 0;
+      const y = mode === 'checkpoint' ? (place.y + bb.y * 0.5) : place.y;
+      this._placementPreview.position.set(place.x, y, place.z);
+      this._placementPreview.rotation.set(0, yaw, 0);
+      this._placementPreview.visible = true;
+      this._previewLastHit = place;
+      return;
+    }
 
     const kind = this._placement.kind;
-    const size = this._defaultSizeForKind(kind);
+    const size = this._placementSizeForKind(kind);
+
+    const smart = this._computeSmartSnap({ point: hit.point, newKind: kind, newSize: size });
+    const place = smart?.point
+      ? smart.point
+      : (this._shouldSnapNow() ? this._snapPointXZ(hit.point) : hit.point);
+
     const bb = this._previewBoundsFor(kind, size);
 
     // Rebuild preview geometry only if needed.
-    const sig = `${kind}:${JSON.stringify(bb)}`;
+    const sig = `${kind}:${JSON.stringify(size)}`;
     if (this._placementPreview.userData._sig !== sig) {
       this._placementPreview.userData._sig = sig;
       this._placementPreview.geometry?.dispose?.();
-      this._placementPreview.geometry = new this._THREE.BoxGeometry(bb.x, bb.y, bb.z);
+      if (kind === 'road_curve' || kind === 'road_curve_90' || kind === 'road_curve_45') {
+        const radius = Math.max(1, size?.radius ?? 30);
+        const width = Math.max(1, size?.width ?? 26);
+        const thickness = Math.max(0.1, size?.thickness ?? 0.6);
+        const angleDeg = Math.max(1, Math.min(90, size?.angleDeg ?? (kind === 'road_curve_45' ? 45 : 90)));
+        const angle = (angleDeg * Math.PI) / 180;
+        const inner = Math.max(1, radius - width / 2);
+        const outer = radius + width / 2;
+
+        const shape = new this._THREE.Shape();
+        const segments = Math.max(8, Math.floor(angleDeg / 5));
+        const innerStartX = inner;
+        const innerStartY = 0;
+        const outerStartX = outer;
+        const outerStartY = 0;
+        const innerEndX = Math.cos(angle) * inner;
+        const innerEndY = -Math.sin(angle) * inner;
+
+        shape.moveTo(innerStartX, innerStartY);
+        shape.lineTo(outerStartX, outerStartY);
+        shape.absarc(0, 0, outer, 0, angle, false);
+        shape.lineTo(innerEndX, innerEndY);
+        shape.absarc(0, 0, inner, angle, 0, true);
+        shape.closePath();
+
+        const g = new this._THREE.ExtrudeGeometry(shape, { depth: thickness, bevelEnabled: false, curveSegments: segments });
+        g.rotateX(Math.PI / 2);
+        g.computeBoundingBox();
+        if (g.boundingBox) {
+          const c = new this._THREE.Vector3();
+          g.boundingBox.getCenter(c);
+          g.translate(-c.x, -c.y, -c.z);
+        }
+        this._placementPreview.geometry = g;
+      } else if (kind === 'road_ramp' || kind === 'road_ramp_45') {
+        const legacy = size && typeof size === 'object' && ('x' in size) && ('y' in size) && ('z' in size);
+        const length = Math.max(1, legacy ? (size.x ?? 40) : (size?.length ?? 40));
+        const width = Math.max(1, legacy ? (size.z ?? 26) : (size?.width ?? 26));
+        const thickness = Math.max(0.1, legacy ? Math.min(2, (size.y ?? 6) * 0.1) : (size?.thickness ?? 0.6));
+        const angleDeg = Math.max(1, Math.min(45, legacy ? 25 : (size?.angleDeg ?? (kind === 'road_ramp_45' ? 45 : 25))));
+        const rise = Math.tan((angleDeg * Math.PI) / 180) * length;
+        const g = new this._THREE.BoxGeometry(length, thickness, width, 1, 1, 1);
+        const pos = g.attributes.position;
+        for (let i = 0; i < pos.count; i += 1) {
+          const x = pos.getX(i);
+          const y = pos.getY(i);
+          const t = (x + length / 2) / length;
+          const baseY = t * rise;
+          pos.setY(i, y > 0 ? (baseY + thickness) : baseY);
+        }
+        pos.needsUpdate = true;
+        g.computeVertexNormals();
+        this._placementPreview.geometry = g;
+      } else {
+        this._placementPreview.geometry = new this._THREE.BoxGeometry(bb.x, bb.y, bb.z);
+      }
     }
 
-    this._placementPreview.position.set(place.x, bb.y * 0.5, place.z);
-    this._placementPreview.rotation.set(0, 0, 0);
+    // Keep the preview resting on the hit height.
+    this._placementPreview.position.set(place.x, place.y + bb.y * 0.5, place.z);
+    this._placementPreview.rotation.set(0, smart?.rotationY ?? 0, 0);
     this._placementPreview.visible = true;
     this._previewLastHit = place;
   }
@@ -949,12 +2061,29 @@ export class TrackEditorMode {
     if (size && typeof size === 'object' && ('x' in size) && ('y' in size) && ('z' in size)) {
       return { x: Math.max(0.1, size.x ?? 1), y: Math.max(0.1, size.y ?? 1), z: Math.max(0.1, size.z ?? 1) };
     }
-    if (kind === 'road_curve_90') {
+    if (kind === 'road_curve' || kind === 'road_curve_90') {
       const r = Math.max(1, size?.radius ?? 30);
       const w = Math.max(1, size?.width ?? 26);
       const t = Math.max(0.1, size?.thickness ?? 0.6);
       const outer = r + w / 2;
+      // AABB for centered quarter-ring.
       return { x: outer, y: t, z: outer };
+    }
+    if (kind === 'road_curve_45') {
+      const r = Math.max(1, size?.radius ?? 30);
+      const w = Math.max(1, size?.width ?? 26);
+      const t = Math.max(0.1, size?.thickness ?? 0.6);
+      const outer = r + w / 2;
+      // Still fits in outer×outer AABB after centering.
+      return { x: outer, y: t, z: outer };
+    }
+    if (kind === 'road_ramp' || kind === 'road_ramp_45') {
+      const length = Math.max(1, size?.length ?? 40);
+      const width = Math.max(1, size?.width ?? 26);
+      const thickness = Math.max(0.1, size?.thickness ?? 0.6);
+      const angleDeg = Math.max(0, Math.min(45, size?.angleDeg ?? (kind === 'road_ramp_45' ? 45 : 25)));
+      const rise = Math.tan((angleDeg * Math.PI) / 180) * length;
+      return { x: length, y: thickness + rise, z: width };
     }
     if (kind === 'barrier_cone') {
       const rad = Math.max(0.1, size?.radius ?? 1.2);
@@ -1032,10 +2161,12 @@ export class TrackEditorMode {
     this._rebuildPieceMeshes();
     this._rebuild();
     this._pushHistory();
+    this._syncUi();
   }
 
   _handleClickSelection(idx, additive) {
     if (typeof idx !== 'number' || idx < 0) return;
+    this._selectedMarker = null;
     if (!additive) {
       this._selection.clear();
       this._selection.add(idx);
@@ -1056,6 +2187,7 @@ export class TrackEditorMode {
     this._updateSelectionVisuals();
     this._attachTransformToSelection();
     this._refreshSelectedOverrideUI();
+    this._syncUi();
   }
 
   _updateSelectionVisuals() {
@@ -1069,6 +2201,17 @@ export class TrackEditorMode {
 
   _attachTransformToSelection() {
     if (!this._transform) return;
+
+    if (this._selectedMarker) {
+      const obj = this._markerMeshes?.[this._selectedMarker.type]?.[this._selectedMarker.index];
+      if (obj) {
+        this._transform.attach(obj);
+        this._pivotAttached = false;
+        if (this._selectionPivot) this._selectionPivot.visible = false;
+      }
+      return;
+    }
+
     if (this._selection.size === 0) {
       this._transform.detach();
       this._pivotAttached = false;
@@ -1170,58 +2313,10 @@ export class TrackEditorMode {
       this._applyTransformSnapping();
     }
 
-    // Avoid hijacking typical text editing inside UI.
-    const activeTag = document.activeElement?.tagName;
-    const inInput = activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT';
-
-    const ctrl = !!(e.ctrlKey || e.metaKey);
-    const shift = !!e.shiftKey;
-
-    // Undo / redo
-    if (ctrl && e.code === 'KeyZ') {
-      e.preventDefault();
-      if (shift) this.redo();
-      else this.undo();
+    // Route through keymap/commands (skips when a text input is focused).
+    if (this._keymap?.handleKeydown?.(e)) {
+      this._syncUi();
       return;
-    }
-    if (ctrl && e.code === 'KeyY') {
-      e.preventDefault();
-      this.redo();
-      return;
-    }
-
-    if (inInput) return;
-
-    // Delete
-    if (e.code === 'Delete' || e.code === 'Backspace') {
-      this._deleteSelection();
-      return;
-    }
-
-    // Duplicate
-    if (ctrl && e.code === 'KeyD') {
-      e.preventDefault();
-      this._duplicateSelection();
-      return;
-    }
-
-    // Transform modes
-    if (e.code === 'KeyG') this._transform?.setMode('translate');
-    if (e.code === 'KeyR') this._transform?.setMode('rotate');
-    if (e.code === 'KeyS') this._transform?.setMode('scale');
-
-    // Toggle snapping
-    if (e.code === 'KeyV') {
-      this._snap.enabled = !this._snap.enabled;
-      const el = this._ui?.querySelector?.('#editor-snap-enabled');
-      if (el) el.checked = !!this._snap.enabled;
-      this._applyTransformSnapping();
-      this._toast(this._snap.enabled ? 'Snap enabled' : 'Snap disabled');
-    }
-
-    // Focus camera
-    if (e.code === 'KeyF') {
-      this._focusSelection();
     }
   }
 
@@ -1239,6 +2334,34 @@ export class TrackEditorMode {
   }
 
   _duplicateSelection() {
+    if (this._selectedMarker) {
+      this._ensureBasicMarkers();
+      const sel = this._selectedMarker;
+      const list = this._spec?.markers?.[sel.type];
+      if (!Array.isArray(list) || !list[sel.index]) return;
+
+      if (sel.type === 'start' && list.length >= 12) {
+        this._toast('Max start positions: 12');
+        return;
+      }
+
+      const offset = { x: 8, y: 0, z: 8 };
+      const clone = deepCloneJson(list[sel.index]);
+      clone.position = clone.position || { x: 0, y: 0, z: 0 };
+      clone.position.x = (clone.position.x ?? 0) + offset.x;
+      clone.position.y = (clone.position.y ?? 0) + offset.y;
+      clone.position.z = (clone.position.z ?? 0) + offset.z;
+      list.push(clone);
+
+      this._rebuildMarkerMeshes();
+      this._rebuild();
+      this._selectMarker(sel.type, list.length - 1);
+      this._pushHistory();
+      this._toast('Duplicated 1 marker');
+      this._syncUi();
+      return;
+    }
+
     if (!Array.isArray(this._spec.pieces)) return;
     const indices = Array.from(this._selection).filter((n) => typeof n === 'number' && n >= 0 && n < this._spec.pieces.length);
     if (indices.length === 0) return;
@@ -1247,6 +2370,7 @@ export class TrackEditorMode {
     indices.sort((a, b) => a - b);
 
     const offset = { x: 8, y: 0, z: 8 };
+    const existingNames = new Set(this._spec.pieces.map((p) => (typeof p?.name === 'string' ? p.name.trim() : '')).filter(Boolean));
     const newIndices = [];
     indices.forEach((idx) => {
       const src = this._spec.pieces[idx];
@@ -1256,6 +2380,10 @@ export class TrackEditorMode {
       clone.position.x = (clone.position.x ?? 0) + offset.x;
       clone.position.y = (clone.position.y ?? 0) + offset.y;
       clone.position.z = (clone.position.z ?? 0) + offset.z;
+
+      clone.name = this._generateUniquePieceName(clone.kind || 'piece', existingNames);
+      existingNames.add(clone.name);
+
       this._spec.pieces.push(clone);
       newIndices.push(this._spec.pieces.length - 1);
     });
@@ -1273,10 +2401,140 @@ export class TrackEditorMode {
 
     this._pushHistory();
     this._toast(`Duplicated ${newIndices.length} piece${newIndices.length === 1 ? '' : 's'}`);
+    this._syncUi();
+  }
+
+  _copySelection() {
+    if (this._selectedMarker) {
+      const sel = this._selectedMarker;
+      const list = this._spec?.markers?.[sel.type];
+      if (!Array.isArray(list) || !list[sel.index]) {
+        this._toast('Nothing to copy');
+        return;
+      }
+      this._clipboard = { kind: 'marker', markerType: sel.type, entries: [deepCloneJson(list[sel.index])] };
+      this._toast('Copied 1 marker');
+      return;
+    }
+
+    if (!Array.isArray(this._spec.pieces)) {
+      this._toast('Nothing to copy');
+      return;
+    }
+    const indices = Array.from(this._selection).filter((n) => typeof n === 'number' && n >= 0 && n < this._spec.pieces.length);
+    if (indices.length === 0) {
+      this._toast('Nothing to copy');
+      return;
+    }
+
+    indices.sort((a, b) => a - b);
+    const pieces = indices.map((idx) => deepCloneJson(this._spec.pieces[idx]));
+    this._clipboard = { kind: 'piece', pieces };
+    this._toast(`Copied ${pieces.length} piece${pieces.length === 1 ? '' : 's'}`);
+  }
+
+  _pasteClipboard() {
+    if (!this._clipboard) {
+      this._toast('Clipboard is empty');
+      return;
+    }
+
+    if (this._clipboard.kind === 'marker') {
+      this._ensureBasicMarkers();
+      const type = this._clipboard.markerType;
+      const list = this._spec?.markers?.[type];
+      if (!Array.isArray(list)) {
+        this._toast('Cannot paste marker');
+        return;
+      }
+      const clones = (this._clipboard.entries || []).map((e) => deepCloneJson(e));
+      if (clones.length === 0) {
+        this._toast('Clipboard is empty');
+        return;
+      }
+
+      if (type === 'start' && (list.length + clones.length) > 12) {
+        this._toast('Max start positions: 12');
+        return;
+      }
+
+      clones.forEach((c) => {
+        c.position = c.position || { x: 0, y: 0, z: 0 };
+        list.push(c);
+      });
+
+      this._rebuildMarkerMeshes();
+      this._rebuild();
+      this._selectMarker(type, list.length - 1);
+      this._pushHistory();
+      this._toast(`Pasted ${clones.length} marker${clones.length === 1 ? '' : 's'}`);
+      this._syncUi();
+      return;
+    }
+
+    if (this._clipboard.kind === 'piece') {
+      this._spec.pieces = Array.isArray(this._spec.pieces) ? this._spec.pieces : [];
+      const src = Array.isArray(this._clipboard.pieces) ? this._clipboard.pieces : [];
+      if (src.length === 0) {
+        this._toast('Clipboard is empty');
+        return;
+      }
+
+      const existingNames = new Set(this._spec.pieces.map((p) => (typeof p?.name === 'string' ? p.name.trim() : '')).filter(Boolean));
+
+      const newIndices = [];
+      src.forEach((p) => {
+        const clone = deepCloneJson(p);
+        // Pasting should not offset positions.
+        clone.position = clone.position || { x: 0, y: 0, z: 0 };
+        // Assign a unique default name on paste.
+        clone.name = this._generateUniquePieceName(clone.kind || 'piece', existingNames);
+        existingNames.add(clone.name);
+        this._spec.pieces.push(clone);
+        newIndices.push(this._spec.pieces.length - 1);
+      });
+
+      this._rebuildPieceMeshes();
+      this._rebuild();
+
+      this._selectedMarker = null;
+      this._selection.clear();
+      newIndices.forEach((i) => this._selection.add(i));
+      this._selectedPieceIndex = newIndices[newIndices.length - 1] ?? -1;
+      this._updateSelectionVisuals();
+      this._attachTransformToSelection();
+      this._refreshSelectedOverrideUI();
+
+      this._pushHistory();
+      this._toast(`Pasted ${newIndices.length} piece${newIndices.length === 1 ? '' : 's'}`);
+      this._syncUi();
+    }
   }
 
   _focusSelection() {
     if (!this._camera || !this._THREE) return;
+
+    if (this._selectedMarker) {
+      const obj = this._markerMeshes?.[this._selectedMarker.type]?.[this._selectedMarker.index];
+      if (!obj) return;
+      const box = new this._THREE.Box3().setFromObject(obj);
+      const center = new this._THREE.Vector3();
+      const size = new this._THREE.Vector3();
+      box.getCenter(center);
+      box.getSize(size);
+      const maxDim = Math.max(size.x, size.y, size.z, 1);
+
+      const fov = (this._camera.fov * Math.PI) / 180;
+      const dist = (maxDim * 0.5) / Math.tan(fov * 0.5);
+      const dir = new this._THREE.Vector3(1, 0.65, 1).normalize();
+      const targetPos = center.clone().addScaledVector(dir, dist * 1.25);
+
+      this._camera.position.copy(targetPos);
+      this._camera.lookAt(center);
+      this._camera.updateProjectionMatrix();
+      return;
+    }
+
     if (this._selection.size === 0) return;
 
     const box = new this._THREE.Box3();
@@ -1372,6 +2630,89 @@ export class TrackEditorMode {
     );
   }
 
+  _computeSmartSnap({ point, newKind, newSize }) {
+    // Snap to nearby pieces on all axes (XYZ). This complements grid snapping.
+    if (!this._shouldSnapNow()) return null;
+    if (!point || !this._THREE) return null;
+    if (!Array.isArray(this._spec?.pieces) || this._spec.pieces.length === 0) return null;
+    if (!Array.isArray(this._pieceMeshes) || this._pieceMeshes.length === 0) return null;
+
+    const THREE = this._THREE;
+    const newBB = this._previewBoundsFor(newKind, newSize);
+    const newHalf = new THREE.Vector3(newBB.x * 0.5, newBB.y * 0.5, newBB.z * 0.5);
+
+    const base = Math.max(1.5, Number.isFinite(this._snap.translate) ? this._snap.translate : 1);
+    const threshold = Math.max(2.0, base * 1.75);
+
+    let best = null;
+    const tmpLocal = new THREE.Vector3();
+
+    for (let i = 0; i < this._pieceMeshes.length; i += 1) {
+      const mesh = this._pieceMeshes[i];
+      const piece = this._spec.pieces[i];
+      if (!mesh || !piece) continue;
+
+      const kind = piece.kind || 'road_straight';
+      const bb = this._previewBoundsFor(kind, piece.size);
+      const sx = mesh.scale?.x ?? 1;
+      const sy = mesh.scale?.y ?? 1;
+      const sz = mesh.scale?.z ?? 1;
+      const half = new THREE.Vector3(bb.x * 0.5 * sx, bb.y * 0.5 * sy, bb.z * 0.5 * sz);
+
+      tmpLocal.copy(point);
+      mesh.worldToLocal(tmpLocal);
+
+      const dx = Math.max(Math.abs(tmpLocal.x) - half.x, 0);
+      const dy = Math.max(Math.abs(tmpLocal.y) - half.y, 0);
+      const dz = Math.max(Math.abs(tmpLocal.z) - half.z, 0);
+      const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+      if (dist > threshold) continue;
+      if (!best || dist < best.dist) {
+        best = {
+          idx: i,
+          dist,
+          mesh,
+          piece,
+          localHit: tmpLocal.clone(),
+          half
+        };
+      }
+    }
+
+    if (!best) return null;
+
+    const lh = best.localHit;
+    const halfT = best.half;
+    const nx = halfT.x > 1e-6 ? Math.abs(lh.x) / halfT.x : 0;
+    const ny = halfT.y > 1e-6 ? Math.abs(lh.y) / halfT.y : 0;
+    const nz = halfT.z > 1e-6 ? Math.abs(lh.z) / halfT.z : 0;
+    let axis = 'x';
+    if (ny >= nx && ny >= nz) axis = 'y';
+    else if (nz >= nx && nz >= ny) axis = 'z';
+
+    const axisValue = axis === 'x' ? lh.x : (axis === 'y' ? lh.y : lh.z);
+    const sign = axisValue >= 0 ? 1 : -1;
+
+    const snappedCenterLocal = new THREE.Vector3(0, 0, 0);
+    if (axis === 'x') snappedCenterLocal.x = sign * (halfT.x + newHalf.x);
+    if (axis === 'y') snappedCenterLocal.y = sign * (halfT.y + newHalf.y);
+    if (axis === 'z') snappedCenterLocal.z = sign * (halfT.z + newHalf.z);
+
+    const snappedCenterWorld = snappedCenterLocal.clone();
+    best.mesh.localToWorld(snappedCenterWorld);
+
+    // Editor convention: spec position is a ground-anchor (bottom center) in world Y.
+    const anchor = new THREE.Vector3(
+      snappedCenterWorld.x,
+      snappedCenterWorld.y - newHalf.y,
+      snappedCenterWorld.z
+    );
+
+    const yaw = best.mesh.rotation?.y ?? (best.piece.rotation?.y ?? 0);
+    return { point: anchor, rotationY: yaw, snappedToIndex: best.idx, axis };
+  }
+
   _updateModsFromEvent(e) {
     this._mods.shift = !!e.shiftKey;
     this._mods.ctrl = !!e.ctrlKey;
@@ -1428,10 +2769,259 @@ export class TrackEditorMode {
       if (typeof idx === 'number') this._selection.add(idx);
     });
     this._selectedPieceIndex = typeof entry.primary === 'number' ? entry.primary : -1;
+    this._selectedMarker = null;
 
     this._rebuildPieceMeshes();
+    this._rebuildMarkerMeshes();
     this._rebuild();
     this._refreshSelectedOverrideUI();
+    this._syncUi();
+  }
+
+  _registerCommands() {
+    if (!this._commands) return;
+
+    this._commands.register('editor.exit', () => {
+      if (typeof this._onExitToMenu === 'function') this._onExitToMenu();
+    });
+
+    this._commands.register('editor.save', () => {
+      saveTrackSpec(this._spec);
+      this._toast('Saved to local storage');
+
+      const startCount = this._startMarkerCount();
+      if (startCount !== 12) {
+        alert(`Track should have exactly 12 start positions (currently ${startCount}).`);
+      }
+    });
+
+    this._commands.register('editor.export', async () => {
+      try {
+        const blob = new Blob([JSON.stringify(this._spec, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${(this._spec.name || 'track').replace(/[^a-z0-9_-]+/gi, '_')}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        this._toast('Exported JSON');
+      } catch (err) {
+        console.error('[Editor] Export failed:', err);
+        alert(`Export failed: ${err.message || err}`);
+      }
+    });
+
+    this._commands.register('editor.import', async () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/json,.json';
+      input.style.display = 'none';
+
+      const cleanup = () => {
+        try { input.remove(); } catch { /* ignore */ }
+      };
+
+      input.addEventListener('change', async () => {
+        const file = input.files?.[0];
+        if (!file) {
+          cleanup();
+          return;
+        }
+        try {
+          const text = await file.text();
+          this._importSpecFromJsonString(text, { sourceName: file.name });
+          // Mirror the main menu behavior: imported spec becomes the current saved track.
+          saveTrackSpec(this._spec);
+          this._toast(`Imported ${file.name}`);
+        } catch (err) {
+          console.error('[Editor] Import failed:', err);
+          alert(`Import failed: ${err.message || err}`);
+        } finally {
+          cleanup();
+        }
+      });
+
+      document.body.appendChild(input);
+      input.click();
+    });
+
+    this._commands.register('editor.playtest', () => {
+      const startCount = this._startMarkerCount();
+      if (startCount !== 12) {
+        alert(`Cannot playtest: track must have exactly 12 start positions (currently ${startCount}).`);
+        return;
+      }
+      saveTrackSpec(this._spec);
+      if (typeof this._onPlaytest === 'function') this._onPlaytest(this._spec);
+    });
+
+    this._commands.register('editor.undo', () => this.undo());
+    this._commands.register('editor.redo', () => this.redo());
+    this._commands.register('editor.duplicate', () => this._duplicateSelection());
+    this._commands.register('editor.copy', () => this._copySelection());
+    this._commands.register('editor.paste', () => this._pasteClipboard());
+    this._commands.register('editor.delete', () => this._deleteSelected());
+    this._commands.register('editor.focus', () => this._focusSelection());
+
+    this._commands.register('editor.rename', () => {
+      if (this._selectedMarker) {
+        this._toast('Markers cannot be renamed');
+        return;
+      }
+      if (!Array.isArray(this._spec?.pieces) || this._selection.size !== 1) {
+        this._toast('Select one piece to rename');
+        return;
+      }
+      const idx = this._selectedPieceIndex;
+      if (typeof idx !== 'number' || idx < 0 || idx >= this._spec.pieces.length) return;
+      const piece = this._spec.pieces[idx];
+      const current = (typeof piece?.name === 'string') ? piece.name : '';
+      const next = prompt('Rename object', current || '');
+      if (next === null) return;
+      piece.name = String(next);
+      this._pushHistory();
+      this._syncUi();
+    });
+
+    this._commands.register('editor.deselect', () => {
+      this._selectedMarker = null;
+      this._selectPiece(-1);
+    });
+
+    this._commands.register('editor.toggleSnap', () => {
+      this._snap.enabled = !this._snap.enabled;
+      const el = this._ui?.querySelector?.('#editor-snap-enabled');
+      if (el) el.checked = !!this._snap.enabled;
+      this._applyTransformSnapping();
+      this._toast(this._snap.enabled ? 'Snap enabled' : 'Snap disabled');
+      this._updateStatusBar();
+    });
+
+    this._commands.register('editor.mode.translate', () => { this._transformMode = 'translate'; this._transform?.setMode('translate'); this._syncUi(); });
+    this._commands.register('editor.mode.rotate', () => { this._transformMode = 'rotate'; this._transform?.setMode('rotate'); this._syncUi(); });
+    this._commands.register('editor.mode.scale', () => { this._transformMode = 'scale'; this._transform?.setMode('scale'); this._syncUi(); });
+
+    this._commands.register('editor.resetLayout', () => this._uiShell?.resetLayout?.());
+
+    this._commands.register('editor.pause.toggle', () => {
+      this._setPaused(!this._paused);
+    });
+    this._commands.register('editor.pause.resume', () => {
+      this._setPaused(false);
+    });
+
+    this._commands.register('editor.showShortcuts', () => {
+      alert(
+        'Editor Shortcuts\n\n' +
+        'LMB: place/select\n' +
+        'Shift+LMB: multi-select\n' +
+        'RMB+WASD: fly camera\n' +
+        'G/R/F: move/rotate/scale\n' +
+        'Ctrl+Z / Ctrl+Y: undo/redo\n' +
+        'Ctrl+D: duplicate\n' +
+        'Ctrl+C / Ctrl+V: copy/paste\n' +
+        'Delete: delete selection\n' +
+        'C: focus selection\n' +
+        'V: toggle snapping\n' +
+        'Esc: editor menu\n' +
+        'Alt: temporarily disable snapping\n' +
+        'Ctrl+S: save'
+      );
+    });
+  }
+
+  _syncUi() {
+    if (!this._uiShell) return;
+    const pieces = Array.isArray(this._spec.pieces) ? this._spec.pieces : [];
+
+    const selection = this._selection;
+    const primaryIndex = this._selectedPieceIndex;
+    const markers = this._spec?.markers || {};
+    const selectedMarker = this._selectedMarker;
+    this._uiShell.renderOutliner({ pieces, selection, primaryIndex, markers, selectedMarker });
+
+    let label = '';
+    if (this._selectedMarker) {
+      const pretty = this._selectedMarker.type === 'checkpoints' ? 'checkpoint' : (this._selectedMarker.type === 'items' ? 'item' : 'start');
+      label = `${pretty} ${this._selectedMarker.index}`;
+    } else if (selection.size === 1) {
+      const p = pieces[primaryIndex];
+      if (p) {
+        const mat = typeof p.material === 'string' ? p.material : '';
+        label = `${p.kind || 'piece'}${mat ? ` [${mat}]` : ''}`;
+      }
+    } else if (selection.size > 1) {
+      label = 'multi';
+    }
+
+    const count = this._selectedMarker ? 1 : selection.size;
+    this._uiShell.setSelectionInfo({ count, label });
+
+    this._updateStatusBar();
+
+    this._syncMaterialsTrayUI();
+  }
+
+  _updateStatusBar() {
+    if (!this._uiShell) return;
+    const snapText = this._snap.enabled
+      ? `Snap: on (grid ${this._snap.translate}, angle ${this._snap.rotateDeg}°)`
+      : 'Snap: off';
+    const delta = this._transformDeltaText ? ` | ${this._transformDeltaText}` : '';
+    this._uiShell.setStatusRight(`${snapText}${delta}`);
+  }
+
+  _setPaused(paused) {
+    this._paused = !!paused;
+    if (this._uiShell?.setPaused) this._uiShell.setPaused(this._paused);
+    if (this._fly) this._fly.enabled = !this._paused && !(this._transform?.dragging);
+  }
+
+  _updateTransformDeltaReadout() {
+    if (!this._transformDeltaStart) {
+      this._transformDeltaText = '';
+      return;
+    }
+
+    const obj = this._selectedMarker
+      ? this._markerMeshes?.[this._selectedMarker.type]?.[this._selectedMarker.index]
+      : (this._pivotAttached ? this._selectionPivot : this._pieceMeshes[this._selectedPieceIndex]);
+    if (!obj) {
+      this._transformDeltaText = '';
+      return;
+    }
+
+    const st = this._transformDeltaStart;
+
+    if (this._transformMode === 'translate') {
+      const dx = obj.position.x - st.position.x;
+      const dy = obj.position.y - st.position.y;
+      const dz = obj.position.z - st.position.z;
+      this._transformDeltaText = `Δ Move: ${dx.toFixed(2)}, ${dy.toFixed(2)}, ${dz.toFixed(2)}`;
+      this._updateStatusBar();
+      return;
+    }
+
+    if (this._transformMode === 'rotate') {
+      const q = obj.quaternion;
+      const dq = st.quaternion.clone().invert().multiply(q);
+      const w = Math.max(-1, Math.min(1, dq.w));
+      const angle = 2 * Math.acos(w);
+      const deg = angle * (180 / Math.PI);
+      this._transformDeltaText = `Δ Rot: ${deg.toFixed(1)}°`;
+      this._updateStatusBar();
+      return;
+    }
+
+    if (this._transformMode === 'scale') {
+      const sx = obj.scale.x / (st.scale.x || 1);
+      const sy = obj.scale.y / (st.scale.y || 1);
+      const sz = obj.scale.z / (st.scale.z || 1);
+      this._transformDeltaText = `Δ Scale: ${sx.toFixed(2)}×, ${sy.toFixed(2)}×, ${sz.toFixed(2)}×`;
+      this._updateStatusBar();
+    }
   }
 
   _toast(text) {
@@ -1445,8 +3035,9 @@ export class TrackEditorMode {
     }, 1400);
   }
 
-  _disposeObject(obj) {
+  _disposeObjectWithOptions(obj, { disposeMaterials } = { disposeMaterials: true }) {
     if (!obj) return;
+    const doDisposeMaterials = disposeMaterials !== false;
     obj.traverse?.((child) => {
       if (child.geometry) {
         if (child.geometry.disposeBoundsTree) {
@@ -1454,11 +3045,15 @@ export class TrackEditorMode {
         }
         if (child.geometry.dispose) child.geometry.dispose();
       }
-      if (child.material) {
+      if (doDisposeMaterials && child.material) {
         const mats = Array.isArray(child.material) ? child.material : [child.material];
         mats.forEach((m) => m?.dispose?.());
       }
     });
+  }
+
+  _disposeObject(obj, options = { disposeMaterials: true }) {
+    this._disposeObjectWithOptions(obj, options);
   }
 }
 

@@ -180,45 +180,112 @@ function pieceDefRegistry({ THREE }) {
     road_ramp: {
       role: 'surface',
       build: ({ size, material }) => {
-        const s = size || { x: 40, y: 6, z: 20 };
-        const geom = new THREE.BoxGeometry(s.x, s.y, s.z, 1, 1, 1);
+        // Prefer new ramp params; accept legacy {x,y,z} too.
+        const legacy = size && typeof size === 'object' && ('x' in size) && ('y' in size) && ('z' in size);
+        const length = Math.max(1, legacy ? (size.x ?? 40) : (size?.length ?? 40));
+        const width = Math.max(1, legacy ? (size.z ?? 26) : (size?.width ?? 26));
+        // Keep vertical thickness comparable to other road slabs.
+        const thickness = Math.max(0.1, legacy ? (Math.max(0.1, (size?.y ?? 6) * 0.1)) : (size?.thickness ?? 0.6));
+        const angleDeg = Math.max(1, Math.min(45, legacy ? 25 : (size?.angleDeg ?? 25)));
+        const rise = Math.tan((angleDeg * Math.PI) / 180) * length;
+
+        // Build a wedge with constant thickness.
+        const geom = new THREE.BoxGeometry(length, thickness, width, 1, 1, 1);
         const pos = geom.attributes.position;
         for (let i = 0; i < pos.count; i += 1) {
           const x = pos.getX(i);
           const y = pos.getY(i);
-          if (y > 0) {
-            const t = (x + s.x / 2) / s.x;
-            pos.setY(i, y * (0.2 + 0.8 * t));
-          }
+          // t: 0 at -length/2 (low end) -> 1 at +length/2 (high end)
+          const t = (x + length / 2) / length;
+          const baseY = t * rise;
+          pos.setY(i, y > 0 ? (baseY + thickness) : baseY);
         }
         pos.needsUpdate = true;
         geom.computeVertexNormals();
+
         const mesh = new THREE.Mesh(geom, material);
         mesh.receiveShadow = true;
         mesh.castShadow = false;
         return mesh;
       }
     },
+
+    road_ramp_45: {
+      role: 'surface',
+      build: ({ size, material }) => {
+        const s = { ...(size || {}), angleDeg: size?.angleDeg ?? 45 };
+        return pieceDefRegistry({ THREE }).road_ramp.build({ size: s, material });
+      }
+    },
     road_curve_90: {
       role: 'surface',
       build: ({ size, material }) => {
-        const s = size || { radius: 30, width: 20, thickness: 0.6 };
-        const inner = Math.max(1, s.radius - s.width / 2);
-        const outer = s.radius + s.width / 2;
-        const geom = new THREE.RingGeometry(inner, outer, 18, 18, 0, Math.PI / 2);
-        geom.rotateX(-Math.PI / 2);
+        const s = size || { radius: 30, width: 26, thickness: 0.6, angleDeg: 90 };
+        const radius = Math.max(1, s.radius ?? 30);
+        const width = Math.max(1, s.width ?? 26);
+        const thickness = Math.max(0.1, s.thickness ?? 0.6);
+        const angleDeg = Math.max(1, Math.min(90, s.angleDeg ?? 90));
+        const angle = (angleDeg * Math.PI) / 180;
+
+        const inner = Math.max(1, radius - width / 2);
+        const outer = radius + width / 2;
+
+        // Build an annulus sector (ring slice) and extrude for road thickness.
+        // Use explicit radial edges to avoid degenerate/"flat" shapes.
+        const shape = new THREE.Shape();
+        const segments = Math.max(8, Math.floor(angleDeg / 5));
+        const innerStartX = inner;
+        const innerStartY = 0;
+        const outerStartX = outer;
+        const outerStartY = 0;
+        const outerEndX = Math.cos(angle) * outer;
+        const outerEndY = -Math.sin(angle) * outer;
+        const innerEndX = Math.cos(angle) * inner;
+        const innerEndY = -Math.sin(angle) * inner;
+
+        shape.moveTo(innerStartX, innerStartY);
+        shape.lineTo(outerStartX, outerStartY);
+        shape.absarc(0, 0, outer, 0, angle, false);
+        shape.lineTo(innerEndX, innerEndY);
+        shape.absarc(0, 0, inner, angle, 0, true);
+        shape.closePath();
+
+        const geom = new THREE.ExtrudeGeometry(shape, {
+          depth: thickness,
+          bevelEnabled: false,
+          curveSegments: segments
+        });
+        // Extrude depth is along +Z; rotate so depth becomes +Y (vertical thickness).
+        geom.rotateX(Math.PI / 2);
+
+        // Center the piece around its AABB so it behaves like other centered pieces.
+        geom.computeBoundingBox();
+        if (geom.boundingBox) {
+          const center = new THREE.Vector3();
+          geom.boundingBox.getCenter(center);
+          geom.translate(-center.x, -center.y, -center.z);
+        }
+
         const mesh = new THREE.Mesh(geom, material);
         mesh.receiveShadow = true;
         mesh.castShadow = false;
+        return mesh;
+      }
+    },
 
-        // Thin hidden collider under it so ground raycasts always hit even on sparse triangles.
-        const collider = new THREE.Mesh(new THREE.BoxGeometry(outer, s.thickness, outer), material);
-        collider.visible = false;
-        const group = new THREE.Group();
-        group.add(mesh);
-        group.add(collider);
-        group.userData._surfaceMeshes = [mesh, collider];
-        return group;
+    // Unified curve piece (angleDeg: 1..90). Prefer this over legacy ids.
+    road_curve: {
+      role: 'surface',
+      build: ({ size, material }) => {
+        return pieceDefRegistry({ THREE }).road_curve_90.build({ size, material });
+      }
+    },
+
+    road_curve_45: {
+      role: 'surface',
+      build: ({ size, material }) => {
+        const s = { ...(size || {}), angleDeg: size?.angleDeg ?? 45 };
+        return pieceDefRegistry({ THREE }).road_curve_90.build({ size: s, material });
       }
     },
 
@@ -354,8 +421,11 @@ export function listAvailablePieces() {
     { id: 'road_straight_short', role: 'surface', description: 'Short flat road segment' },
     { id: 'road_straight_long', role: 'surface', description: 'Long flat road segment' },
     { id: 'road_platform', role: 'surface', description: 'Square platform road segment' },
+    { id: 'road_curve', role: 'surface', description: 'Configurable curve segment (1–90°)' },
     { id: 'road_curve_90', role: 'surface', description: 'Quarter-turn curve segment' },
+    { id: 'road_curve_45', role: 'surface', description: 'Eighth-turn curve segment' },
     { id: 'road_ramp', role: 'surface', description: 'Simple wedge ramp segment' },
+    { id: 'road_ramp_45', role: 'surface', description: 'Steep 45° ramp segment' },
     { id: 'wall_straight', role: 'wall', description: 'Straight barrier wall segment' },
     { id: 'barrier_block', role: 'wall', description: 'Small cube barrier block' },
     { id: 'barrier_pipe', role: 'wall', description: 'Horizontal pipe barrier' },
@@ -386,6 +456,18 @@ function ensureModularSpec(spec) {
 function tryBuildBVH(mesh) {
   if (!mesh?.geometry?.computeBoundsTree) return;
   try { mesh.geometry.computeBoundsTree(); } catch { /* ignore */ }
+}
+
+function anchorObjectToBottom({ THREE, obj }) {
+  if (!THREE || !obj) return;
+  // The editor treats piece.position as a ground-anchor (bottom center). Many of the
+  // generated geometries are centered around the origin, so lift them so their local
+  // bounding-box bottom sits at y=0 before applying world transforms.
+  const box = new THREE.Box3().setFromObject(obj);
+  if (!box || !Number.isFinite(box.min?.y) || !Number.isFinite(box.max?.y)) return;
+  const dy = -box.min.y;
+  if (Math.abs(dy) < 1e-6) return;
+  obj.position.y += dy;
 }
 
 function addSurfaceMeshesFromObject(obj, surfaces) {
@@ -492,6 +574,9 @@ export function buildTrackFromModularSpec({ THREE, scene, config, spec }) {
 
     const obj = def.build({ size: p.size, material: mat, materialSecondary: matSecondary });
 
+    // Make piece.position behave like a bottom-anchor (editor convention).
+    anchorObjectToBottom({ THREE, obj });
+
     obj.name = `Piece_${kind}_${idx}`;
     applyTransform(obj, {
       position: v3(THREE, p.position),
@@ -541,14 +626,49 @@ export function buildTrackFromModularSpec({ THREE, scene, config, spec }) {
     s.markers.checkpoints.forEach((cp, idx) => {
       const center = v3(THREE, cp.position);
       const size = v3(THREE, cp.size, { x: 30, y: 10, z: 8 });
-      const box = new THREE.Box3().setFromCenterAndSize(center, size);
-      checkpoints.push({ index: idx, position: center.clone(), box, isFinishLine: idx === 0, name: `Checkpoint${idx}` });
+
+      const rot = cp?.rotation || { x: 0, y: 0, z: 0 };
+      const e = new THREE.Euler(rot.x ?? 0, rot.y ?? 0, rot.z ?? 0, 'XYZ');
+      const q = new THREE.Quaternion().setFromEuler(e);
+      const invQuat = q.clone().invert();
+      const halfSize = size.clone().multiplyScalar(0.5);
+
+      // Build an enclosing AABB (for broadphase/debug) that matches the rotated box.
+      const m4 = new THREE.Matrix4().makeRotationFromQuaternion(q);
+      const m3 = new THREE.Matrix3().setFromMatrix4(m4);
+      const e0 = Math.abs(m3.elements[0]) * halfSize.x + Math.abs(m3.elements[1]) * halfSize.y + Math.abs(m3.elements[2]) * halfSize.z;
+      const e1 = Math.abs(m3.elements[3]) * halfSize.x + Math.abs(m3.elements[4]) * halfSize.y + Math.abs(m3.elements[5]) * halfSize.z;
+      const e2 = Math.abs(m3.elements[6]) * halfSize.x + Math.abs(m3.elements[7]) * halfSize.y + Math.abs(m3.elements[8]) * halfSize.z;
+      const aabbSize = new THREE.Vector3(e0 * 2, e1 * 2, e2 * 2);
+      const box = new THREE.Box3().setFromCenterAndSize(center, aabbSize);
+
+      checkpoints.push({
+        index: idx,
+        position: center.clone(),
+        box,
+        size,
+        rotation: { x: e.x, y: e.y, z: e.z },
+        obb: { center: center.clone(), halfSize, invQuat },
+        isFinishLine: idx === 0,
+        name: `Checkpoint${idx}`
+      });
     });
   } else {
     const center = startPositions[0].position.clone();
     const size = new THREE.Vector3(30, 10, 8);
+    const halfSize = size.clone().multiplyScalar(0.5);
+    const invQuat = new THREE.Quaternion();
     const box = new THREE.Box3().setFromCenterAndSize(center, size);
-    checkpoints.push({ index: 0, position: center.clone(), box, isFinishLine: true, name: 'Checkpoint0' });
+    checkpoints.push({
+      index: 0,
+      position: center.clone(),
+      box,
+      size,
+      rotation: { x: 0, y: 0, z: 0 },
+      obb: { center: center.clone(), halfSize, invQuat },
+      isFinishLine: true,
+      name: 'Checkpoint0'
+    });
   }
 
   s.markers.items.forEach((it, idx) => {
